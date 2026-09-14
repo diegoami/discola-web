@@ -1,0 +1,1308 @@
+<title>Discola</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap">
+
+<style>
+/* ---------------------------------------------------------------------------
+   Discola — a card table, lit from above.
+   One committed visual world (green baize under warm light), so no theme swap:
+   the felt colour is a player control, inherited from the original's Colore menu.
+   Every colour is painted explicitly so the page holds on any host ground.
+   --------------------------------------------------------------------------- */
+:root{
+  --felt:        #1e5140;
+  --felt-lit:    #2a6b54;
+  --edge:        #12332a;
+  --rail:        #0d2620;
+  --rail-line:   #1f4a3d;
+  --brass:       #c8a24a;
+  --brass-dim:   #8d7136;
+  --ivory:       #f2ebdc;
+  --ivory-dim:   #b9b09c;
+  --rosso:       #a33b2a;
+
+  --cw: clamp(46px, 8.2vw, 74px);
+  --ratio: 2.0833;
+  --ch: calc(var(--cw) * var(--ratio));
+  --sheet: url("decks/trevisane.png");
+
+  --step: clamp(.5rem, 1.4vw, 1rem);
+  --radius: 5px;
+
+  --font-display: "Bodoni Moda", "Didot", "Times New Roman", serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-label: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  background: var(--rail);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, select, input{ font: inherit; color: inherit; }
+
+:focus-visible{
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* ---- shell ---------------------------------------------------------------- */
+
+/* The table is pinned to the viewport so your own hand is never pushed below
+   the fold by a tall rail; the rail scrolls inside itself instead. */
+.app{
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 300px;
+  height: 100vh;
+  height: 100dvh;
+}
+@media (max-width: 900px){
+  .app{ grid-template-columns: minmax(0,1fr); height: auto; }
+}
+
+/* ---- the table ------------------------------------------------------------ */
+
+.table{
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0,1fr) auto;
+  gap: var(--step);
+  padding-block: clamp(.75rem, 2vw, 1.5rem);
+  padding-inline: clamp(16px, 3vw, 2rem);
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 45%, var(--felt-lit) 0%, var(--felt) 55%, var(--edge) 100%);
+  overflow: hidden;
+}
+
+/* faint baize weave — reads as cloth, not as a texture overlay */
+.table::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .35;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.055) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg,  rgba(0,0,0,.055) 0 1px, transparent 1px 3px);
+}
+
+.table > *{ position: relative; z-index: 1; }
+
+/* ---- seats ---------------------------------------------------------------- */
+
+/* Both hands sit on the table's centre line; the name plates take the corners. */
+.seat{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--step);
+}
+
+.hand{
+  grid-column: 2;
+  display: flex;
+  gap: clamp(.3rem, 1vw, .7rem);
+}
+
+.seat--opp .plate{ grid-column: 1; justify-self: start; }
+.seat--you .plate{ grid-column: 3; justify-self: end; }
+
+/* ---- cards ---------------------------------------------------------------- */
+
+.card{
+  width: var(--cw);
+  height: var(--ch);
+  flex: none;
+  border: 0;
+  padding: 0;
+  border-radius: var(--radius);
+  background-color: transparent;
+  background-image: var(--sheet);
+  background-repeat: no-repeat;
+  background-size: calc(var(--cw) * 11) calc(var(--ch) * 4);
+  background-position: calc(var(--cw) * var(--col, 10) * -1) calc(var(--ch) * var(--row, 0) * -1);
+  box-shadow: 0 2px 5px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.25);
+  transition: transform .16s ease, box-shadow .16s ease, opacity .3s ease;
+}
+
+.card[data-empty="true"]{
+  background-image: none;
+  box-shadow: inset 0 0 0 1px rgba(242,235,220,.11);
+  border-radius: var(--radius);
+}
+
+/* a card you can actually play */
+button.card:not(:disabled){ cursor: pointer; }
+button.card:not(:disabled):hover,
+button.card:not(:disabled):focus-visible{
+  transform: translateY(-10px);
+  box-shadow: 0 10px 18px rgba(0,0,0,.5), 0 0 0 1px var(--brass);
+}
+button.card:disabled{ cursor: default; }
+
+.card--played{ animation: cardIn .26s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes cardIn{
+  from{ opacity: 0; transform: translateY(var(--from, 16px)) scale(.9) rotate(var(--tilt, -3deg)); }
+  to  { opacity: 1; transform: none; }
+}
+
+.card--won-up{   animation: sweepUp   .45s ease-in both; }
+.card--won-down{ animation: sweepDown .45s ease-in both; }
+@keyframes sweepUp{
+  from{ opacity: 1; transform: none; }
+  to  { opacity: 0; transform: translateY(-70px) scale(.82) rotate(-6deg); }
+}
+@keyframes sweepDown{
+  from{ opacity: 1; transform: none; }
+  to  { opacity: 0; transform: translateY(70px) scale(.82) rotate(6deg); }
+}
+
+/* ---- middle: the trick, and the tallone ----------------------------------- */
+
+.middle{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(1rem, 4vw, 3rem);
+}
+
+.trick{
+  grid-column: 2;
+  display: flex;
+  gap: clamp(.4rem, 1.4vw, 1rem);
+  padding: clamp(.5rem, 1.4vw, 1rem);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(242,235,220,.09), inset 0 0 34px rgba(0,0,0,.22);
+}
+
+.tallone{
+  grid-column: 3;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: clamp(.6rem, 2vw, 1.2rem);
+}
+
+/* briscola lies face-up across the table under the face-down stock */
+.pile{
+  position: relative;
+  width: calc(var(--ch) + var(--cw) * .62);
+  height: var(--ch);
+  flex: none;
+}
+.pile .card{ position: absolute; top: 0; }
+/* rotating about the centre swings the box left by (ch - cw)/2; offset it back
+   so the laid-down briscola starts flush with the pile's left edge */
+.pile .briscola{
+  left: calc((var(--ch) - var(--cw)) / 2);
+  transform: rotate(90deg);
+}
+.pile .stock{ right: 0; }
+.pile[data-stock="0"] .stock{ display: none; }
+.pile[data-briscola="0"] .briscola{ display: none; }
+
+.tallone-meta{ display: grid; gap: .35rem; }
+
+@media (max-width: 900px){
+  .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: 1.25rem; }
+  .trick, .tallone{ grid-column: 1; justify-self: center; }
+}
+
+.count{
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ivory);
+}
+
+.eyebrow{
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .76rem;
+  color: var(--ivory-dim);
+}
+
+.last-hand{
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .78rem;
+  color: var(--brass);
+  border-top: 1px solid var(--brass-dim);
+  padding-top: .3rem;
+}
+.last-hand[hidden]{ display: none; }
+
+/* ---- name plates ---------------------------------------------------------- */
+
+.plate{
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .4rem .85rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(0,0,0,.24), rgba(0,0,0,.36));
+  box-shadow: inset 0 0 0 1px var(--brass-dim);
+}
+
+.plate__who{
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.plate__role{
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .72rem;
+  color: var(--ivory-dim);
+}
+
+.plate__score{
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brass);
+  min-width: 2.2ch;
+  text-align: right;
+}
+.plate__score[hidden]{ display: none; }
+
+.plate--turn{ box-shadow: inset 0 0 0 1px var(--brass), 0 0 16px rgba(200,162,74,.3); }
+
+.turn-dot{
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--brass);
+  flex: none;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.plate--turn .turn-dot{ opacity: 1; }
+
+/* ---- the rail ------------------------------------------------------------- */
+
+.rail{
+  background: var(--rail);
+  border-left: 1px solid var(--rail-line);
+  padding-block: 1.25rem;
+  padding-inline: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  overflow-y: auto;
+}
+@media (max-width: 900px){
+  .rail{ border-left: 0; border-top: 1px solid var(--rail-line); }
+}
+
+.masthead h1{
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  margin: 0;
+  line-height: 1;
+}
+.masthead p{
+  margin: .4rem 0 0;
+  font-size: .82rem;
+  color: var(--ivory-dim);
+  max-width: 34ch;
+}
+
+.group{ display: grid; gap: .5rem; }
+.group > .eyebrow{ border-bottom: 1px solid var(--rail-line); padding-bottom: .3rem; }
+
+.btn{
+  border: 1px solid var(--brass-dim);
+  background: transparent;
+  color: var(--ivory);
+  padding: .5rem .8rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .85rem;
+  transition: background .15s ease, color .15s ease;
+}
+.btn:hover{ background: var(--brass); color: var(--rail); }
+
+.btn--primary{ background: var(--brass); color: var(--rail); border-color: var(--brass); font-weight: 600; }
+.btn--primary:hover{ background: var(--ivory); border-color: var(--ivory); }
+
+/* opponent dossiers — the four profiles are real, tuned weights from Global.pas */
+.opponents{ display: grid; gap: .4rem; }
+
+.opp{
+  display: grid;
+  gap: .3rem;
+  padding: .55rem .7rem;
+  border: 1px solid var(--rail-line);
+  border-radius: 3px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.opp:hover{ border-color: var(--brass-dim); }
+.opp[aria-pressed="true"]{ border-color: var(--brass); background: rgba(200,162,74,.09); }
+
+.opp__name{
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.opp__line{ font-size: .78rem; color: var(--ivory-dim); line-height: 1.35; }
+
+.traits{ display: grid; gap: 3px; margin-top: .15rem; }
+.trait{ display: grid; grid-template-columns: 8.5ch 1fr; gap: .5rem; align-items: center; }
+.trait span{
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  font-size: .66rem;
+  color: var(--ivory-dim);
+}
+.trait i{ display: block; height: 3px; background: rgba(242,235,220,.14); border-radius: 2px; }
+.trait i::before{
+  content: "";
+  display: block;
+  height: 100%;
+  width: var(--v, 50%);
+  background: var(--brass-dim);
+  border-radius: 2px;
+}
+.opp[aria-pressed="true"] .trait i::before{ background: var(--brass); }
+
+.weights{ margin-top: .5rem; }
+.weights summary{
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .72rem;
+  color: var(--ivory-dim);
+  cursor: pointer;
+}
+.weights table{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: .45rem;
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+}
+.weights td{ padding: .12rem 0; vertical-align: top; }
+.weights td:first-child{ color: var(--ivory-dim); padding-right: .6rem; }
+.weights td:last-child{ text-align: right; color: var(--brass); }
+
+.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: .85rem; }
+.field select, .field input[type="color"]{
+  background: transparent;
+  border: 1px solid var(--rail-line);
+  border-radius: 3px;
+  padding: .3rem .4rem;
+}
+.field select{ min-width: 10ch; }
+.field input[type="color"]{ width: 44px; height: 28px; padding: 2px; cursor: pointer; }
+.field input[type="range"]{ width: 120px; accent-color: var(--brass); }
+
+.toggle{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  font-size: .85rem;
+  cursor: pointer;
+}
+.toggle input{ accent-color: var(--brass); width: 16px; height: 16px; }
+
+.colophon{
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rail-line);
+  font-size: .74rem;
+  color: var(--ivory-dim);
+  line-height: 1.5;
+}
+.colophon a{ color: var(--brass-dim); }
+
+/* ---- end-of-hand ---------------------------------------------------------- */
+
+.scrim{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(7,20,16,.72);
+  z-index: 20;
+}
+.scrim[hidden]{ display: none; }
+
+.result{
+  width: min(380px, 100%);
+  padding: 1.6rem;
+  border-radius: 4px;
+  background: var(--rail);
+  box-shadow: inset 0 0 0 1px var(--brass-dim), 0 24px 60px rgba(0,0,0,.6);
+  text-align: center;
+  display: grid;
+  gap: 1rem;
+}
+.result h2{
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin: 0;
+  text-wrap: balance;
+}
+.result__tally{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: .8rem;
+}
+.result__n{
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brass);
+}
+.result__sep{ color: var(--ivory-dim); }
+.result__note{ font-size: .84rem; color: var(--ivory-dim); margin: 0; }
+
+/* ---- cheat ---------------------------------------------------------------- */
+
+.cheat-note{
+  position: absolute;
+  top: .6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: .7rem;
+  color: var(--brass);
+  z-index: 3;
+}
+.cheat-note[hidden]{ display: none; }
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+</style>
+
+<div class="app">
+  <main class="table" id="table">
+    <p class="cheat-note" id="cheatNote" hidden>Carte scoperte</p>
+
+    <section class="seat seat--opp">
+      <div class="plate" id="plateOpp">
+        <span class="turn-dot"></span>
+        <span>
+          <span class="plate__who" id="oppName">Valerio</span>
+          <span class="plate__role">avversario</span>
+        </span>
+        <span class="plate__score" id="oppScore">0</span>
+      </div>
+      <div class="hand hand--opp" id="oppHand"></div>
+    </section>
+
+    <section class="middle">
+      <div class="trick">
+        <div class="card" id="slotOpp" data-empty="true"></div>
+        <div class="card" id="slotYou" data-empty="true"></div>
+      </div>
+
+      <div class="tallone">
+        <div class="pile" id="pile">
+          <div class="card briscola" id="briscolaCard"></div>
+          <div class="card stock" id="stockCard" style="--col:10;--row:0"></div>
+        </div>
+        <div class="tallone-meta">
+          <span class="eyebrow">Tallone</span>
+          <span class="count" id="stockCount">34</span>
+          <span class="eyebrow" id="briscolaName">briscola: denari</span>
+          <span class="last-hand" id="lastHand" hidden>Ultima mano</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="seat seat--you">
+      <div class="hand hand--you" id="youHand"></div>
+      <div class="plate" id="plateYou">
+        <span class="turn-dot"></span>
+        <span>
+          <span class="plate__who">Tu</span>
+          <span class="plate__role">giocatore</span>
+        </span>
+        <span class="plate__score" id="youScore">0</span>
+      </div>
+    </section>
+  </main>
+
+  <aside class="rail">
+    <div class="masthead">
+      <h1>Discola</h1>
+      <p>Briscola a due. Il primo a 61 punti su 120 vince la partita.</p>
+    </div>
+
+    <button class="btn btn--primary" id="newGame" type="button">Nuova partita</button>
+
+    <div class="group">
+      <span class="eyebrow">Avversario</span>
+      <div class="opponents" id="opponents"></div>
+      <details class="weights">
+        <summary>Pesi della strategia</summary>
+        <table id="weightsTable"><tbody></tbody></table>
+      </details>
+    </div>
+
+    <div class="group">
+      <span class="eyebrow">Tavolo</span>
+      <label class="field" for="deckSel">Mazzo
+        <select id="deckSel">
+          <option value="Trevisane">Trevisane</option>
+          <option value="Piacentine">Piacentine</option>
+          <option value="Napoletane">Napoletane</option>
+          <option value="Romagnole">Romagnole</option>
+          <option value="Francesi">Francesi</option>
+        </select>
+      </label>
+      <label class="field" for="feltSel">Panno
+        <input type="color" id="feltSel" value="#1e5140">
+      </label>
+      <label class="field" for="speedSel">Ritmo
+        <input type="range" id="speedSel" min="200" max="2000" step="100" value="900">
+      </label>
+      <label class="toggle" for="pointsSel">Mostra i punti
+        <input type="checkbox" id="pointsSel" checked>
+      </label>
+      <label class="toggle" for="soundSel">Suono
+        <input type="checkbox" id="soundSel" checked>
+      </label>
+    </div>
+
+    <p class="colophon">
+      Gioca una carta con un clic o con i tasti <strong>1</strong>, <strong>2</strong>, <strong>3</strong>.<br><br>
+      Porting web di <strong>Discola</strong>, scritta in Delphi 3 nel 1997 da Diego Amicabile.
+      Le carte sono le immagini originali del programma; la strategia dell&rsquo;avversario è
+      quella di <code>UGiocatore.pas</code>, pesi compresi.
+    </p>
+  </aside>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <h2 id="resultTitle">Hai vinto</h2>
+    <div class="result__tally">
+      <div>
+        <div class="result__n" id="resultYou">61</div>
+        <div class="eyebrow">tu</div>
+      </div>
+      <div class="result__sep">—</div>
+      <div>
+        <div class="result__n" id="resultOpp">59</div>
+        <div class="eyebrow" id="resultOppName">valerio</div>
+      </div>
+    </div>
+    <p class="result__note" id="resultNote"></p>
+    <button class="btn btn--primary" id="playAgain" type="button">Ancora</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ===========================================================================
+   Discola — web port of the 1997 Delphi 3 original.
+
+   The rules engine below is a direct transcription of UMazzo.pas, and the
+   opponent of TGiocatore.CompGioca in UGiocatore.pas, weights and all. Where
+   the Pascal had a quirk that shapes how the opponent plays, the quirk is
+   kept and marked — the point of the port is to play the same game, not a
+   tidied-up relative of it.
+   =========================================================================== */
+
+/* --- cards (UMazzo.pas) ---------------------------------------------------- */
+
+// TSeme order: Denari, Coppe, Spade, Bastoni. The sprite sheet uses the same
+// order for its rows, and column n-1 for card number n.
+const SUITS = ["denari", "coppe", "spade", "bastoni"];
+
+const BASSO = 0; // the human player, at the bottom of the table
+const ALTO  = 1; // the computer, at the top
+
+// TCarta.Valore
+function valore(n){
+  if (n === 1) return 11;
+  if (n === 3) return 10;
+  if (n >= 8)  return n - 6;
+  return 0;
+}
+
+// TCarta.piuAlta's local veroValore: the asso and the tre outrank the re
+function veroValore(n){
+  if (n === 3) return 11;
+  if (n === 1) return 12;
+  return n;
+}
+
+// TCarta.piuAlta — does `self` beat `other`? `led` is true when self led the trick.
+function piuAlta(self, other, led, briscola){
+  if (self.s === briscola){
+    if (other.s !== briscola) return true;
+    return veroValore(self.n) > veroValore(other.n);
+  }
+  if (other.s === briscola) return false;
+  if (self.s !== other.s) return led;
+  return veroValore(self.n) > veroValore(other.n);
+}
+
+// TMazzo.Init — 40 cards, suit-major
+function buildDeck(){
+  const cards = [];
+  for (let s = 0; s < 4; s++)
+    for (let n = 1; n <= 10; n++)
+      cards.push({ s, n });
+  return cards;
+}
+
+// TMazzo.Mescola — 200 + Random(100) random swaps
+function mescola(cards){
+  const swaps = 200 + Math.floor(Math.random() * 100);
+  for (let i = 0; i < swaps; i++){
+    const a = Math.floor(Math.random() * 40);
+    const b = Math.floor(Math.random() * 40);
+    const t = cards[a]; cards[a] = cards[b]; cards[b] = t;
+  }
+}
+
+/* --- opponent profiles (Global.pas SetProfiles) ---------------------------- */
+
+const WEIGHT_KEYS = [
+  "FIXED_BRISCOLA_PENALTY", "VARIANT_BRISCOLA_PENALTY", "VARIANT_CARICO_PENALTY",
+  "VARIANT_STROZZO_PENALTY", "FIXED_TRE_PENALTY", "VARIANT_WINNING_CARD_PENALTY",
+  "FIXED_WINNER_BRISCOLA_PENALTY", "VARIANT_WINNER_BRISCOLA_PENALTY",
+  "FIXED_LOSER_BRISCOLA_PENALTY", "VARIANT_LOSER_BRISCOLA_PENALTY",
+  "VARIANT_PASSIVE_STROZZO_PENALTY", "ASSO_PENALTY"
+];
+
+function weights(v){
+  const o = {};
+  WEIGHT_KEYS.forEach((k, i) => { o[k] = v[i]; });
+  return o;
+}
+
+// Pascal Random(n) is an integer in 0..n-1; bare Random is a real in [0,1).
+const randInt = n => Math.floor(Math.random() * n);
+const rnd = () => Math.random();
+
+// SetProfiles runs once at startup, so Piero's randomised temperament is fixed
+// for the session — you never play the same Piero twice, but you do play the
+// same Piero all evening. That is the original behaviour.
+function makeProfiles(){
+  return {
+    Valerio:  weights([3,   0.7, 0.045, 0.45, 2.5, 0.6, 4, 1.2, 5.5, 1.6, 0.18, 1.5]),
+    Graziano: weights([2,   0.8, 0.065, 0.30, 1.5, 0.5, 3, 1.1, 4.5, 1.4, 0.10, 1.0]),
+    Piero:    weights([
+      2 + randInt(3),      0.5 + rnd() / 3,  0.045 + rnd() / 20,
+      0.3 + rnd() / 5,     1 + randInt(2),   0.5 + rnd() / 4,
+      3 + randInt(2),      0.9 + rnd(),      5 + randInt(2),
+      0.8 + rnd() / 2,     0.15 + rnd() / 10, 1 + rnd()
+    ]),
+    Franco:   weights([4.5, 0.5, 0.085, 0.50, 3.0, 0.7, 5, 1.0, 6.0, 1.2, 0.23, 2.0])
+  };
+}
+
+const PROFILES = makeProfiles();
+
+const DOSSIER = {
+  Valerio: "Lo standard della casa. Equilibrato: spende una briscola quando la presa la vale.",
+  Graziano: "Sciolto e veloce. È il più generoso con le briscole, e le brucia presto.",
+  Piero: "Si tira i pesi a caso a ogni sessione. Non giochi mai due volte contro lo stesso Piero.",
+  Franco: "Il più chiuso del tavolo. Tiene le briscole e lascia andare una presa pur di salvare l'asso."
+};
+
+// Four readable traits, each read straight off a weight that drives CompGioca.
+const TRAITS = [
+  ["briscole", "FIXED_LOSER_BRISCOLA_PENALTY", 7],
+  ["presa",    "VARIANT_WINNING_CARD_PENALTY", 0.85],
+  ["strozzo",  "VARIANT_STROZZO_PENALTY",      0.6],
+  ["asso",     "ASSO_PENALTY",                 2.4]
+];
+
+/* --- game state ------------------------------------------------------------ */
+
+const state = {
+  cards: [],
+  next: 0,            // TMazzo.Tallone - 1
+  briscola: 0,        // SemeBriscola
+  hands: [[null,null,null], [null,null,null]],
+  played: [null, null],
+  scores: [0, 0],
+  seen: [],           // Giocatori[Alto].CarteViste
+  perPrimo: BASSO,
+  deveGiocare: BASSO,
+  partitaPrimo: BASSO,
+  over: false,
+  cheat: false,
+  opponent: "Valerio",
+  deck: "Trevisane",
+  felt: "#1e5140",
+  speed: 900,
+  showPoints: true,
+  sound: true
+};
+
+const DECK_RATIO = {
+  Trevisane: 125 / 60,
+  Romagnole: 112 / 71,
+  Napoletane: 128 / 78,
+  Piacentine: 128 / 74,
+  Francesi: 128 / 75
+};
+
+let timer = null;
+let epoch = 0; // bumped on every new hand so stale timers can't fire into it
+
+function later(fn, ms){
+  const mine = epoch;
+  clearTimeout(timer);
+  timer = setTimeout(() => { if (mine === epoch) fn(); }, ms);
+}
+
+/* --- dealing (TMazzo.pop / TGiocatore.Pesca) ------------------------------- */
+
+function pop(){
+  // Pesca only draws while cards remain; past that a player's hand just thins out.
+  if (state.next >= 40) return null;
+  return state.cards[state.next++];
+}
+
+function pesca(who){
+  const card = pop();
+  if (card === null) return;
+  if (who === ALTO) state.seen.push(card);
+  const hand = state.hands[who];
+  let i = 0;
+  while (hand[i] !== null && i < 2) i++;
+  hand[i] = card;
+}
+
+// TForm1.Redo
+function newHand(){
+  epoch++;
+  clearTimeout(timer);
+
+  state.cards = buildDeck();
+  mescola(state.cards);
+  state.next = 0;
+  state.briscola = state.cards[39].s;   // the bottom card names the trump suit
+  state.seen = [];
+  state.played = [null, null];
+  state.scores = [0, 0];
+  state.over = false;
+
+  for (const who of [BASSO, ALTO]){
+    state.hands[who] = [null, null, null];
+    pesca(who); pesca(who); pesca(who);
+  }
+
+  state.perPrimo = state.partitaPrimo;
+  state.deveGiocare = state.perPrimo;
+
+  // whoever did not lead this hand leads the next one
+  if (state.perPrimo === ALTO){
+    state.partitaPrimo = BASSO;
+    render();
+    later(computerPlay, state.speed);
+    return;
+  }
+  state.partitaPrimo = ALTO;
+  render();
+}
+
+/* --- the opponent (TGiocatore.CompGioca) ----------------------------------- */
+
+// SemiAndati / CountCarte both walk CarteViste from index 1, not 0, so the very
+// first card the opponent ever saw is never counted. It is an off-by-one in the
+// 1997 source; keeping it keeps the opponent's judgement exactly as it was.
+function semiAndati(suit){
+  let total = 0;
+  for (let i = 1; i < state.seen.length; i++)
+    if (state.seen[i].s === suit) total += valore(state.seen[i].n);
+  return total;
+}
+
+function countCarte(suit){
+  let count = 0;
+  for (let i = 1; i < state.seen.length; i++)
+    if (state.seen[i].s === suit) count++;
+  return count;
+}
+
+function compGioca(against){
+  const P = PROFILES[state.opponent];
+  const hand = state.hands[ALTO];
+  const brisc = state.briscola;
+
+  let bestSlot = 0;
+  let bestScore = -150;
+
+  if (against === null){
+    // leading: shed the cheapest card that is not a briscola and not worth points
+    for (let i = 0; i < 3; i++){
+      const c = hand[i];
+      if (!c) continue;
+      const v = valore(c.n);
+      let score;
+      if (c.s === brisc){
+        score = 100 - P.FIXED_BRISCOLA_PENALTY - v * P.VARIANT_BRISCOLA_PENALTY;
+      } else {
+        score = 100 - v * (1 - P.VARIANT_CARICO_PENALTY * countCarte(brisc));
+        if (v < 10) score += semiAndati(c.s) * P.VARIANT_STROZZO_PENALTY;
+      }
+      if (v === 10) score -= P.FIXED_TRE_PENALTY;
+      if (score > bestScore){ bestScore = score; bestSlot = i; }
+    }
+    return bestSlot;
+  }
+
+  // following: weigh what the trick is worth against what taking it costs
+  const cartaval = valore(against.n);
+  for (let i = 0; i < 3; i++){
+    const c = hand[i];
+    if (!c) continue;
+    const led = state.perPrimo === ALTO;
+    const prende = piuAlta(c, against, led, brisc);
+    const miaval = valore(c.n);
+
+    let score = prende
+      ? cartaval + miaval * P.VARIANT_WINNING_CARD_PENALTY
+      : -cartaval * P.VARIANT_WINNING_CARD_PENALTY - miaval;
+
+    if (c.s === brisc){
+      score -= prende
+        ? miaval * P.VARIANT_WINNER_BRISCOLA_PENALTY + P.FIXED_WINNER_BRISCOLA_PENALTY
+        : miaval * P.VARIANT_LOSER_BRISCOLA_PENALTY + P.FIXED_LOSER_BRISCOLA_PENALTY;
+    } else if (miaval < 10){
+      score -= semiAndati(c.s) * P.VARIANT_PASSIVE_STROZZO_PENALTY;
+    }
+
+    // taking this trick would hand the opponent the face-up briscola
+    if (state.next === 38 && prende){
+      score -= valore(state.cards[39].n) * P.VARIANT_WINNER_BRISCOLA_PENALTY
+             + P.FIXED_WINNER_BRISCOLA_PENALTY;
+    }
+    if (miaval === 11) score -= P.ASSO_PENALTY;
+
+    if (score > bestScore){ bestScore = score; bestSlot = i; }
+  }
+  return bestSlot;
+}
+
+/* --- turns (TForm1.Gioca1Click / Gioca2Click / EffettuaPescaggi) ----------- */
+
+function aggiornaPunti(){
+  const worth = valore(state.played[BASSO].n) + valore(state.played[ALTO].n);
+  state.scores[state.perPrimo] += worth;
+}
+
+function humanPlay(slot){
+  if (state.over) return;
+  if (state.deveGiocare !== BASSO || state.played[BASSO]) return;
+  const card = state.hands[BASSO][slot];
+  if (!card) return;
+
+  state.hands[BASSO][slot] = null;
+  state.played[BASSO] = card;
+  state.seen.push(card);          // the opponent watches what you put down
+  state.deveGiocare = ALTO;
+  blip(520);
+
+  if (state.perPrimo === ALTO){
+    // you followed, so the trick is complete
+    state.perPrimo = piuAlta(card, state.played[ALTO], false, state.briscola) ? BASSO : ALTO;
+    state.deveGiocare = state.perPrimo;
+    aggiornaPunti();
+    render();
+    sweep();
+    later(resolve, state.speed);
+    return;
+  }
+  render();
+  later(computerPlay, state.speed);
+}
+
+function computerPlay(){
+  if (state.over || state.deveGiocare !== ALTO) return;
+
+  const slot = compGioca(state.played[BASSO]);
+  const card = state.hands[ALTO][slot];
+  if (!card) return;
+
+  state.hands[ALTO][slot] = null;
+  state.played[ALTO] = card;
+  state.deveGiocare = BASSO;
+  blip(420);
+
+  if (state.perPrimo === BASSO){
+    // the opponent followed, so the trick is complete
+    state.perPrimo = piuAlta(state.played[BASSO], card, true, state.briscola) ? BASSO : ALTO;
+    state.deveGiocare = state.perPrimo;
+    aggiornaPunti();
+    render();
+    sweep();
+    later(resolve, state.speed);
+    return;
+  }
+  render();
+}
+
+function resolve(){
+  state.played = [null, null];
+
+  const handsEmpty = state.hands[BASSO].every(c => c === null);
+  if (handsEmpty){ render(); finish(); return; }
+
+  // the winner of the trick draws first
+  pesca(state.perPrimo);
+  pesca(state.perPrimo === BASSO ? ALTO : BASSO);
+  render();
+
+  if (state.deveGiocare === ALTO) later(computerPlay, state.speed);
+}
+
+function finish(){
+  state.over = true;
+  const you = state.scores[BASSO];
+  const opp = state.scores[ALTO];
+
+  const title = you > opp ? "Hai vinto" : (you < opp ? "Hai perso" : "Pareggio");
+  let note;
+  if (you === opp) note = "Sessanta pari. Nessuno arriva a 61.";
+  else if (Math.abs(you - opp) <= 6) note = "Decisa all'ultima presa.";
+  else if (you > opp) note = `${state.opponent} ha lasciato andare troppe briscole.`;
+  else note = `${state.opponent} ha tenuto i carichi fino in fondo.`;
+
+  el.resultTitle.textContent = title;
+  el.resultYou.textContent = you;
+  el.resultOpp.textContent = opp;
+  el.resultOppName.textContent = state.opponent.toLowerCase();
+  el.resultNote.textContent = note;
+  el.scrim.hidden = false;
+  el.playAgain.focus();
+}
+
+/* --- sound ----------------------------------------------------------------- */
+
+let audio = null;
+
+// a short filtered noise burst — a card landing on cloth, not a beep
+function blip(cut){
+  if (!state.sound) return;
+  try{
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+    const dur = 0.09;
+    const buf = audio.createBuffer(1, Math.ceil(audio.sampleRate * dur), audio.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++){
+      const fade = 1 - i / data.length;
+      data[i] = (Math.random() * 2 - 1) * fade * fade * 0.5;
+    }
+    const src = audio.createBufferSource();
+    src.buffer = buf;
+    const filter = audio.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = cut;
+    filter.Q.value = 0.7;
+    const gain = audio.createGain();
+    gain.gain.value = 0.22;
+    src.connect(filter).connect(gain).connect(audio.destination);
+    src.start();
+  } catch (e){ /* no audio available; the game plays on regardless */ }
+}
+
+/* --- rendering ------------------------------------------------------------- */
+
+const el = {};
+for (const id of ["table","oppHand","youHand","slotOpp","slotYou","pile","briscolaCard",
+  "stockCard","stockCount","briscolaName","lastHand","oppName","oppScore","youScore",
+  "plateOpp","plateYou","opponents","weightsTable","deckSel","feltSel","speedSel",
+  "pointsSel","soundSel","newGame","scrim","playAgain","resultTitle","resultYou",
+  "resultOpp","resultOppName","resultNote","cheatNote"])
+  el[id] = document.getElementById(id);
+
+function faceOf(node, card){
+  if (!card){
+    node.dataset.empty = "true";
+    node.style.removeProperty("--col");
+    node.style.removeProperty("--row");
+    return;
+  }
+  node.dataset.empty = "false";
+  node.style.setProperty("--col", card.n - 1);
+  node.style.setProperty("--row", card.s);
+}
+
+function backOf(node){
+  node.dataset.empty = "false";
+  node.style.setProperty("--col", 10);
+  node.style.setProperty("--row", 0);
+}
+
+// three stable slots per hand, so CSS transitions have something to hold on to
+function buildHands(){
+  el.oppHand.replaceChildren(...[0,1,2].map(() => {
+    const d = document.createElement("div");
+    d.className = "card";
+    return d;
+  }));
+  el.youHand.replaceChildren(...[0,1,2].map(i => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "card";
+    b.dataset.slot = i;
+    b.addEventListener("click", () => humanPlay(i));
+    return b;
+  }));
+}
+
+function render(){
+  const yourTurn = state.deveGiocare === BASSO && !state.played[BASSO] && !state.over;
+
+  [...el.youHand.children].forEach((node, i) => {
+    const card = state.hands[BASSO][i];
+    faceOf(node, card);
+    node.disabled = !card || !yourTurn;
+    node.setAttribute("aria-label", card
+      ? `Gioca il ${card.n} di ${SUITS[card.s]}`
+      : "Posto vuoto");
+  });
+
+  [...el.oppHand.children].forEach((node, i) => {
+    const card = state.hands[ALTO][i];
+    if (!card){ faceOf(node, null); return; }
+    if (state.cheat) faceOf(node, card); else backOf(node);
+  });
+
+  faceOf(el.slotOpp, state.played[ALTO]);
+  faceOf(el.slotYou, state.played[BASSO]);
+
+  const remaining = 40 - state.next;
+  el.pile.dataset.stock = remaining >= 2 ? "1" : "0";
+  el.pile.dataset.briscola = remaining >= 1 ? "1" : "0";
+  faceOf(el.briscolaCard, state.cards[39]);
+  el.stockCount.textContent = remaining;
+  el.briscolaName.textContent = `briscola: ${SUITS[state.briscola]}`;
+  el.lastHand.hidden = remaining !== 2;
+
+  el.oppScore.textContent = state.scores[ALTO];
+  el.youScore.textContent = state.scores[BASSO];
+  el.oppScore.hidden = !state.showPoints;
+  el.youScore.hidden = !state.showPoints;
+
+  el.plateYou.classList.toggle("plate--turn", yourTurn);
+  el.plateOpp.classList.toggle("plate--turn", state.deveGiocare === ALTO && !state.over);
+  el.oppName.textContent = state.opponent;
+  el.cheatNote.hidden = !state.cheat;
+}
+
+// the two cards slide off toward whoever took them
+function sweep(){
+  const cls = state.perPrimo === BASSO ? "card--won-down" : "card--won-up";
+  for (const node of [el.slotOpp, el.slotYou]){
+    node.classList.remove("card--won-down", "card--won-up");
+    void node.offsetWidth; // restart the animation
+    node.classList.add(cls);
+  }
+  setTimeout(() => {
+    el.slotOpp.classList.remove("card--won-down", "card--won-up");
+    el.slotYou.classList.remove("card--won-down", "card--won-up");
+  }, Math.max(state.speed - 20, 60));
+}
+
+/* --- settings and chrome --------------------------------------------------- */
+
+function applyDeck(name){
+  state.deck = name;
+  const root = document.documentElement;
+  root.style.setProperty("--sheet", `url("decks/${name.toLowerCase()}.png")`);
+  root.style.setProperty("--ratio", DECK_RATIO[name]);
+  el.deckSel.value = name;
+}
+
+function applyFelt(hex){
+  state.felt = hex;
+  const root = document.documentElement;
+  root.style.setProperty("--felt", hex);
+  root.style.setProperty("--felt-lit", shade(hex, 0.16));
+  root.style.setProperty("--edge", shade(hex, -0.42));
+  el.feltSel.value = hex;
+}
+
+function shade(hex, amount){
+  const n = parseInt(hex.slice(1), 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v =>
+    Math.max(0, Math.min(255, Math.round(amount >= 0 ? v + (255 - v) * amount : v * (1 + amount))))
+  );
+  return "#" + ch.map(v => v.toString(16).padStart(2, "0")).join("");
+}
+
+function buildOpponents(){
+  el.opponents.replaceChildren(...Object.keys(PROFILES).map(name => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "opp";
+    b.dataset.name = name;
+
+    const traits = TRAITS.map(([label, key, max]) => {
+      const pct = Math.round(Math.min(1, PROFILES[name][key] / max) * 100);
+      return `<div class="trait"><span>${label}</span><i style="--v:${pct}%"></i></div>`;
+    }).join("");
+
+    b.innerHTML =
+      `<span class="opp__name">${name}</span>` +
+      `<span class="opp__line">${DOSSIER[name]}</span>` +
+      `<div class="traits">${traits}</div>`;
+
+    b.addEventListener("click", () => selectOpponent(name));
+    return b;
+  }));
+}
+
+function selectOpponent(name){
+  state.opponent = name;
+  for (const b of el.opponents.children)
+    b.setAttribute("aria-pressed", String(b.dataset.name === name));
+
+  const P = PROFILES[name];
+  el.weightsTable.tBodies[0].replaceChildren(...WEIGHT_KEYS.map(k => {
+    const tr = document.createElement("tr");
+    const label = document.createElement("td");
+    label.textContent = k.toLowerCase().replace(/_/g, " ");
+    const value = document.createElement("td");
+    value.textContent = P[k].toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+    tr.append(label, value);
+    return tr;
+  }));
+
+  render();
+  save();
+}
+
+/* --- persistence ----------------------------------------------------------- */
+
+const KEY = "discola.settings";
+
+function save(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify({
+      opponent: state.opponent, deck: state.deck, felt: state.felt,
+      speed: state.speed, showPoints: state.showPoints, sound: state.sound
+    }));
+  } catch (e){ /* private window or blocked storage: settings just won't stick */ }
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e){ return {}; }
+}
+
+/* --- input ----------------------------------------------------------------- */
+
+// the original's easter egg: type it to turn the opponent's hand face up
+const CHEAT = "6winouj64ie";
+let buffer = "";
+
+document.addEventListener("keydown", ev => {
+  if (ev.target.matches("input, select, textarea")) return;
+
+  if (ev.key >= "1" && ev.key <= "3" && !state.over){
+    humanPlay(Number(ev.key) - 1);
+    return;
+  }
+
+  buffer = (buffer + ev.key).slice(-CHEAT.length);
+  if (buffer === CHEAT){
+    state.cheat = !state.cheat;
+    render();
+  }
+});
+
+el.newGame.addEventListener("click", () => { el.scrim.hidden = true; newHand(); });
+el.playAgain.addEventListener("click", () => { el.scrim.hidden = true; newHand(); });
+
+el.deckSel.addEventListener("change", () => { applyDeck(el.deckSel.value); save(); });
+el.feltSel.addEventListener("input", () => { applyFelt(el.feltSel.value); save(); });
+el.speedSel.addEventListener("input", () => {
+  // the slider reads left-to-right as faster, the original stored a delay
+  state.speed = 2200 - Number(el.speedSel.value);
+  save();
+});
+el.pointsSel.addEventListener("change", () => {
+  state.showPoints = el.pointsSel.checked; render(); save();
+});
+el.soundSel.addEventListener("change", () => {
+  state.sound = el.soundSel.checked; save();
+});
+
+/* --- boot ------------------------------------------------------------------ */
+
+function start(carried){
+  const saved = Object.assign({}, load(), carried && carried.settings);
+
+  applyDeck(DECK_RATIO[saved.deck] ? saved.deck : "Trevisane");
+  applyFelt(/^#[0-9a-f]{6}$/i.test(saved.felt || "") ? saved.felt : "#1e5140");
+
+  state.speed = Number.isFinite(saved.speed) ? saved.speed : 900;
+  el.speedSel.value = 2200 - state.speed;
+
+  state.showPoints = saved.showPoints !== false;
+  el.pointsSel.checked = state.showPoints;
+
+  state.sound = saved.sound !== false;
+  el.soundSel.checked = state.sound;
+
+  buildHands();
+  buildOpponents();
+  selectOpponent(PROFILES[saved.opponent] ? saved.opponent : "Valerio");
+  newHand();
+}
+
+// carry a hand in progress across a republish rather than dealing over it
+window.claude?.hot?.snapshot(() => ({
+  settings: {
+    opponent: state.opponent, deck: state.deck, felt: state.felt,
+    speed: state.speed, showPoints: state.showPoints, sound: state.sound
+  }
+}));
+
+if (window.claude?.hot?.ready) window.claude.hot.ready(start);
+else start(window.claude?.hot?.data ?? {});
+</script>
