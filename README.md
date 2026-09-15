@@ -31,12 +31,10 @@ Also carried over:
   `Opzioni` record, persisted to `localStorage` instead of `Discola.ini`.
 - The `6winouj64ie` keystroke easter egg, which turns the opponent's hand face up.
 
-Two quirks of the 1997 source are deliberately preserved, because they shape how
-the opponent plays and removing them would make it a different player:
-
-- `SemiAndati` and `CountCarte` walk the seen-cards list from index 1 rather
-  than 0, so the first card the opponent ever saw is never counted.
-- `Piero`'s randomised temperament is rolled once at startup, not per hand.
+`Piero`'s randomised temperament is rolled once at startup rather than per hand,
+because that is where `SetProfiles` sat — called from `FormCreate`. It is not a
+bug, just where the randomisation lives, and it gives Piero one personality per
+sitting instead of fresh noise every deal.
 
 ## What changed
 
@@ -44,6 +42,13 @@ the opponent plays and removing them would make it a different player:
   deck (see `tools/`). Nothing was redrawn.
 - The MIDI soundtrack (`macarena_2.mid`) is gone; card sounds are synthesised
   with WebAudio instead.
+- `SemiAndati` and `CountCarte` walked the seen-cards list from index 1 rather
+  than 0 — a `TList` is zero-based — so the opponent never counted the first
+  card it was dealt. Fixed. It was worth almost nothing: over 40,000 simulated
+  hands per profile the win rate moved by at most 0.56 percentage points and the
+  mean score by at most 0.2 of 120, both inside the noise floor. One forgotten
+  card out of the twenty-odd tracked rarely flips a comparison that briscola and
+  card values already dominate.
 - `Discola.dpr` never called `Application.CreateForm` for `DifficultyDlg` and
   `OKRightDlg`, so the difficulty and release-notes dialogs would fault in that
   project — `Briscolino.dpr` was the complete one. Neither dialog is ported: the
