@@ -63,6 +63,21 @@ The original release installer cannot be run on a modern computer: its
 `SETUP.EXE` is a 16-bit NE executable, and 64-bit Windows has no 16-bit
 subsystem. That is what this port is for.
 
+## Checking the UI
+
+`tools/check_ui.mjs` drives every screen and dialog across nineteen viewports
+and all five decks, asserting the things that break silently: overlapping
+cards, a hand below the fold, rows drifting apart, text below its size floor,
+tap targets under 32px, more than one screen visible at once, script errors.
+
+```sh
+npm i playwright-core && npx playwright install chromium
+node tools/check_ui.mjs
+```
+
+Run it after any UI change. Every threshold in it is calibrated against a
+defect that actually shipped; the file says which.
+
 ## Rebuilding the sprite sheets
 
 `tools/pack_cards.py` reads the original 8-bit Windows BMPs and writes one RGBA
