@@ -842,6 +842,18 @@ button.card:disabled{ cursor: default; }
   </div>
 </div>
 
+<div class="scrim" id="confirmScrim" hidden>
+  <div class="result" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">Abbandonare la partita?</h2>
+    <p class="result__note">La partita in corso va persa e non viene registrata
+    nello storico.</p>
+    <div class="result__actions">
+      <button class="btn btn--primary" id="confirmNo" type="button">Continua a giocare</button>
+      <button class="btn btn--quiet" id="confirmYes" type="button">Abbandona</button>
+    </div>
+  </div>
+</div>
+
 <div class="scrim" id="scrim" hidden>
   <div class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
     <h2 id="resultTitle">Hai vinto</h2>
@@ -1290,6 +1302,7 @@ for (const id of ["table","oppHand","youHand","slotOpp","slotYou","pile","brisco
   "pointsSel","soundSel","scrim","playAgain","backToStart","resultTitle","resultYou",
   "resultOpp","resultOppName","resultNote","cheatNote","viewTable","viewStart",
   "viewSettings","viewHistory","viewAbout","btnNew","btnHistory","btnSettings",
+  "confirmScrim","confirmYes","confirmNo",
   "btnAbout","startPlay","changeOpponent","historyBody","lastResult"])
   el[id] = document.getElementById(id);
 
@@ -1401,6 +1414,26 @@ function show(name){
 
 // Back from a sheet: to the table if a hand is in play, otherwise to the start.
 function back(){ show(state.dealt ? "table" : "start"); }
+
+// Abandoning a hand has to cancel what is already queued. Bumping the epoch
+// makes every pending `later` callback a no-op: without it the opponent plays
+// on behind the start screen, and a hand that finishes there pops its result
+// dialog over it and records a match nobody was watching.
+function abandon(){
+  epoch++;
+  clearTimeout(timer);
+  el.scrim.hidden = true;
+  el.confirmScrim.hidden = true;
+  show("start");
+}
+
+// Only worth asking while a hand is in play; once it is over there is nothing
+// left to lose.
+function askRestart(){
+  if (!state.dealt || state.over){ abandon(); return; }
+  el.confirmScrim.hidden = false;
+  el.confirmNo.focus();   // the safe choice is the default
+}
 
 /* --- match history (kept in this browser, on this device) ------------------ */
 
@@ -1642,6 +1675,7 @@ let buffer = "";
 document.addEventListener("keydown", ev => {
   if (ev.target.matches("input, select, textarea")) return;
 
+  if (ev.key === "Escape" && !el.confirmScrim.hidden){ el.confirmScrim.hidden = true; return; }
   if (ev.key === "Escape" && screen !== "table" && screen !== "start"){ back(); return; }
 
   if (screen === "table" && ev.key >= "1" && ev.key <= "3" && !state.over){
@@ -1659,7 +1693,9 @@ document.addEventListener("keydown", ev => {
 for (const b of document.querySelectorAll("[data-back]"))
   b.addEventListener("click", back);
 
-el.btnNew.addEventListener("click", () => show("start"));
+el.btnNew.addEventListener("click", askRestart);
+el.confirmNo.addEventListener("click", () => { el.confirmScrim.hidden = true; });
+el.confirmYes.addEventListener("click", abandon);
 el.btnHistory.addEventListener("click", () => show("history"));
 el.btnSettings.addEventListener("click", () => show("settings"));
 el.btnAbout.addEventListener("click", () => show("about"));
@@ -1668,7 +1704,7 @@ el.startPlay.addEventListener("click", () => { show("table"); newHand(); });
 el.changeOpponent.addEventListener("click", () => show("start"));
 
 el.playAgain.addEventListener("click", () => { el.scrim.hidden = true; newHand(); });
-el.backToStart.addEventListener("click", () => { el.scrim.hidden = true; show("start"); });
+el.backToStart.addEventListener("click", abandon);
 
 el.deckSel.addEventListener("change", () => { applyDeck(el.deckSel.value); save(); });
 el.feltSel.addEventListener("input", () => { applyFelt(el.feltSel.value); save(); });
