@@ -22,9 +22,14 @@
   --ivory-dim:   #b9b09c;
   --rosso:       #a33b2a;
 
-  /* Bounded by width AND height: three rows of cards have to fit the table,
-     so the card cannot simply grow with the viewport's width. */
-  --cw: clamp(52px, min(8.2vw, calc(26vh / var(--ratio))), 104px);
+  /* Vertical space the table spends on things that are not cards: its own
+     padding, the two row gaps, and the trick's inner padding. Whatever is
+     left is split between the three rows of cards. Budgeting this explicitly
+     matters: the middle row is minmax(0,1fr) and will shrink below its own
+     content rather than push the table taller, so a card too tall for its
+     row spills over the hand below it instead of being clipped. */
+  --chrome: 96px;
+  --cw: clamp(40px, min(8.2vw, calc((100dvh - var(--chrome)) / 3 / var(--ratio))), 104px);
   --ratio: 2.0833;
   --ch: calc(var(--cw) * var(--ratio));
   --sheet: url("decks/trevisane.png");
@@ -507,6 +512,15 @@ button.card:disabled{ cursor: default; }
   z-index: 3;
 }
 .cheat-note[hidden]{ display: none; }
+
+/* A phone in landscape has roughly 380px of height for three rows of cards.
+   Claw back the chrome so the cards keep a usable size instead of shrinking
+   to fit padding that nobody needs at this height. */
+@media (orientation: landscape) and (max-height: 600px){
+  :root{ --chrome: 58px; --step: .4rem; }
+  .table{ padding-block: .45rem; }
+  .trick{ padding: .3rem; }
+}
 
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
