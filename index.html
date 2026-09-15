@@ -72,8 +72,16 @@ button, select, input{ font: inherit; color: inherit; }
   height: 100dvh;
 }
 @media (max-width: 900px), (orientation: portrait){
-  /* Stacked and free-flowing, so the cards are sized by width alone. */
-  :root{ --cw: clamp(60px, 21vw, 124px); }
+  /* Stacked, so the table is four card rows deep: the opponent's hand,
+     the trick, the tallone and your hand. All four have to be on screen
+     at once — having to scroll to see your own cards is not playing —
+     so the card is bounded by a quarter of the height, not by width
+     alone. A portrait tablet is where width alone gets it wrong: plenty
+     of it, but not enough height to spend the cap on. */
+  :root{
+    --chrome: 140px;
+    --cw: clamp(48px, min(21vw, calc((100dvh - var(--chrome)) / 4 / var(--ratio))), 124px);
+  }
   .app{ grid-template-columns: minmax(0,1fr); height: auto; }
 }
 
