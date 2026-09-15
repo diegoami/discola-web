@@ -22,19 +22,30 @@
   --ivory-dim:   #b9b09c;
   --rosso:       #a33b2a;
 
-  /* Vertical space the table spends on things that are not cards: its own
-     padding, the two row gaps, and the trick's inner padding. Whatever is
-     left is split between the three rows of cards. Budgeting this explicitly
-     matters: the middle row is minmax(0,1fr) and will shrink below its own
-     content rather than push the table taller, so a card too tall for its
-     row spills over the hand below it instead of being clipped. */
-  --chrome: 96px;
-  --cw: clamp(40px, min(8.2vw, calc((100dvh - var(--chrome)) / 3 / var(--ratio))), 104px);
+  /* Spacing tokens. Everything that eats vertical space on the table is
+     declared here once and used by name below, so --chrome can be DERIVED
+     rather than hand-estimated.
+
+     Why that matters: the middle row is minmax(0,1fr), so it shrinks below
+     its own content rather than pushing the table taller — a card too tall
+     for its row spills over the hand beneath it instead of being clipped.
+     The card height is therefore (viewport - chrome) / --rows, and if chrome
+     is a guess that drifts out of step with the real padding, cards overlap
+     silently. Earlier versions of this file hard-coded 96px/140px/58px here
+     and were wrong three times. Change a padding now and the budget follows. */
+  --pad-block: clamp(.75rem, 2vw, 1.5rem);   /* .table, top and bottom      */
+  --step: clamp(.5rem, 1.4vw, 1rem);         /* .table row gaps             */
+  --trick-pad: var(--step);                  /* .trick, inside its border   */
+  --extra-gap: 0px;                          /* .middle's gap when it stacks */
+  --slack: 8px;                              /* never land exactly on zero  */
+  --rows: 3;                                 /* card rows down the table    */
+  --chrome: calc(2*var(--pad-block) + 2*var(--step) + 2*var(--trick-pad)
+                 + var(--extra-gap) + var(--slack));
+  --cw: clamp(32px, min(8.2vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 104px);
   --ratio: 2.0833;
   --ch: calc(var(--cw) * var(--ratio));
   --sheet: url("decks/trevisane.png");
 
-  --step: clamp(.5rem, 1.4vw, 1rem);
   --radius: 5px;
 
   --font-display: "Bodoni Moda", "Didot", "Times New Roman", serif;
@@ -79,8 +90,9 @@ button, select, input{ font: inherit; color: inherit; }
      alone. A portrait tablet is where width alone gets it wrong: plenty
      of it, but not enough height to spend the cap on. */
   :root{
-    --chrome: 140px;
-    --cw: clamp(48px, min(21vw, calc((100dvh - var(--chrome)) / 4 / var(--ratio))), 124px);
+    --rows: 4;
+    --extra-gap: 1.25rem;
+    --cw: clamp(40px, min(21vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 124px);
   }
   .app{ grid-template-columns: minmax(0,1fr); height: auto; }
 }
@@ -90,13 +102,15 @@ button, select, input{ font: inherit; color: inherit; }
 .table{
   position: relative;
   display: grid;
-  grid-template-rows: auto minmax(0,1fr) auto;
+  grid-template-rows: auto minmax(min-content,1fr) auto;
   gap: var(--step);
-  padding-block: clamp(.75rem, 2vw, 1.5rem);
+  padding-block: var(--pad-block);
   padding-inline: clamp(16px, 3vw, 2rem);
   background:
     radial-gradient(ellipse 80% 70% at 50% 45%, var(--felt-lit) 0%, var(--felt) 55%, var(--edge) 100%);
-  overflow: hidden;
+  /* Vertical scroll is the safe fallback if the budget is ever exceeded:
+     reaching a card by scrolling beats a card hidden under another one. */
+  overflow: hidden auto;
 }
 
 /* faint baize weave — reads as cloth, not as a texture overlay */
@@ -195,7 +209,7 @@ button.card:disabled{ cursor: default; }
   grid-column: 2;
   display: flex;
   gap: clamp(.4rem, 1.4vw, 1rem);
-  padding: clamp(.5rem, 1.4vw, 1rem);
+  padding: var(--trick-pad);
   border-radius: 10px;
   box-shadow: inset 0 0 0 1px rgba(242,235,220,.09), inset 0 0 34px rgba(0,0,0,.22);
 }
@@ -229,7 +243,7 @@ button.card:disabled{ cursor: default; }
 .tallone-meta{ display: grid; gap: .35rem; }
 
 @media (max-width: 900px), (orientation: portrait){
-  .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: 1.25rem; }
+  .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: var(--extra-gap); }
   .trick, .tallone{ grid-column: 1; justify-self: center; }
 }
 
@@ -525,9 +539,11 @@ button.card:disabled{ cursor: default; }
    Claw back the chrome so the cards keep a usable size instead of shrinking
    to fit padding that nobody needs at this height. */
 @media (orientation: landscape) and (max-height: 600px){
-  :root{ --chrome: 58px; --step: .4rem; }
-  .table{ padding-block: .45rem; }
-  .trick{ padding: .3rem; }
+  /* Only tokens: --chrome recomputes itself, and .table/.trick pick these up
+     wherever they sit in the sheet. The previous version overrode .table and
+     .trick directly from here and lost, because both are declared again at the
+     same specificity further down. */
+  :root{ --pad-block: .45rem; --step: .4rem; }
 }
 
 @media (prefers-reduced-motion: reduce){

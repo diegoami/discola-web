@@ -1,0 +1,3 @@
+# Local tooling for tools/check_layout.mjs (npm i playwright-core)
+# No trailing slash: this is often a symlink, which "node_modules/" would miss.
+node_modules
