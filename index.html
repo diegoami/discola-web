@@ -398,11 +398,14 @@ button.card:disabled{ cursor: default; }
   padding-inline: 16px;
 }
 
+.sheet-body .eyebrow{ font-size: .86rem; }
+.sheet-body .empty{ font-size: 1rem; }
+
 .sheet-inner{
   width: min(620px, 100%);
   margin-inline: auto;
   display: grid;
-  gap: 1.5rem;
+  gap: 1.15rem;
   align-content: start;
 }
 
@@ -420,25 +423,25 @@ button.card:disabled{ cursor: default; }
   margin: 0;
   line-height: .95;
 }
-.hero p{ margin: 0; color: var(--ivory-dim); font-size: .92rem; }
+.hero p{ margin: 0; color: var(--ivory-dim); font-size: 1.02rem; line-height: 1.5; }
 
 .last-result{
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .1em;
-  font-size: .78rem;
+  font-size: .88rem;
   color: var(--brass);
 }
 
 /* opponent dossiers — the four profiles are real, tuned weights from Global.pas */
-.opponents{ display: grid; gap: .45rem; }
+.opponents{ display: grid; gap: .4rem; }
 @media (min-width: 560px){ .opponents{ grid-template-columns: 1fr 1fr; } }
 
 .opp{
   display: grid;
   gap: .3rem;
   align-content: start;
-  padding: .6rem .75rem;
+  padding: .5rem .7rem;
   border: 1px solid var(--rail-line);
   border-radius: 4px;
   background: rgba(0,0,0,.16);
@@ -449,8 +452,8 @@ button.card:disabled{ cursor: default; }
 .opp:hover{ border-color: var(--brass-dim); }
 .opp[aria-pressed="true"]{ border-color: var(--brass); background: rgba(200,162,74,.1); }
 
-.opp__name{ font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; }
-.opp__line{ font-size: .78rem; color: var(--ivory-dim); line-height: 1.35; }
+.opp__name{ font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; }
+.opp__line{ font-size: .98rem; color: var(--ivory-dim); line-height: 1.45; }
 
 
 /* deck picker — each option shows a real card from that deck */
@@ -459,8 +462,8 @@ button.card:disabled{ cursor: default; }
 .deck-opt{
   display: grid;
   justify-items: center;
-  gap: .4rem;
-  padding: .5rem .55rem;
+  gap: .35rem;
+  padding: .45rem .5rem;
   border: 1px solid var(--rail-line);
   border-radius: 4px;
   background: rgba(0,0,0,.16);
@@ -475,8 +478,8 @@ button.card:disabled{ cursor: default; }
 .deck-opt span:last-child{
   font-family: var(--font-label);
   text-transform: uppercase;
-  letter-spacing: .08em;
-  font-size: .72rem;
+  letter-spacing: .04em;
+  font-size: .82rem;
   color: var(--ivory-dim);
 }
 .deck-opt[aria-pressed="true"] span:last-child{ color: var(--brass); }
@@ -493,17 +496,17 @@ button.card:disabled{ cursor: default; }
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .1em;
-  font-size: .86rem;
+  font-size: .95rem;
   transition: background .15s ease, color .15s ease;
 }
 .btn:hover{ background: var(--brass); color: var(--rail); }
 .btn--primary{ background: var(--brass); color: var(--rail); border-color: var(--brass); font-weight: 600; }
 .btn--primary:hover{ background: var(--ivory); border-color: var(--ivory); }
-.btn--big{ padding: .8rem 1rem; font-size: 1rem; }
+.btn--big{ padding: .9rem 1rem; font-size: 1.12rem; }
 .btn--quiet{ border-color: var(--rail-line); color: var(--ivory-dim); }
 .btn--quiet:hover{ background: var(--rosso); border-color: var(--rosso); color: var(--ivory); }
 
-.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: .92rem; }
+.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: 1.02rem; }
 .field select, .field input[type="color"]{
   background: transparent;
   border: 1px solid var(--rail-line);
@@ -518,17 +521,17 @@ button.card:disabled{ cursor: default; }
   align-items: center;
   justify-content: space-between;
   gap: .6rem;
-  font-size: .92rem;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 .toggle input{ accent-color: var(--brass); width: 17px; height: 17px; }
 
-.prose{ font-size: .9rem; color: var(--ivory-dim); line-height: 1.6; }
+.prose{ font-size: 1rem; color: var(--ivory-dim); line-height: 1.65; }
 .prose strong{ color: var(--ivory); }
 .prose a{ color: var(--brass); }
 .prose p{ margin: 0 0 .85rem; }
 
-.weights{ width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .82rem; }
+.weights{ width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; }
 .weights td{ padding: .12rem 0; }
 .weights td:first-child{ color: var(--ivory-dim); padding-right: .6rem; }
 .weights td:last-child{ text-align: right; color: var(--brass); }
@@ -561,7 +564,7 @@ button.card:disabled{ cursor: default; }
   align-items: baseline;
   padding: .45rem .6rem;
   background: rgba(0,0,0,.16);
-  font-size: .9rem;
+  font-size: .98rem;
 }
 .log li:nth-child(odd){ background: rgba(0,0,0,.26); }
 .res{ font-family: var(--font-label); font-weight: 600; font-size: .82rem; }
@@ -569,7 +572,7 @@ button.card:disabled{ cursor: default; }
 .res--l{ color: var(--rosso); }
 .res--d{ color: var(--ivory-dim); }
 .score{ font-variant-numeric: tabular-nums; color: var(--brass); }
-.when{ color: var(--ivory-dim); font-size: .8rem; }
+.when{ color: var(--ivory-dim); font-size: .88rem; }
 
 .empty{
   padding: 2.5rem 1rem;
@@ -619,7 +622,7 @@ button.card:disabled{ cursor: default; }
   color: var(--brass);
 }
 .result__sep{ color: var(--ivory-dim); }
-.result__note{ font-size: .84rem; color: var(--ivory-dim); margin: 0; }
+.result__note{ font-size: .95rem; color: var(--ivory-dim); line-height: 1.5; margin: 0; }
 .result__actions{ display: grid; gap: .5rem; }
 
 /* ---- portrait ------------------------------------------------------------- */
