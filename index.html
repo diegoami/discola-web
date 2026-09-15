@@ -22,7 +22,9 @@
   --ivory-dim:   #b9b09c;
   --rosso:       #a33b2a;
 
-  --cw: clamp(46px, 8.2vw, 74px);
+  /* Bounded by width AND height: three rows of cards have to fit the table,
+     so the card cannot simply grow with the viewport's width. */
+  --cw: clamp(52px, min(8.2vw, calc(26vh / var(--ratio))), 104px);
   --ratio: 2.0833;
   --ch: calc(var(--cw) * var(--ratio));
   --sheet: url("decks/trevisane.png");
@@ -64,7 +66,9 @@ button, select, input{ font: inherit; color: inherit; }
   height: 100vh;
   height: 100dvh;
 }
-@media (max-width: 900px){
+@media (max-width: 900px), (orientation: portrait){
+  /* Stacked and free-flowing, so the cards are sized by width alone. */
+  :root{ --cw: clamp(60px, 21vw, 124px); }
   .app{ grid-template-columns: minmax(0,1fr); height: auto; }
 }
 
@@ -211,7 +215,7 @@ button.card:disabled{ cursor: default; }
 
 .tallone-meta{ display: grid; gap: .35rem; }
 
-@media (max-width: 900px){
+@media (max-width: 900px), (orientation: portrait){
   .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: 1.25rem; }
   .trick, .tallone{ grid-column: 1; justify-self: center; }
 }
@@ -306,7 +310,7 @@ button.card:disabled{ cursor: default; }
   gap: 1.15rem;
   overflow-y: auto;
 }
-@media (max-width: 900px){
+@media (max-width: 900px), (orientation: portrait){
   .rail{ border-left: 0; border-top: 1px solid var(--rail-line); }
 }
 
