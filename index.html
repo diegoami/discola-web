@@ -44,7 +44,7 @@
   --rows: 3;                                 /* card rows down the table     */
   --chrome: calc(var(--topbar) + 2*var(--pad-block) + 2*var(--step)
                  + 2*var(--trick-pad) + var(--extra-gap) + var(--slack));
-  --cw: clamp(32px, min(9vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 112px);
+  --cw: clamp(32px, min(9vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 156px);
   --ratio: 2.0833;
   --ch: calc(var(--cw) * var(--ratio));
   --sheet: url("decks/trevisane.png");
@@ -139,7 +139,13 @@ button, select, input{ font: inherit; color: inherit; }
 .table{
   position: relative;
   display: grid;
-  grid-template-rows: auto minmax(min-content,1fr) auto;
+  /* Rows hug their content and the whole group is centred, so leftover height
+     sits above and below the table rather than being shared out between the
+     rows. A 1fr middle row gave every spare pixel to the gaps, which is fine
+     while the cards are height-bound and drifts badly apart once they are not.
+     `safe` keeps the top reachable if the content ever does overflow. */
+  grid-template-rows: auto auto auto;
+  align-content: safe center;
   gap: var(--step);
   padding-block: var(--pad-block);
   padding-inline: clamp(16px, 3vw, 2rem);
@@ -379,6 +385,10 @@ button.card:disabled{ cursor: default; }
   font-weight: 600;
   margin: 0;
 }
+
+/* The start screen is a short block on a tall phone; centre it rather than
+   pinning it to the top with everything empty below. */
+#viewStart .sheet-body{ display: grid; align-content: safe center; justify-items: center; }
 
 .sheet-body{
   overflow-y: auto;
@@ -624,7 +634,7 @@ button.card:disabled{ cursor: default; }
   :root{
     --rows: 4;
     --extra-gap: 1rem;
-    --cw: clamp(40px, min(22vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 124px);
+    --cw: clamp(40px, min(22vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 168px);
   }
   .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: var(--extra-gap); }
   .trick, .tallone{ grid-column: 1; justify-self: center; }
