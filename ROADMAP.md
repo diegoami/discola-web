@@ -7,7 +7,7 @@ stack is the way to get there.
 
 ## Status
 
-Nothing here is built. Discola today is one `index.html`, no build step, no
+Nothing here is built. Discola today is one `public/index.html`, no build step, no
 dependencies, deployed to Netlify on push. This is a plan and a set of
 recommendations, not work in progress.
 
@@ -68,8 +68,8 @@ The UI is the expensive half, and rewriting it buys nothing a user can see.
 Keep the single file. Add a web app manifest and a service worker, then point
 Capacitor and Tauri at the same directory Netlify serves.
 
-- Desktop: Tauri 2 shell, `build.frontendDist` = the repo root.
-- Android: Capacitor 8, `webDir` = the repo root.
+- Desktop: Tauri 2 shell, `build.frontendDist` = `public/`.
+- Android: Capacitor 8, `webDir` = `public/`.
 - Neither needs a `beforeBuildCommand`. Geoclick2027 has one because it
   builds a SvelteKit app first; Discola has nothing to build.
 - One codebase, three targets, no framework.
@@ -125,8 +125,7 @@ Each is independently shippable. Stop after any of them.
 
 **Goal.** Kill the plan early if the assumption is wrong.
 
-Point a throwaway Tauri project and a throwaway Capacitor project at the current
-repo root. Load the game. Check: do the sprite sheets load over the `file://`
+Point a throwaway Tauri project and a throwaway Capacitor project at `public/`. Load the game. Check: do the sprite sheets load over the `file://`
 or custom scheme the wrapper uses; does `localStorage` persist across restarts;
 does the safe-area inset still work; does WebAudio play without a user gesture
 prompt.
@@ -146,7 +145,7 @@ cheapest of the three and benefits the web build too.
 
 - `manifest.webmanifest`: name, icons, `display: standalone`, portrait-primary,
   theme colour `#0d2620`.
-- A service worker precaching `index.html` and the five sheets (~2.2 MB).
+- A service worker precaching `public/index.html` and the five sheets (~2.2 MB).
   Cache-first for `decks/*`, network-first for the page, matching the existing
   `netlify.toml` headers.
 - Icons from the Trevisane back or the existing favicon.
@@ -162,14 +161,14 @@ update. Version the cache and claim clients on activate.
 
 Move the rules and opponent — `valore`, `veroValore`, `piuAlta`, `buildDeck`,
 `mescola`, `compGioca`, the profiles — into `packages/engine`, an ES module with
-no dependencies and no DOM. `index.html` imports it; the wrappers get it for
+no dependencies and no DOM. `public/index.html` imports it; the wrappers get it for
 free; a future SvelteKit app gets it for free.
 
 Add Vitest unit tests: card ranking, trick resolution, the 120-point total, the
 draw order, and a golden test that a fixed seed produces a fixed sequence of
 plays per profile. That last one is what makes any later refactor safe.
 
-**Done when** `index.html` has no game logic in it and the engine has tests.
+**Done when** `public/index.html` has no game logic in it and the engine has tests.
 
 **Note.** This is the first Geoclick-shaped thing in the repo — a `packages/*`
 workspace — and it is worth having even if Route B is never taken.
@@ -179,7 +178,7 @@ workspace — and it is worth having even if Route B is never taken.
 **Goal.** A signed desktop build.
 
 `desktop/src-tauri` mirroring Geoclick2027's layout, `build.frontendDist`
-pointing at the repo root, window defaulting to a landscape size that suits the 3-row table
+pointing at `public/`, window defaulting to a landscape size that suits the 3-row table
 (1280 × 800 is comfortable; the layout check already covers it). No Tauri
 plugins needed — there is no database, `localStorage` is enough.
 
@@ -194,7 +193,7 @@ Apple Developer account; Linux AppImage costs nothing.
 
 **Goal.** An APK, and optionally a Play listing.
 
-`mobile/` with `capacitor.config.ts`, `webDir` at the repo root, Android
+`mobile/` with `capacitor.config.ts`, `webDir` at `public/`, Android
 platform added. No plugins: no SQLite, no filesystem — `localStorage` covers
 both storage keys.
 

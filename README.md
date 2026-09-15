@@ -6,7 +6,7 @@ without an installer.
 
 **Play it:** <https://discola.netlify.app>
 
-Or open `index.html` locally, or serve the folder with any static web
+Or open `public/index.html` locally, or serve `public/` with any static web
 server — it is plain static files with no build step.
 
 ## What is faithful to the original
@@ -89,5 +89,5 @@ the deck's maximum and every card is centred in it over transparent padding.
 Pure standard library, no dependencies:
 
 ```sh
-python3 tools/pack_cards.py /path/to/briscola-JS decks/
+python3 tools/pack_cards.py /path/to/briscola-JS public/decks/
 ```

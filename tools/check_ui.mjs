@@ -2,7 +2,7 @@
 /**
  * UI check for Discola. Run it after any UI change.
  *
- *   node tools/check_ui.mjs [path-to-index.html]
+ *   node tools/check_ui.mjs [path-to-index.html]   # defaults to public/index.html
  *
  * Needs playwright-core and a Chromium binary:
  *   npm i playwright-core && npx playwright install chromium
@@ -29,7 +29,7 @@
 import { chromium } from 'playwright-core';
 import path from 'node:path';
 
-const FILE = path.resolve(process.argv[2] ?? new URL('../index.html', import.meta.url).pathname);
+const FILE = path.resolve(process.argv[2] ?? new URL('../public/index.html', import.meta.url).pathname);
 const CHROME = process.env.CHROME || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const URL_ = 'file://' + FILE;
 

@@ -73,7 +73,7 @@ Two 1997 quirks were examined explicitly.
 
 ### 4.1 One file
 
-`index.html` (~1850 lines) contains the markup, the stylesheet and the script.
+`public/index.html` (~1850 lines) contains the markup, the stylesheet and the script.
 No build step, no runtime dependencies, no imports. Deployment is copying files
 to a static host.
 
@@ -82,7 +82,7 @@ CSS and the JS, in the order below, and by the fact that nothing is
 tree-shaken, minified or transformed between what you read and what runs — the
 file you debug in the browser is the file in the repository.
 
-### 4.2 Map of `index.html`
+### 4.2 Map of `public/index.html`
 
 ```
 <title>, font link
@@ -344,7 +344,7 @@ wrote the same settings to `Discola.ini`.
 
 ## 10. Assets
 
-Five PNG sprite sheets in `decks/`, 2.2 MB total, one per deck. Each is an
+Five PNG sprite sheets in `public/decks/`, 2.2 MB total, one per deck. Each is an
 11 × 4 grid: **column = card number − 1**, **row = suit** in `TSeme` order
 (denari, coppe, spade, bastoni), and **column 10, row 0 is the card back**.
 
@@ -363,7 +363,7 @@ over transparent padding. `tools/pack_cards.py` rebuilds the sheets from the
 original BMPs in `diegoami/briscola-JS` — pure standard library, no Pillow:
 
 ```sh
-python3 tools/pack_cards.py /path/to/briscola-JS decks/
+python3 tools/pack_cards.py /path/to/briscola-JS public/decks/
 ```
 
 A card is rendered as a `background-position` offset into the sheet, so the
@@ -399,7 +399,9 @@ layout while failing every good one.
 ## 12. Deployment
 
 Netlify, site `discola`, linked to this repository. Every push to `main`
-redeploys; there is no build step. `netlify.toml` publishes the repo root, caches
+redeploys; there is no build step. `netlify.toml` publishes `public/` — and only
+`public/`, so the docs, the tooling and netlify.toml itself are never served —
+caches
 `decks/*` for a year (the sprite sheets never change once packed) and
 revalidates `index.html` on every load so a deploy reaches players immediately.
 
@@ -416,7 +418,7 @@ revalidates `index.html` on every load so a deploy reaches players immediately.
   opponent. This matches the 1997 behaviour and is deliberate, but it is a
   reasonable thing to change.
 - **Sound is synthesised.** The original's MIDI soundtrack is gone.
-- **`decks/` is committed.** 2.2 MB of PNGs in the repository, so the site works
+- **`public/decks/` is committed.** 2.2 MB of PNGs in the repository, so the site works
   standalone rather than depending on `briscola-JS` at build time.
 - **History is per-device.** No export, no sync. Clearing site data loses it.
 

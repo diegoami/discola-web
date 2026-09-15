@@ -1,6 +1,6 @@
 ---
 name: ui-check
-description: Run Discola's UI checks across every screen, dialog and viewport. Use after any change to index.html's markup, CSS, screen flow or typography — and always before committing or publishing a UI change. Also use when a layout or readability bug is reported, to reproduce it and to confirm the fix.
+description: Run Discola's UI checks across every screen, dialog and viewport. Use after any change to public/index.html's markup, CSS, screen flow or typography — and always before committing or publishing a UI change. Also use when a layout or readability bug is reported, to reproduce it and to confirm the fix.
 ---
 
 # UI check
@@ -27,13 +27,13 @@ npm i playwright-core && npx playwright install chromium
 CHROME=/path/to/chrome node tools/check_ui.mjs      # if Chromium is elsewhere
 ```
 
-To check a file that is not `index.html` — an older revision, say — pass it as
-an argument. That is how you confirm an assertion really catches the bug it
-was written for:
+To check a file that is not `public/index.html` — an older revision, say — pass
+it as an argument. That is how you confirm an assertion really catches the bug
+it was written for:
 
 ```sh
-git show <commit>:index.html > .old.html
-node tools/check_ui.mjs "$PWD/.old.html"; rm .old.html
+git show <commit>:public/index.html > public/.old.html
+node tools/check_ui.mjs "$PWD/public/.old.html"; rm public/.old.html
 ```
 
 ## What it covers
