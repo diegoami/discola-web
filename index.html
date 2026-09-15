@@ -442,25 +442,6 @@ button.card:disabled{ cursor: default; }
 .opp__name{ font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; }
 .opp__line{ font-size: .78rem; color: var(--ivory-dim); line-height: 1.35; }
 
-.traits{ display: grid; gap: 3px; margin-top: .2rem; }
-.trait{ display: grid; grid-template-columns: 8.5ch 1fr; gap: .5rem; align-items: center; }
-.trait span{
-  font-family: var(--font-label);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  font-size: .66rem;
-  color: var(--ivory-dim);
-}
-.trait i{ display: block; height: 3px; background: rgba(242,235,220,.14); border-radius: 2px; }
-.trait i::before{
-  content: "";
-  display: block;
-  height: 100%;
-  width: var(--v, 50%);
-  background: var(--brass-dim);
-  border-radius: 2px;
-}
-.opp[aria-pressed="true"] .trait i::before{ background: var(--brass); }
 
 /* deck picker — each option shows a real card from that deck */
 .decks{ display: flex; flex-wrap: wrap; gap: .5rem; }
@@ -1000,13 +981,6 @@ const DOSSIER = {
   Franco: "Il più chiuso del tavolo. Tiene le briscole e lascia andare una presa pur di salvare l'asso."
 };
 
-// Four readable traits, each read straight off a weight that drives CompGioca.
-const TRAITS = [
-  ["briscole", "FIXED_LOSER_BRISCOLA_PENALTY", 7],
-  ["presa",    "VARIANT_WINNING_CARD_PENALTY", 0.85],
-  ["strozzo",  "VARIANT_STROZZO_PENALTY",      0.6],
-  ["asso",     "ASSO_PENALTY",                 2.4]
-];
 
 /* --- game state ------------------------------------------------------------ */
 
@@ -1594,15 +1568,9 @@ function buildOpponents(){
     b.className = "opp";
     b.dataset.name = name;
 
-    const traits = TRAITS.map(([label, key, max]) => {
-      const pct = Math.round(Math.min(1, PROFILES[name][key] / max) * 100);
-      return `<div class="trait"><span>${label}</span><i style="--v:${pct}%"></i></div>`;
-    }).join("");
-
     b.innerHTML =
       `<span class="opp__name">${name}</span>` +
-      `<span class="opp__line">${DOSSIER[name]}</span>` +
-      `<div class="traits">${traits}</div>`;
+      `<span class="opp__line">${DOSSIER[name]}</span>`;
 
     b.addEventListener("click", () => selectOpponent(name));
     return b;
