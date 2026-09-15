@@ -51,6 +51,19 @@
 
   --radius: 5px;
 
+  /* One type scale for the screens outside the table. Absolute by default;
+     the phone-shaped block near the bottom of this sheet re-expresses all of
+     it in vw. See the note there for why. */
+  --t-title: clamp(2.6rem, 9vw, 4rem);
+  --t-body:  1.15rem;
+  --t-name:  1.35rem;
+  --t-label: .95rem;
+  --t-pick:  1.1rem;
+  --t-cta:   1.22rem;
+  --t-btn:   .95rem;
+  --t-tiny:  .8rem;
+  --deck-sw: clamp(34px, 11.5vw, 58px);
+
   --font-display: "Bodoni Moda", "Didot", "Times New Roman", serif;
   --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-label: "Barlow Condensed", "Barlow", system-ui, sans-serif;
@@ -290,7 +303,7 @@ button.card:disabled{ cursor: default; }
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .12em;
-  font-size: .8rem;
+  font-size: var(--t-tiny);
   color: var(--ivory-dim);
 }
 
@@ -318,14 +331,14 @@ button.card:disabled{ cursor: default; }
 
 .plate__who{
   font-family: var(--font-display);
-  font-size: 1.02rem;
+  font-size: var(--t-pick);
   font-weight: 600;
 }
 .plate__role{
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .12em;
-  font-size: .8rem;
+  font-size: var(--t-tiny);
   color: var(--ivory-dim);
 }
 
@@ -410,8 +423,8 @@ button.card:disabled{ cursor: default; }
   padding-inline: 16px;
 }
 
-.sheet-body .eyebrow{ font-size: .95rem; }
-.sheet-body .empty{ font-size: 1rem; }
+.sheet-body .eyebrow{ font-size: var(--t-label); }
+.sheet-body .empty{ font-size: var(--t-body); }
 
 .sheet-inner{
   width: min(620px, 100%);
@@ -429,13 +442,13 @@ button.card:disabled{ cursor: default; }
 .hero{ display: grid; gap: .3rem; text-align: center; }
 .hero h1{
   font-family: var(--font-display);
-  font-size: clamp(2.6rem, 9vw, 4rem);
+  font-size: var(--t-title);
   font-weight: 700;
   letter-spacing: .02em;
   margin: 0;
   line-height: .95;
 }
-.hero p{ margin: 0; color: var(--ivory-dim); font-size: 1.15rem; line-height: 1.5; }
+.hero p{ margin: 0; color: var(--ivory-dim); font-size: var(--t-body); line-height: 1.5; }
 
 .last-result{
   font-family: var(--font-label);
@@ -454,7 +467,7 @@ button.card:disabled{ cursor: default; }
   border-bottom: 1px solid var(--rail-line);
   padding-bottom: .3rem;
 }
-.pick{ font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--brass); }
+.pick{ font-family: var(--font-display); font-size: var(--t-pick); font-weight: 600; color: var(--brass); }
 
 /* Four names, and the description of whichever is chosen. Showing all four
    descriptions at once took half the phone screen and forced every size down;
@@ -464,7 +477,7 @@ button.card:disabled{ cursor: default; }
 
 .chip{
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: var(--t-name);
   font-weight: 600;
   padding: .55rem .5rem;
   border: 1px solid var(--rail-line);
@@ -479,11 +492,11 @@ button.card:disabled{ cursor: default; }
 
 .dossier{
   margin: 0;
-  font-size: 1.15rem;
+  font-size: var(--t-body);
   line-height: 1.5;
   color: var(--ivory-dim);
   /* three lines held open, so switching opponent does not move the deck row */
-  min-height: calc(1.15rem * 1.5 * 3);
+  min-height: calc(var(--t-body) * 1.5 * 3);
 }
 
 
@@ -506,8 +519,8 @@ button.card:disabled{ cursor: default; }
 /* Both --cw and --ch are redeclared here: --ch on :root was already substituted
    against the root's --cw, so overriding --cw alone would not resize anything. */
 .deck-opt .card{
-  --cw: clamp(34px, 11.5vw, 58px);
-  --ch: calc(clamp(34px, 11.5vw, 58px) * var(--ratio));
+  --cw: var(--deck-sw);
+  --ch: calc(var(--deck-sw) * var(--ratio));
 }
 
 /* ---- controls ------------------------------------------------------------- */
@@ -522,17 +535,17 @@ button.card:disabled{ cursor: default; }
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .1em;
-  font-size: .95rem;
+  font-size: var(--t-btn);
   transition: background .15s ease, color .15s ease;
 }
 .btn:hover{ background: var(--brass); color: var(--rail); }
 .btn--primary{ background: var(--brass); color: var(--rail); border-color: var(--brass); font-weight: 600; }
 .btn--primary:hover{ background: var(--ivory); border-color: var(--ivory); }
-.btn--big{ padding: .95rem 1rem; font-size: 1.22rem; }
+.btn--big{ padding: .95rem 1rem; font-size: var(--t-cta); }
 .btn--quiet{ border-color: var(--rail-line); color: var(--ivory-dim); }
 .btn--quiet:hover{ background: var(--rosso); border-color: var(--rosso); color: var(--ivory); }
 
-.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: 1.02rem; }
+.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: var(--t-body); }
 .field select, .field input[type="color"]{
   background: transparent;
   border: 1px solid var(--rail-line);
@@ -547,12 +560,12 @@ button.card:disabled{ cursor: default; }
   align-items: center;
   justify-content: space-between;
   gap: .6rem;
-  font-size: 1.02rem;
+  font-size: var(--t-body);
   cursor: pointer;
 }
 .toggle input{ accent-color: var(--brass); width: 17px; height: 17px; }
 
-.prose{ font-size: 1rem; color: var(--ivory-dim); line-height: 1.65; }
+.prose{ font-size: var(--t-body); color: var(--ivory-dim); line-height: 1.65; }
 .prose strong{ color: var(--ivory); }
 .prose a{ color: var(--brass); }
 .prose p{ margin: 0 0 .85rem; }
@@ -590,7 +603,7 @@ button.card:disabled{ cursor: default; }
   align-items: baseline;
   padding: .45rem .6rem;
   background: rgba(0,0,0,.16);
-  font-size: .98rem;
+  font-size: var(--t-body);
 }
 .log li:nth-child(odd){ background: rgba(0,0,0,.26); }
 .res{ font-family: var(--font-label); font-weight: 600; font-size: .82rem; }
@@ -677,6 +690,41 @@ button.card:disabled{ cursor: default; }
   :root{ --topbar: 40px; --pad-block: .4rem; --step: .4rem; }
   .wordmark{ font-size: 1.1rem; }
   .tool{ width: 32px; height: 32px; }
+}
+
+/* ---- phone-shaped screens -------------------------------------------------
+
+   A portrait screen this tall is a phone in someone's hand, whatever CSS width
+   the browser reports — and some Android browsers report 700-1000px for a six
+   inch screen. Every size above is absolute, so on such a device each one
+   renders at roughly half its physical size: 18px body text at a reported
+   770px is physically smaller than 18px at a reported 393px, on the same
+   piece of glass. Raising the rem values cannot fix that, because the problem
+   is the unit, not the number.
+
+   So on a phone the scale is re-expressed against the viewport width, which
+   really is a hand's width whichever number the browser picked. The aspect
+   ratio is what separates a phone from a tablet here, not the width: a phone
+   is around 0.45-0.52 wide-over-tall, a portrait tablet 0.70-0.75.
+
+   The content column also stops being capped at 620px, since on a 770px phone
+   that cap stranded the page in the middle of the screen.                    */
+@media (orientation: portrait) and (max-aspect-ratio: 3/5){
+  :root{
+    --t-title: clamp(40px, 11vw,  96px);
+    --t-body:  clamp(17px, 4.6vw, 42px);
+    --t-name:  clamp(20px, 5.4vw, 48px);
+    --t-label: clamp(13px, 3.4vw, 30px);
+    --t-pick:  clamp(16px, 4.4vw, 40px);
+    --t-cta:   clamp(19px, 5.2vw, 46px);
+    --t-btn:   clamp(15px, 4vw,   32px);
+    --t-tiny:  clamp(12.5px, 3.2vw, 28px);
+    --deck-sw: clamp(40px, 13vw, 120px);
+  }
+  .sheet-inner{ width: 100%; }
+  .start-foot .btn{ width: 100%; }
+  /* two big chips per row rather than four narrow ones, whatever the width */
+  .chips{ grid-template-columns: 1fr 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce){
