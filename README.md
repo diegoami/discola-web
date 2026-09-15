@@ -4,7 +4,10 @@ A two-player Briscola game, originally written in Delphi 3 in 1997. This is a
 port to a single self-contained HTML page, so it runs on any modern computer
 without an installer.
 
-**Play it:** open `index.html`, or serve the folder with any static web server.
+**Play it:** <https://discola.netlify.app>
+
+Or open `index.html` locally, or serve the folder with any static web
+server — it is plain static files with no build step.
 
 ## What is faithful to the original
 
