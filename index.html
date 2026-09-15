@@ -21,6 +21,7 @@
   --ivory:       #f2ebdc;
   --ivory-dim:   #b9b09c;
   --rosso:       #a33b2a;
+  --verde:       #5f9e72;
 
   /* Spacing tokens. Everything that eats vertical space on the table is
      declared here once and used by name below, so --chrome can be DERIVED
@@ -34,15 +35,16 @@
 
      tools/check_layout.mjs asserts the result, and re-runs with these tokens
      inflated so that replacing the derivation with a constant fails there. */
-  --pad-block: clamp(.75rem, 2vw, 1.5rem);   /* .table, top and bottom      */
-  --step: clamp(.5rem, 1.4vw, 1rem);         /* .table row gaps             */
-  --trick-pad: var(--step);                  /* .trick, inside its border   */
+  --topbar: 48px;                            /* the icon bar above the table */
+  --pad-block: clamp(.6rem, 1.6vw, 1.25rem); /* .table, top and bottom       */
+  --step: clamp(.5rem, 1.4vw, 1rem);         /* .table row gaps              */
+  --trick-pad: var(--step);                  /* .trick, inside its border    */
   --extra-gap: 0px;                          /* .middle's gap when it stacks */
-  --slack: 8px;                              /* never land exactly on zero  */
-  --rows: 3;                                 /* card rows down the table    */
-  --chrome: calc(2*var(--pad-block) + 2*var(--step) + 2*var(--trick-pad)
-                 + var(--extra-gap) + var(--slack));
-  --cw: clamp(32px, min(8.2vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 104px);
+  --slack: 8px;                              /* never land exactly on zero   */
+  --rows: 3;                                 /* card rows down the table     */
+  --chrome: calc(var(--topbar) + 2*var(--pad-block) + 2*var(--step)
+                 + 2*var(--trick-pad) + var(--extra-gap) + var(--slack));
+  --cw: clamp(32px, min(9vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 112px);
   --ratio: 2.0833;
   --ch: calc(var(--cw) * var(--ratio));
   --sheet: url("decks/trevisane.png");
@@ -55,6 +57,12 @@
 }
 
 *{ box-sizing: border-box; }
+
+/* Elements below declare `display`, and an author display rule beats the UA
+   stylesheet's [hidden]{display:none} — so .view and .scrim would both stay on
+   screen, the scrim swallowing every click. Some hosts inject this reset and
+   would hide the bug; a plain static server does not. */
+[hidden]{ display: none !important; }
 
 body{
   margin: 0;
@@ -73,29 +81,57 @@ button, select, input{ font: inherit; color: inherit; }
   outline-offset: 2px;
 }
 
-/* ---- shell ---------------------------------------------------------------- */
+/* ---- screens -------------------------------------------------------------- */
 
-/* The table is pinned to the viewport so your own hand is never pushed below
-   the fold by a tall rail; the rail scrolls inside itself instead. */
-.app{
-  display: grid;
-  grid-template-columns: minmax(0,1fr) 300px;
+/* One view is on screen at a time. Each fills the viewport; sheets scroll
+   inside their own body so the header stays put. */
+.view{
   height: 100vh;
   height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0,1fr);
 }
-@media (max-width: 900px), (orientation: portrait){
-  /* Stacked, so the table is four card rows deep: the opponent's hand,
-     the trick, the tallone and your hand. All four have to be on screen
-     at once — having to scroll to see your own cards is not playing —
-     so the card is bounded by a quarter of the height, not by width
-     alone. A portrait tablet is where width alone gets it wrong: plenty
-     of it, but not enough height to spend the cap on. */
-  :root{
-    --rows: 4;
-    --extra-gap: 1.25rem;
-    --cw: clamp(40px, min(21vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 124px);
-  }
-  .app{ grid-template-columns: minmax(0,1fr); height: auto; }
+
+/* ---- the icon bar --------------------------------------------------------- */
+
+.topbar{
+  height: var(--topbar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-inline: clamp(12px, 3vw, 1.5rem);
+  background: var(--rail);
+  border-bottom: 1px solid var(--rail-line);
+}
+
+.wordmark{
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1;
+}
+
+.tools{ display: flex; gap: .15rem; }
+
+.tool{
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ivory-dim);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.tool:hover{ background: rgba(200,162,74,.14); color: var(--brass); }
+.tool svg{
+  width: 21px; height: 21px;
+  fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
 }
 
 /* ---- the table ------------------------------------------------------------ */
@@ -168,7 +204,6 @@ button, select, input{ font: inherit; color: inherit; }
 .card[data-empty="true"]{
   background-image: none;
   box-shadow: inset 0 0 0 1px rgba(242,235,220,.11);
-  border-radius: var(--radius);
 }
 
 /* a card you can actually play */
@@ -179,12 +214,6 @@ button.card:not(:disabled):focus-visible{
   box-shadow: 0 10px 18px rgba(0,0,0,.5), 0 0 0 1px var(--brass);
 }
 button.card:disabled{ cursor: default; }
-
-.card--played{ animation: cardIn .26s cubic-bezier(.2,.9,.3,1.2) both; }
-@keyframes cardIn{
-  from{ opacity: 0; transform: translateY(var(--from, 16px)) scale(.9) rotate(var(--tilt, -3deg)); }
-  to  { opacity: 1; transform: none; }
-}
 
 .card--won-up{   animation: sweepUp   .45s ease-in both; }
 .card--won-down{ animation: sweepDown .45s ease-in both; }
@@ -241,20 +270,14 @@ button.card:disabled{ cursor: default; }
 .pile[data-stock="0"] .stock{ display: none; }
 .pile[data-briscola="0"] .briscola{ display: none; }
 
-.tallone-meta{ display: grid; gap: .35rem; }
-
-@media (max-width: 900px), (orientation: portrait){
-  .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: var(--extra-gap); }
-  .trick, .tallone{ grid-column: 1; justify-self: center; }
-}
+.tallone-meta{ display: grid; gap: .3rem; }
 
 .count{
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-size: clamp(1.5rem, 3.6vw, 2.2rem);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--ivory);
 }
 
 .eyebrow{
@@ -272,17 +295,16 @@ button.card:disabled{ cursor: default; }
   font-size: .78rem;
   color: var(--brass);
   border-top: 1px solid var(--brass-dim);
-  padding-top: .3rem;
+  padding-top: .25rem;
 }
-.last-hand[hidden]{ display: none; }
 
 /* ---- name plates ---------------------------------------------------------- */
 
 .plate{
   display: flex;
   align-items: center;
-  gap: .8rem;
-  padding: .4rem .85rem;
+  gap: .7rem;
+  padding: .35rem .8rem;
   border-radius: 3px;
   background: linear-gradient(180deg, rgba(0,0,0,.24), rgba(0,0,0,.36));
   box-shadow: inset 0 0 0 1px var(--brass-dim);
@@ -290,21 +312,20 @@ button.card:disabled{ cursor: default; }
 
 .plate__who{
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 600;
-  letter-spacing: .01em;
 }
 .plate__role{
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .12em;
-  font-size: .72rem;
+  font-size: .7rem;
   color: var(--ivory-dim);
 }
 
 .plate__score{
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -312,7 +333,6 @@ button.card:disabled{ cursor: default; }
   min-width: 2.2ch;
   text-align: right;
 }
-.plate__score[hidden]{ display: none; }
 
 .plate--turn{ box-shadow: inset 0 0 0 1px var(--brass), 0 0 16px rgba(200,162,74,.3); }
 
@@ -326,83 +346,103 @@ button.card:disabled{ cursor: default; }
 }
 .plate--turn .turn-dot{ opacity: 1; }
 
-/* ---- the rail ------------------------------------------------------------- */
+.cheat-note{
+  position: absolute;
+  top: .4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: .7rem;
+  color: var(--brass);
+  z-index: 3;
+}
 
-.rail{
-  background: var(--rail);
-  border-left: 1px solid var(--rail-line);
-  padding-block: 1.25rem;
-  padding-inline: 1.25rem;
+/* ---- sheets: start, settings, history, about ------------------------------ */
+
+/* The start screen has no header bar, so its body takes the whole view. */
+#viewStart{ grid-template-rows: minmax(0,1fr); }
+
+.sheet-head{
+  height: var(--topbar);
   display: flex;
-  flex-direction: column;
-  gap: 1.15rem;
-  overflow-y: auto;
+  align-items: center;
+  gap: .5rem;
+  padding-inline: clamp(12px, 3vw, 1.5rem);
+  background: var(--rail);
+  border-bottom: 1px solid var(--rail-line);
 }
-@media (max-width: 900px), (orientation: portrait){
-  .rail{ border-left: 0; border-top: 1px solid var(--rail-line); }
+.sheet-head h2{
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
 }
 
-.masthead h1{
+.sheet-body{
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, var(--felt) 0%, var(--edge) 100%);
+  padding-block: clamp(1.25rem, 4vw, 2.5rem);
+  padding-inline: 16px;
+}
+
+.sheet-inner{
+  width: min(620px, 100%);
+  margin-inline: auto;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.group{ display: grid; gap: .6rem; align-content: start; }
+.group > .eyebrow{ border-bottom: 1px solid var(--rail-line); padding-bottom: .3rem; }
+
+/* ---- start screen --------------------------------------------------------- */
+
+.hero{ display: grid; gap: .3rem; text-align: center; }
+.hero h1{
   font-family: var(--font-display);
-  font-size: 2.1rem;
+  font-size: clamp(2.6rem, 9vw, 4rem);
   font-weight: 700;
   letter-spacing: .02em;
   margin: 0;
-  line-height: 1;
+  line-height: .95;
 }
-.masthead p{
-  margin: .4rem 0 0;
-  font-size: .82rem;
-  color: var(--ivory-dim);
-  max-width: 34ch;
-}
+.hero p{ margin: 0; color: var(--ivory-dim); font-size: .92rem; }
 
-.group{ display: grid; gap: .5rem; }
-.group > .eyebrow{ border-bottom: 1px solid var(--rail-line); padding-bottom: .3rem; }
-
-.btn{
-  border: 1px solid var(--brass-dim);
-  background: transparent;
-  color: var(--ivory);
-  padding: .5rem .8rem;
-  border-radius: 3px;
-  cursor: pointer;
+.last-result{
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .1em;
-  font-size: .85rem;
-  transition: background .15s ease, color .15s ease;
+  font-size: .78rem;
+  color: var(--brass);
 }
-.btn:hover{ background: var(--brass); color: var(--rail); }
-
-.btn--primary{ background: var(--brass); color: var(--rail); border-color: var(--brass); font-weight: 600; }
-.btn--primary:hover{ background: var(--ivory); border-color: var(--ivory); }
 
 /* opponent dossiers — the four profiles are real, tuned weights from Global.pas */
-.opponents{ display: grid; gap: .4rem; }
+.opponents{ display: grid; gap: .45rem; }
+@media (min-width: 560px){ .opponents{ grid-template-columns: 1fr 1fr; } }
 
 .opp{
   display: grid;
   gap: .3rem;
-  padding: .55rem .7rem;
+  align-content: start;
+  padding: .6rem .75rem;
   border: 1px solid var(--rail-line);
-  border-radius: 3px;
-  background: transparent;
+  border-radius: 4px;
+  background: rgba(0,0,0,.16);
   text-align: left;
   cursor: pointer;
   transition: border-color .15s ease, background .15s ease;
 }
 .opp:hover{ border-color: var(--brass-dim); }
-.opp[aria-pressed="true"]{ border-color: var(--brass); background: rgba(200,162,74,.09); }
+.opp[aria-pressed="true"]{ border-color: var(--brass); background: rgba(200,162,74,.1); }
 
-.opp__name{
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
-}
+.opp__name{ font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; }
 .opp__line{ font-size: .78rem; color: var(--ivory-dim); line-height: 1.35; }
 
-.traits{ display: grid; gap: 3px; margin-top: .15rem; }
+.traits{ display: grid; gap: 3px; margin-top: .2rem; }
 .trait{ display: grid; grid-template-columns: 8.5ch 1fr; gap: .5rem; align-items: center; }
 .trait span{
   font-family: var(--font-label);
@@ -422,58 +462,134 @@ button.card:disabled{ cursor: default; }
 }
 .opp[aria-pressed="true"] .trait i::before{ background: var(--brass); }
 
-.weights{ margin-top: .5rem; }
-.weights summary{
+/* deck picker — each option shows a real card from that deck */
+.decks{ display: flex; flex-wrap: wrap; gap: .5rem; }
+
+.deck-opt{
+  display: grid;
+  justify-items: center;
+  gap: .4rem;
+  padding: .5rem .55rem;
+  border: 1px solid var(--rail-line);
+  border-radius: 4px;
+  background: rgba(0,0,0,.16);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.deck-opt:hover{ border-color: var(--brass-dim); }
+.deck-opt[aria-pressed="true"]{ border-color: var(--brass); background: rgba(200,162,74,.1); }
+/* Both --cw and --ch are redeclared here: --ch on :root was already substituted
+   against the root's --cw, so overriding --cw alone would not resize anything. */
+.deck-opt .card{ --cw: 42px; --ch: calc(42px * var(--ratio)); }
+.deck-opt span:last-child{
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .72rem;
+  color: var(--ivory-dim);
+}
+.deck-opt[aria-pressed="true"] span:last-child{ color: var(--brass); }
+
+/* ---- controls ------------------------------------------------------------- */
+
+.btn{
+  border: 1px solid var(--brass-dim);
+  background: transparent;
+  color: var(--ivory);
+  padding: .55rem .9rem;
+  border-radius: 3px;
+  cursor: pointer;
   font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: .1em;
-  font-size: .72rem;
-  color: var(--ivory-dim);
-  cursor: pointer;
+  font-size: .86rem;
+  transition: background .15s ease, color .15s ease;
 }
-.weights table{
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: .45rem;
-  font-size: .72rem;
-  font-variant-numeric: tabular-nums;
-}
-.weights td{ padding: .12rem 0; vertical-align: top; }
-.weights td:first-child{ color: var(--ivory-dim); padding-right: .6rem; }
-.weights td:last-child{ text-align: right; color: var(--brass); }
+.btn:hover{ background: var(--brass); color: var(--rail); }
+.btn--primary{ background: var(--brass); color: var(--rail); border-color: var(--brass); font-weight: 600; }
+.btn--primary:hover{ background: var(--ivory); border-color: var(--ivory); }
+.btn--big{ padding: .8rem 1rem; font-size: 1rem; }
+.btn--quiet{ border-color: var(--rail-line); color: var(--ivory-dim); }
+.btn--quiet:hover{ background: var(--rosso); border-color: var(--rosso); color: var(--ivory); }
 
-.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: .85rem; }
+.field{ display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center; font-size: .92rem; }
 .field select, .field input[type="color"]{
   background: transparent;
   border: 1px solid var(--rail-line);
   border-radius: 3px;
   padding: .3rem .4rem;
 }
-.field select{ min-width: 10ch; }
-.field input[type="color"]{ width: 44px; height: 28px; padding: 2px; cursor: pointer; }
-.field input[type="range"]{ width: 120px; accent-color: var(--brass); }
+.field input[type="color"]{ width: 46px; height: 30px; padding: 2px; cursor: pointer; }
+.field input[type="range"]{ width: 140px; accent-color: var(--brass); }
 
 .toggle{
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: .6rem;
-  font-size: .85rem;
+  font-size: .92rem;
   cursor: pointer;
 }
-.toggle input{ accent-color: var(--brass); width: 16px; height: 16px; }
+.toggle input{ accent-color: var(--brass); width: 17px; height: 17px; }
 
-.colophon{
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rail-line);
-  font-size: .74rem;
-  color: var(--ivory-dim);
-  line-height: 1.5;
+.prose{ font-size: .9rem; color: var(--ivory-dim); line-height: 1.6; }
+.prose strong{ color: var(--ivory); }
+.prose a{ color: var(--brass); }
+.prose p{ margin: 0 0 .85rem; }
+
+.weights{ width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .82rem; }
+.weights td{ padding: .12rem 0; }
+.weights td:first-child{ color: var(--ivory-dim); padding-right: .6rem; }
+.weights td:last-child{ text-align: right; color: var(--brass); }
+
+/* ---- match history -------------------------------------------------------- */
+
+.tally{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: .8rem 1rem;
+  border-radius: 4px;
+  background: rgba(0,0,0,.2);
+  box-shadow: inset 0 0 0 1px var(--rail-line);
 }
-.colophon a{ color: var(--brass-dim); }
+.tally div{ display: grid; gap: .1rem; }
+.tally b{
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
 
-/* ---- end-of-hand ---------------------------------------------------------- */
+.log{ list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.log li{
+  display: grid;
+  grid-template-columns: 1.6rem 1fr auto auto;
+  gap: .7rem;
+  align-items: baseline;
+  padding: .45rem .6rem;
+  background: rgba(0,0,0,.16);
+  font-size: .9rem;
+}
+.log li:nth-child(odd){ background: rgba(0,0,0,.26); }
+.res{ font-family: var(--font-label); font-weight: 600; font-size: .82rem; }
+.res--w{ color: var(--verde); }
+.res--l{ color: var(--rosso); }
+.res--d{ color: var(--ivory-dim); }
+.score{ font-variant-numeric: tabular-nums; color: var(--brass); }
+.when{ color: var(--ivory-dim); font-size: .8rem; }
+
+.empty{
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--ivory-dim);
+  font-size: .9rem;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--rail-line);
+}
+
+/* ---- end of match --------------------------------------------------------- */
 
 .scrim{
   position: fixed;
@@ -481,10 +597,9 @@ button.card:disabled{ cursor: default; }
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(7,20,16,.72);
+  background: rgba(7,20,16,.74);
   z-index: 20;
 }
-.scrim[hidden]{ display: none; }
 
 .result{
   width: min(380px, 100%);
@@ -503,12 +618,7 @@ button.card:disabled{ cursor: default; }
   margin: 0;
   text-wrap: balance;
 }
-.result__tally{
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: .8rem;
-}
+.result__tally{ display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .8rem; }
 .result__n{
   font-family: var(--font-display);
   font-size: 2.6rem;
@@ -519,32 +629,34 @@ button.card:disabled{ cursor: default; }
 }
 .result__sep{ color: var(--ivory-dim); }
 .result__note{ font-size: .84rem; color: var(--ivory-dim); margin: 0; }
+.result__actions{ display: grid; gap: .5rem; }
 
-/* ---- cheat ---------------------------------------------------------------- */
+/* ---- portrait ------------------------------------------------------------- */
 
-.cheat-note{
-  position: absolute;
-  top: .6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-label);
-  text-transform: uppercase;
-  letter-spacing: .16em;
-  font-size: .7rem;
-  color: var(--brass);
-  z-index: 3;
+@media (orientation: portrait){
+  /* Stacked, so the table is four card rows deep: the opponent's hand,
+     the trick, the tallone and your hand. All four have to be on screen at
+     once — having to scroll to see your own cards is not playing — so the
+     card is bounded by a quarter of the height, not by width alone. A
+     portrait tablet is where width alone gets it wrong: plenty of it, but
+     not enough height to spend the cap on. */
+  :root{
+    --rows: 4;
+    --extra-gap: 1rem;
+    --cw: clamp(40px, min(22vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 124px);
+  }
+  .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: var(--extra-gap); }
+  .trick, .tallone{ grid-column: 1; justify-self: center; }
 }
-.cheat-note[hidden]{ display: none; }
 
-/* A phone in landscape has roughly 380px of height for three rows of cards.
-   Claw back the chrome so the cards keep a usable size instead of shrinking
-   to fit padding that nobody needs at this height. */
 @media (orientation: landscape) and (max-height: 600px){
   /* Only tokens: --chrome recomputes itself, and .table/.trick pick these up
-     wherever they sit in the sheet. The previous version overrode .table and
-     .trick directly from here and lost, because both are declared again at the
-     same specificity further down. */
-  :root{ --pad-block: .45rem; --step: .4rem; }
+     wherever they sit in the sheet. An earlier version overrode .table and
+     .trick directly from here and lost, because both are declared again at
+     the same specificity further down. */
+  :root{ --topbar: 40px; --pad-block: .4rem; --step: .4rem; }
+  .wordmark{ font-size: 1.1rem; }
+  .tool{ width: 32px; height: 32px; }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -556,7 +668,26 @@ button.card:disabled{ cursor: default; }
 }
 </style>
 
-<div class="app">
+<!-- ============================ the table ============================ -->
+<div class="view" id="viewTable" hidden>
+  <header class="topbar">
+    <span class="wordmark">Discola</span>
+    <nav class="tools">
+      <button class="tool" id="btnNew" type="button" title="Nuova partita" aria-label="Nuova partita">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.7 3.3"/><path d="M20 5.5V11h-5.5"/></svg>
+      </button>
+      <button class="tool" id="btnHistory" type="button" title="Storico partite" aria-label="Storico partite">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg>
+      </button>
+      <button class="tool" id="btnSettings" type="button" title="Impostazioni" aria-label="Impostazioni">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.1"/><circle cx="16" cy="12" r="2.1"/><circle cx="8" cy="17" r="2.1"/></svg>
+      </button>
+      <button class="tool" id="btnAbout" type="button" title="Informazioni" aria-label="Informazioni">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.3"/><path d="M12 7.6v1"/></svg>
+      </button>
+    </nav>
+  </header>
+
   <main class="table" id="table">
     <p class="cheat-note" id="cheatNote" hidden>Carte scoperte</p>
 
@@ -577,7 +708,6 @@ button.card:disabled{ cursor: default; }
         <div class="card" id="slotOpp" data-empty="true"></div>
         <div class="card" id="slotYou" data-empty="true"></div>
       </div>
-
       <div class="tallone">
         <div class="pile" id="pile">
           <div class="card briscola" id="briscolaCard"></div>
@@ -604,56 +734,135 @@ button.card:disabled{ cursor: default; }
       </div>
     </section>
   </main>
+</div>
 
-  <aside class="rail">
-    <div class="masthead">
-      <h1>Discola</h1>
-      <p>Briscola a due. Il primo a 61 punti su 120 vince la partita.</p>
+<!-- ============================ start ============================ -->
+<div class="view" id="viewStart">
+  <div class="sheet-body">
+    <div class="sheet-inner">
+      <div class="hero">
+        <h1>Discola</h1>
+        <p>Briscola a due. Il primo a 61 punti su 120 vince la partita.</p>
+        <p class="last-result" id="lastResult" hidden></p>
+      </div>
+
+      <div class="group">
+        <span class="eyebrow">Scegli l&rsquo;avversario</span>
+        <div class="opponents" id="opponents"></div>
+      </div>
+
+      <div class="group">
+        <span class="eyebrow">Scegli il mazzo</span>
+        <div class="decks" id="decks"></div>
+      </div>
+
+      <button class="btn btn--primary btn--big" id="startPlay" type="button">Gioca</button>
     </div>
+  </div>
+</div>
 
-    <button class="btn btn--primary" id="newGame" type="button">Nuova partita</button>
+<!-- ============================ settings ============================ -->
+<div class="view" id="viewSettings" hidden>
+  <header class="sheet-head">
+    <button class="tool" type="button" data-back aria-label="Indietro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2>Impostazioni</h2>
+  </header>
+  <div class="sheet-body">
+    <div class="sheet-inner">
+      <div class="group">
+        <span class="eyebrow">Tavolo</span>
+        <label class="field" for="deckSel">Mazzo
+          <select id="deckSel">
+            <option value="Trevisane">Trevisane</option>
+            <option value="Piacentine">Piacentine</option>
+            <option value="Napoletane">Napoletane</option>
+            <option value="Romagnole">Romagnole</option>
+            <option value="Francesi">Francesi</option>
+          </select>
+        </label>
+        <label class="field" for="feltSel">Panno
+          <input type="color" id="feltSel" value="#1e5140">
+        </label>
+        <label class="field" for="speedSel">Ritmo
+          <input type="range" id="speedSel" min="200" max="2000" step="100" value="1300">
+        </label>
+        <label class="toggle" for="pointsSel">Mostra i punti
+          <input type="checkbox" id="pointsSel" checked>
+        </label>
+        <label class="toggle" for="soundSel">Suono
+          <input type="checkbox" id="soundSel" checked>
+        </label>
+      </div>
 
-    <div class="group">
-      <span class="eyebrow">Avversario</span>
-      <div class="opponents" id="opponents"></div>
-      <details class="weights">
-        <summary>Pesi della strategia</summary>
-        <table id="weightsTable"><tbody></tbody></table>
+      <div class="group">
+        <span class="eyebrow">Partita</span>
+        <button class="btn" id="changeOpponent" type="button">Cambia avversario</button>
+      </div>
+
+      <details class="group">
+        <summary class="eyebrow" style="cursor:pointer;list-style:revert">Pesi della strategia</summary>
+        <p class="prose">I dodici pesi che guidano <code>CompGioca</code> per l&rsquo;avversario
+        scelto, presi da <code>Global.pas</code>.</p>
+        <table class="weights" id="weightsTable"><tbody></tbody></table>
       </details>
     </div>
+  </div>
+</div>
 
-    <div class="group">
-      <span class="eyebrow">Tavolo</span>
-      <label class="field" for="deckSel">Mazzo
-        <select id="deckSel">
-          <option value="Trevisane">Trevisane</option>
-          <option value="Piacentine">Piacentine</option>
-          <option value="Napoletane">Napoletane</option>
-          <option value="Romagnole">Romagnole</option>
-          <option value="Francesi">Francesi</option>
-        </select>
-      </label>
-      <label class="field" for="feltSel">Panno
-        <input type="color" id="feltSel" value="#1e5140">
-      </label>
-      <label class="field" for="speedSel">Ritmo
-        <input type="range" id="speedSel" min="200" max="2000" step="100" value="900">
-      </label>
-      <label class="toggle" for="pointsSel">Mostra i punti
-        <input type="checkbox" id="pointsSel" checked>
-      </label>
-      <label class="toggle" for="soundSel">Suono
-        <input type="checkbox" id="soundSel" checked>
-      </label>
+<!-- ============================ history ============================ -->
+<div class="view" id="viewHistory" hidden>
+  <header class="sheet-head">
+    <button class="tool" type="button" data-back aria-label="Indietro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2>Storico partite</h2>
+  </header>
+  <div class="sheet-body">
+    <div class="sheet-inner" id="historyBody"></div>
+  </div>
+</div>
+
+<!-- ============================ about ============================ -->
+<div class="view" id="viewAbout" hidden>
+  <header class="sheet-head">
+    <button class="tool" type="button" data-back aria-label="Indietro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2>Discola</h2>
+  </header>
+  <div class="sheet-body">
+    <div class="sheet-inner prose">
+      <p><strong>Discola</strong> è un gioco di briscola a due scritto in Delphi 3
+      nel 1997 da Diego Amicabile. Questa è la versione web.</p>
+
+      <p>Le carte sono le immagini originali del programma: cinque mazzi —
+      Trevisane, Piacentine, Napoletane, Romagnole e Francesi.</p>
+
+      <p>Anche l&rsquo;avversario è quello originale. Le regole vengono da
+      <code>UMazzo.pas</code> e la strategia da <code>TGiocatore.CompGioca</code>
+      in <code>UGiocatore.pas</code>, con i dodici pesi di <code>Global.pas</code>
+      per ciascuno dei quattro profili — Valerio, Graziano, Piero e Franco.
+      Due stranezze del sorgente del 1997 sono state tenute apposta, perché
+      cambiano il modo in cui l&rsquo;avversario gioca: il conteggio delle carte
+      viste parte dall&rsquo;indice 1 invece che da 0, e i pesi di Piero vengono
+      estratti una volta per sessione, non a ogni partita.</p>
+
+      <p>L&rsquo;installer originale non si apre più su un computer moderno: il suo
+      <code>SETUP.EXE</code> è un eseguibile NE a 16 bit, e Windows a 64 bit non ha
+      più un sottosistema a 16 bit. Questa versione serve a quello.</p>
+
+      <p>Giochi una carta con un clic o con i tasti <strong>1</strong>,
+      <strong>2</strong>, <strong>3</strong>. Lo storico delle partite resta nel
+      browser, su questo dispositivo.</p>
+
+      <p style="margin:0">
+        <a href="https://github.com/diegoami/discola-web">Sorgente della versione web</a> &middot;
+        <a href="https://github.com/diegoami/discola-PAS">Sorgente Delphi del 1997</a>
+      </p>
     </div>
-
-    <p class="colophon">
-      Gioca una carta con un clic o con i tasti <strong>1</strong>, <strong>2</strong>, <strong>3</strong>.<br><br>
-      Porting web di <strong>Discola</strong>, scritta in Delphi 3 nel 1997 da Diego Amicabile.
-      Le carte sono le immagini originali del programma; la strategia dell&rsquo;avversario è
-      quella di <code>UGiocatore.pas</code>, pesi compresi.
-    </p>
-  </aside>
+  </div>
 </div>
 
 <div class="scrim" id="scrim" hidden>
@@ -664,14 +873,17 @@ button.card:disabled{ cursor: default; }
         <div class="result__n" id="resultYou">61</div>
         <div class="eyebrow">tu</div>
       </div>
-      <div class="result__sep">—</div>
+      <div class="result__sep">&mdash;</div>
       <div>
         <div class="result__n" id="resultOpp">59</div>
         <div class="eyebrow" id="resultOppName">valerio</div>
       </div>
     </div>
     <p class="result__note" id="resultNote"></p>
-    <button class="btn btn--primary" id="playAgain" type="button">Ancora</button>
+    <div class="result__actions">
+      <button class="btn btn--primary" id="playAgain" type="button">Ancora</button>
+      <button class="btn" id="backToStart" type="button">Cambia avversario o mazzo</button>
+    </div>
   </div>
 </div>
 
@@ -810,6 +1022,7 @@ const state = {
   deveGiocare: BASSO,
   partitaPrimo: BASSO,
   over: false,
+  dealt: false,       // has a hand been dealt yet this session
   cheat: false,
   opponent: "Valerio",
   deck: "Trevisane",
@@ -818,6 +1031,8 @@ const state = {
   showPoints: true,
   sound: true
 };
+
+const DECKS = ["Trevisane", "Piacentine", "Napoletane", "Romagnole", "Francesi"];
 
 const DECK_RATIO = {
   Trevisane: 125 / 60,
@@ -867,6 +1082,7 @@ function newHand(){
   state.played = [null, null];
   state.scores = [0, 0];
   state.over = false;
+  state.dealt = true;
 
   for (const who of [BASSO, ALTO]){
     state.hands[who] = [null, null, null];
@@ -1050,6 +1266,8 @@ function finish(){
   else if (you > opp) note = `${state.opponent} ha lasciato andare troppe briscole.`;
   else note = `${state.opponent} ha tenuto i carichi fino in fondo.`;
 
+  recordMatch(you, opp);
+
   el.resultTitle.textContent = title;
   el.resultYou.textContent = you;
   el.resultOpp.textContent = opp;
@@ -1094,9 +1312,11 @@ function blip(cut){
 const el = {};
 for (const id of ["table","oppHand","youHand","slotOpp","slotYou","pile","briscolaCard",
   "stockCard","stockCount","briscolaName","lastHand","oppName","oppScore","youScore",
-  "plateOpp","plateYou","opponents","weightsTable","deckSel","feltSel","speedSel",
-  "pointsSel","soundSel","newGame","scrim","playAgain","resultTitle","resultYou",
-  "resultOpp","resultOppName","resultNote","cheatNote"])
+  "plateOpp","plateYou","opponents","decks","weightsTable","deckSel","feltSel","speedSel",
+  "pointsSel","soundSel","scrim","playAgain","backToStart","resultTitle","resultYou",
+  "resultOpp","resultOppName","resultNote","cheatNote","viewTable","viewStart",
+  "viewSettings","viewHistory","viewAbout","btnNew","btnHistory","btnSettings",
+  "btnAbout","startPlay","changeOpponent","historyBody","lastResult"])
   el[id] = document.getElementById(id);
 
 function faceOf(node, card){
@@ -1158,7 +1378,7 @@ function render(){
   const remaining = 40 - state.next;
   el.pile.dataset.stock = remaining >= 2 ? "1" : "0";
   el.pile.dataset.briscola = remaining >= 1 ? "1" : "0";
-  faceOf(el.briscolaCard, state.cards[39]);
+  if (state.cards.length) faceOf(el.briscolaCard, state.cards[39]);
   el.stockCount.textContent = remaining;
   el.briscolaName.textContent = `briscola: ${SUITS[state.briscola]}`;
   el.lastHand.hidden = remaining !== 2;
@@ -1188,6 +1408,156 @@ function sweep(){
   }, Math.max(state.speed - 20, 60));
 }
 
+/* --- screens --------------------------------------------------------------- */
+
+const VIEWS = {
+  table: el.viewTable, start: el.viewStart, settings: el.viewSettings,
+  history: el.viewHistory, about: el.viewAbout
+};
+let screen = "start";
+
+function show(name){
+  screen = name;
+  for (const [key, node] of Object.entries(VIEWS)) node.hidden = key !== name;
+  if (name === "history") renderHistory();
+  if (name === "start") renderLastResult();
+  // Timers keep running behind a sheet on purpose: the opponent does not wait
+  // for you to close the settings, exactly as the Delphi original behaved.
+}
+
+// Back from a sheet: to the table if a hand is in play, otherwise to the start.
+function back(){ show(state.dealt ? "table" : "start"); }
+
+/* --- match history (kept in this browser, on this device) ------------------ */
+
+const HKEY = "discola.history";
+const HCAP = 100;
+
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(HKEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (e){ return []; }
+}
+
+function recordMatch(you, opp){
+  const list = loadHistory();
+  list.unshift({ t: Date.now(), o: state.opponent, d: state.deck, y: you, a: opp });
+  try{
+    localStorage.setItem(HKEY, JSON.stringify(list.slice(0, HCAP)));
+  } catch (e){ /* storage blocked: the match simply is not remembered */ }
+}
+
+function clearHistory(){
+  try{ localStorage.removeItem(HKEY); } catch (e){}
+  renderHistory();
+}
+
+const WHEN = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short" });
+
+function renderLastResult(){
+  const [last] = loadHistory();
+  if (!last){ el.lastResult.hidden = true; return; }
+  const verb = last.y > last.a ? "vinto" : (last.y < last.a ? "perso" : "pareggiato");
+  el.lastResult.textContent =
+    `Ultima partita: hai ${verb} ${last.y}–${last.a} contro ${last.o}`;
+  el.lastResult.hidden = false;
+}
+
+function renderHistory(){
+  const list = loadHistory();
+  el.historyBody.replaceChildren();
+
+  if (!list.length){
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "Nessuna partita ancora. Lo storico resta in questo browser.";
+    el.historyBody.append(p);
+    return;
+  }
+
+  const won  = list.filter(m => m.y > m.a).length;
+  const lost = list.filter(m => m.y < m.a).length;
+
+  const tally = document.createElement("div");
+  tally.className = "tally";
+  for (const [n, label] of [[list.length,"partite"],[won,"vinte"],[lost,"perse"],
+                            [list.length - won - lost,"pari"]]){
+    const cell = document.createElement("div");
+    const b = document.createElement("b");
+    b.textContent = n;
+    const s = document.createElement("span");
+    s.className = "eyebrow";
+    s.textContent = label;
+    cell.append(b, s);
+    tally.append(cell);
+  }
+  el.historyBody.append(tally);
+
+  // How you do against each of the four, which is the interesting question.
+  const byOpp = {};
+  for (const m of list){
+    const row = byOpp[m.o] || (byOpp[m.o] = { n: 0, w: 0 });
+    row.n++;
+    if (m.y > m.a) row.w++;
+  }
+  const names = Object.keys(byOpp).sort((a, b) => byOpp[b].n - byOpp[a].n);
+  if (names.length > 1){
+    const group = document.createElement("div");
+    group.className = "group";
+    const head = document.createElement("span");
+    head.className = "eyebrow";
+    head.textContent = "Vinte contro";
+    group.append(head);
+    for (const name of names){
+      const line = document.createElement("div");
+      line.className = "field";
+      const who = document.createElement("span");
+      who.textContent = name;
+      const n = document.createElement("span");
+      n.className = "score";
+      n.textContent = `${byOpp[name].w}/${byOpp[name].n}`;
+      line.append(who, n);
+      group.append(line);
+    }
+    el.historyBody.append(group);
+  }
+
+  const ul = document.createElement("ul");
+  ul.className = "log";
+  for (const m of list){
+    const win = m.y > m.a, draw = m.y === m.a;
+    const li = document.createElement("li");
+
+    const res = document.createElement("span");
+    res.className = "res " + (draw ? "res--d" : win ? "res--w" : "res--l");
+    res.textContent = draw ? "P" : win ? "V" : "S";
+
+    const who = document.createElement("span");
+    who.textContent = m.o;
+
+    const score = document.createElement("span");
+    score.className = "score";
+    score.textContent = `${m.y}–${m.a}`;
+
+    const when = document.createElement("span");
+    when.className = "when";
+    when.textContent = WHEN.format(new Date(m.t));
+
+    li.append(res, who, score, when);
+    ul.append(li);
+  }
+  el.historyBody.append(ul);
+
+  const wipe = document.createElement("button");
+  wipe.type = "button";
+  wipe.className = "btn btn--quiet";
+  wipe.textContent = "Cancella lo storico";
+  wipe.addEventListener("click", clearHistory);
+  el.historyBody.append(wipe);
+}
+
 /* --- settings and chrome --------------------------------------------------- */
 
 function applyDeck(name){
@@ -1196,6 +1566,8 @@ function applyDeck(name){
   root.style.setProperty("--sheet", `url("decks/${name.toLowerCase()}.png")`);
   root.style.setProperty("--ratio", DECK_RATIO[name]);
   el.deckSel.value = name;
+  for (const b of el.decks.children)
+    b.setAttribute("aria-pressed", String(b.dataset.deck === name));
 }
 
 function applyFelt(hex){
@@ -1233,6 +1605,22 @@ function buildOpponents(){
       `<div class="traits">${traits}</div>`;
 
     b.addEventListener("click", () => selectOpponent(name));
+    return b;
+  }));
+}
+
+// Each deck option shows a real card from that deck — the asso, which is the
+// most characteristic card in all five.
+function buildDecks(){
+  el.decks.replaceChildren(...DECKS.map(name => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "deck-opt";
+    b.dataset.deck = name;
+    b.style.setProperty("--sheet", `url("decks/${name.toLowerCase()}.png")`);
+    b.style.setProperty("--ratio", DECK_RATIO[name]);
+    b.innerHTML = `<span class="card" style="--col:0;--row:0"></span><span>${name}</span>`;
+    b.addEventListener("click", () => { applyDeck(name); save(); });
     return b;
   }));
 }
@@ -1286,7 +1674,9 @@ let buffer = "";
 document.addEventListener("keydown", ev => {
   if (ev.target.matches("input, select, textarea")) return;
 
-  if (ev.key >= "1" && ev.key <= "3" && !state.over){
+  if (ev.key === "Escape" && screen !== "table" && screen !== "start"){ back(); return; }
+
+  if (screen === "table" && ev.key >= "1" && ev.key <= "3" && !state.over){
     humanPlay(Number(ev.key) - 1);
     return;
   }
@@ -1298,8 +1688,19 @@ document.addEventListener("keydown", ev => {
   }
 });
 
-el.newGame.addEventListener("click", () => { el.scrim.hidden = true; newHand(); });
+for (const b of document.querySelectorAll("[data-back]"))
+  b.addEventListener("click", back);
+
+el.btnNew.addEventListener("click", () => show("start"));
+el.btnHistory.addEventListener("click", () => show("history"));
+el.btnSettings.addEventListener("click", () => show("settings"));
+el.btnAbout.addEventListener("click", () => show("about"));
+
+el.startPlay.addEventListener("click", () => { show("table"); newHand(); });
+el.changeOpponent.addEventListener("click", () => show("start"));
+
 el.playAgain.addEventListener("click", () => { el.scrim.hidden = true; newHand(); });
+el.backToStart.addEventListener("click", () => { el.scrim.hidden = true; show("start"); });
 
 el.deckSel.addEventListener("change", () => { applyDeck(el.deckSel.value); save(); });
 el.feltSel.addEventListener("input", () => { applyFelt(el.feltSel.value); save(); });
@@ -1320,6 +1721,10 @@ el.soundSel.addEventListener("change", () => {
 function start(carried){
   const saved = Object.assign({}, load(), carried && carried.settings);
 
+  buildHands();
+  buildOpponents();
+  buildDecks();
+
   applyDeck(DECK_RATIO[saved.deck] ? saved.deck : "Trevisane");
   applyFelt(/^#[0-9a-f]{6}$/i.test(saved.felt || "") ? saved.felt : "#1e5140");
 
@@ -1332,13 +1737,12 @@ function start(carried){
   state.sound = saved.sound !== false;
   el.soundSel.checked = state.sound;
 
-  buildHands();
-  buildOpponents();
   selectOpponent(PROFILES[saved.opponent] ? saved.opponent : "Valerio");
-  newHand();
+
+  // No hand is dealt yet — you pick an opponent and a deck first.
+  show("start");
 }
 
-// carry a hand in progress across a republish rather than dealing over it
 window.claude?.hot?.snapshot(() => ({
   settings: {
     opponent: state.opponent, deck: state.deck, felt: state.felt,

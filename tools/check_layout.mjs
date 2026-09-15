@@ -66,15 +66,17 @@ const measure = () => {
 
 async function run(browser, { width, height }, inflate) {
   const page = await browser.newPage({ viewport: { width, height } });
-  await page.goto('file://' + FILE);
-  if (inflate) {
-    await page.addStyleTag({ content: ':root{ --pad-block: 1.5rem; --step: 1.25rem; --slack: 16px; }' });
-  }
-  await page.waitForTimeout(400);
   const out = [];
+  // The table is only on screen once a hand is dealt, so each deck goes through
+  // the real flow: pick it on the start screen, then press Gioca.
   for (const deck of DECKS) {
-    await page.selectOption('#deckSel', deck);
-    await page.waitForTimeout(90);
+    await page.goto('file://' + FILE);
+    if (inflate) {
+      await page.addStyleTag({ content: ':root{ --pad-block: 1.5rem; --step: 1.25rem; --slack: 16px; }' });
+    }
+    await page.click(`.deck-opt[data-deck="${deck}"]`);
+    await page.click('#startPlay');
+    await page.waitForTimeout(260);
     out.push({ deck, ...(await page.evaluate(measure)) });
   }
   await page.close();
