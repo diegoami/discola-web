@@ -83,7 +83,16 @@ const seedHistory = async page => page.evaluate(() => {
 });
 
 const SCREENS = [
-  { name: 'start',         open: async () => {} },
+  { name: 'start', open: async () => {},
+    // The primary action has to be reachable without hunting for it. Readable
+    // type pushed it past the fold once; a pinned footer is the fix, and this
+    // is what stops it drifting back.
+    check: () => {
+      const r = document.querySelector('#startPlay').getBoundingClientRect();
+      return (r.bottom > window.innerHeight + 1 || r.top < -1)
+        ? [`Gioca is off screen (bottom ${Math.round(r.bottom)} vs viewport ${window.innerHeight})`]
+        : [];
+    } },
   { name: 'table',         open: async p => { await p.click('#startPlay'); } },
   { name: 'settings',      open: async p => { await p.click('#startPlay'); await p.click('#btnSettings'); } },
   { name: 'history empty', open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); } },
@@ -189,7 +198,11 @@ async function checkScreens(browser) {
       await screen.open(page);
       await page.waitForTimeout(350);
 
-      const issues = [...(await page.evaluate(audit)), ...errs];
+      const issues = [
+        ...(await page.evaluate(audit)),
+        ...(screen.check ? await page.evaluate(screen.check) : []),
+        ...errs,
+      ];
       if (issues.length) failed++;
       console.log(`  ${issues.length ? 'FAIL' : 'pass'}  ${vname.padEnd(16)} ${screen.name}`);
       issues.forEach(i => console.log(`        ${i}`));
