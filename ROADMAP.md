@@ -68,14 +68,24 @@ The UI is the expensive half, and rewriting it buys nothing a user can see.
 Keep the single file. Add a web app manifest and a service worker, then point
 Capacitor and Tauri at the same directory Netlify serves.
 
-- Desktop: Tauri 2 shell, `distDir` = the repo root.
+- Desktop: Tauri 2 shell, `build.frontendDist` = the repo root.
 - Android: Capacitor 8, `webDir` = the repo root.
+- Neither needs a `beforeBuildCommand`. Geoclick2027 has one because it
+  builds a SvelteKit app first; Discola has nothing to build.
 - One codebase, three targets, no framework.
 - Introduces a build step only for packaging, never for the web build.
 
 **Cost:** roughly one day per target, mostly signing and store paperwork.
 **Risk:** low. If Tauri or Capacitor is abandoned in five years, the web build
 is untouched and still opens.
+
+**What toolchain this does bring in**, to be exact about it: the Tauri CLI and
+a Rust toolchain to produce desktop binaries, and the Capacitor CLI with a JDK,
+the Android SDK and Gradle to produce an APK. That is real, and it is npm
+tooling in the repo. But it is build-time tooling for *packaging only* — the
+web build stays a directory of static files that opens with no toolchain at
+all, and it is what the wrappers load. SPEC §2's longevity argument survives
+because the artefact it protects is unchanged.
 
 ### Route B — adopt the Geoclick2027 stack
 
@@ -168,8 +178,8 @@ workspace — and it is worth having even if Route B is never taken.
 
 **Goal.** A signed desktop build.
 
-`desktop/src-tauri` mirroring Geoclick2027's layout, `distDir` pointing at the
-repo root, window defaulting to a landscape size that suits the 3-row table
+`desktop/src-tauri` mirroring Geoclick2027's layout, `build.frontendDist`
+pointing at the repo root, window defaulting to a landscape size that suits the 3-row table
 (1280 × 800 is comfortable; the layout check already covers it). No Tauri
 plugins needed — there is no database, `localStorage` is enough.
 
