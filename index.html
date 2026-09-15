@@ -26,13 +26,14 @@
      declared here once and used by name below, so --chrome can be DERIVED
      rather than hand-estimated.
 
-     Why that matters: the middle row is minmax(0,1fr), so it shrinks below
-     its own content rather than pushing the table taller — a card too tall
-     for its row spills over the hand beneath it instead of being clipped.
-     The card height is therefore (viewport - chrome) / --rows, and if chrome
-     is a guess that drifts out of step with the real padding, cards overlap
-     silently. Earlier versions of this file hard-coded 96px/140px/58px here
-     and were wrong three times. Change a padding now and the budget follows. */
+     Why that matters: the card height is (viewport - chrome) / --rows, so a
+     chrome that drifts out of step with the real padding shrinks or grows
+     every card on the table. Earlier versions hard-coded 96px/140px/58px
+     here and were wrong three times, each time silently. Change a padding
+     now and the budget follows it.
+
+     tools/check_layout.mjs asserts the result, and re-runs with these tokens
+     inflated so that replacing the derivation with a constant fails there. */
   --pad-block: clamp(.75rem, 2vw, 1.5rem);   /* .table, top and bottom      */
   --step: clamp(.5rem, 1.4vw, 1rem);         /* .table row gaps             */
   --trick-pad: var(--step);                  /* .trick, inside its border   */
