@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Discola</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,10 +44,12 @@
   --step: clamp(.5rem, 1.4vw, 1rem);         /* .table row gaps              */
   --trick-pad: var(--step);                  /* .trick, inside its border    */
   --extra-gap: 0px;                          /* .middle's gap when it stacks */
+  --plates: 0px;                             /* name plates, when they stack  */
   --slack: 8px;                              /* never land exactly on zero   */
   --rows: 3;                                 /* card rows down the table     */
   --chrome: calc(var(--topbar) + 2*var(--pad-block) + 2*var(--step)
-                 + 2*var(--trick-pad) + var(--extra-gap) + var(--slack));
+                 + 2*var(--trick-pad) + var(--extra-gap) + var(--plates)
+                 + var(--slack));
   --cw: clamp(32px, min(9vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 156px);
   --ratio: 2.0833;
   --ch: calc(var(--cw) * var(--ratio));
@@ -289,7 +295,10 @@ button.card:disabled{ cursor: default; }
 .pile[data-stock="0"] .stock{ display: none; }
 .pile[data-briscola="0"] .briscola{ display: none; }
 
-.tallone-meta{ display: grid; gap: .3rem; }
+/* min-width:0 lets the text wrap instead of forcing the row wider than the
+   screen; a flex item will not shrink below its content without it. */
+.tallone{ max-width: 100%; }
+.tallone-meta{ display: grid; gap: .3rem; min-width: 0; }
 
 .count{
   font-family: var(--font-display);
@@ -673,9 +682,17 @@ button.card:disabled{ cursor: default; }
      card is bounded by a quarter of the height, not by width alone. A
      portrait tablet is where width alone gets it wrong: plenty of it, but
      not enough height to spend the cap on. */
+  /* `1fr auto 1fr` makes both side columns fit the name plate, so a seat costs
+     2 x plate + hand — more than a phone is wide, and the opponent's third card
+     was being clipped off the screen. Stack them instead, and pay for the two
+     plate rows out of the card budget rather than pretending they are free. */
+  .seat{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: .25rem; }
+  .hand, .seat--opp .plate, .seat--you .plate{ grid-column: 1; justify-self: center; }
+
   :root{
     --rows: 4;
     --extra-gap: 1rem;
+    --plates: 76px;
     --cw: clamp(40px, min(22vw, calc((100dvh - var(--chrome)) / var(--rows) / var(--ratio))), 168px);
   }
   .middle{ grid-template-columns: minmax(0,1fr); justify-items: center; gap: var(--extra-gap); }
@@ -694,21 +711,23 @@ button.card:disabled{ cursor: default; }
 
 /* ---- phone-shaped screens -------------------------------------------------
 
-   A portrait screen this tall is a phone in someone's hand, whatever CSS width
-   the browser reports — and some Android browsers report 700-1000px for a six
-   inch screen. Every size above is absolute, so on such a device each one
-   renders at roughly half its physical size: 18px body text at a reported
-   770px is physically smaller than 18px at a reported 393px, on the same
-   piece of glass. Raising the rem values cannot fix that, because the problem
-   is the unit, not the number.
+   A portrait screen this tall is a phone in someone's hand, and a phone's
+   width is a hand's width. Sizing the UI against the viewport rather than in
+   absolute rem keeps the type proportionate to the screen it is held at, and
+   lets the content column use the full width instead of being capped at 620px.
 
-   So on a phone the scale is re-expressed against the viewport width, which
-   really is a hand's width whichever number the browser picked. The aspect
-   ratio is what separates a phone from a tablet here, not the width: a phone
-   is around 0.45-0.52 wide-over-tall, a portrait tablet 0.70-0.75.
+   The aspect ratio separates a phone from a tablet here, not the width: a
+   phone is around 0.45-0.52 wide-over-tall, a portrait tablet 0.70-0.75.
 
-   The content column also stops being capped at 620px, since on a 770px phone
-   that cap stranded the page in the middle of the screen.                    */
+   Historical note, because the numbers below were first chosen for the wrong
+   reason. This block originally said Android browsers report 700-1000 CSS px
+   for a six inch screen, and the caps were set high to compensate. They do
+   not. The page had no <meta name="viewport">, so every phone laid it out at
+   the ~980px default and scaled the result down, and Chrome's text autosizing
+   then inflated the type on top of that — 18px of body copy measured 55px.
+   The tag is there now and a 393px phone lays out at 393px. The vw scale is
+   kept because it is right on its own merits, but the caps are only safety
+   rails now and never bind on a real phone.                                  */
 @media (orientation: portrait) and (max-aspect-ratio: 3/5){
   :root{
     --t-title: clamp(40px, 11vw,  96px);
