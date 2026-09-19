@@ -1536,6 +1536,12 @@ function render(){
 
   faceOf(el.slotOpp, state.played[ALTO]);
   faceOf(el.slotYou, state.played[BASSO]);
+  // A slot with no played card is either empty or just swept. Drop the sweep
+  // animation class in the very same frame the slot is emptied, so the card
+  // never snaps back to its resting position between the sweep finishing and
+  // the slot clearing — that one-frame reappearance was the visible glitch.
+  if (!state.played[ALTO]) el.slotOpp.classList.remove("card--won-up", "card--won-down");
+  if (!state.played[BASSO]) el.slotYou.classList.remove("card--won-up", "card--won-down");
 
   const remaining = 40 - state.next;
   el.pile.dataset.stock = remaining >= 2 ? "1" : "0";
@@ -1564,10 +1570,11 @@ function sweep(){
     void node.offsetWidth; // restart the animation
     node.classList.add(cls);
   }
-  setTimeout(() => {
-    el.slotOpp.classList.remove("card--won-down", "card--won-up");
-    el.slotYou.classList.remove("card--won-down", "card--won-up");
-  }, Math.max(state.speed - 20, 60));
+  // No timer removes the class here. It used to fire at state.speed - 20, i.e.
+  // one beat before resolve() empties the slots at state.speed, and in that gap
+  // the still-played card lost the animation's held end-frame and flashed back
+  // into view. resolve() now empties the slot and render() strips this class in
+  // the same frame, and `animation: … both` holds the card hidden until then.
 }
 
 /* --- screens --------------------------------------------------------------- */
