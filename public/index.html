@@ -627,6 +627,12 @@ button.card:disabled{ cursor: default; }
   border-radius: 3px;
   padding: .3rem .4rem;
 }
+/* The dropdown popup is drawn by the OS. With a transparent select it fell back
+   to light text on a white system menu — the unselected deck names were nearly
+   invisible on Windows. Give the select and its options an explicit dark ground
+   and light ink so the whole list is legible everywhere. */
+.field select{ color: var(--ivory); background-color: var(--rail); }
+.field select option{ color: var(--ivory); background-color: var(--rail); }
 .field input[type="color"]{ width: 46px; height: 30px; padding: 2px; cursor: pointer; }
 .field input[type="range"]{ width: 140px; accent-color: var(--brass); }
 
