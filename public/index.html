@@ -446,7 +446,11 @@ button.card:disabled{ cursor: default; }
    scroll on a small phone, but the primary action never leaves the screen.
    Making the text readable pushed the button past the fold at 393px, and the
    answer to that is to pin the button, not to shrink the text again. */
-#viewStart{ grid-template-rows: minmax(0,1fr) auto; }
+/* topbar, then the scrolling sheet, then the pinned Gioca footer */
+#viewStart{ grid-template-rows: auto minmax(0,1fr) auto; }
+/* No wordmark on the start bar, so push the tools to the right where the eye
+   expects them, instead of the space-between default leaving them on the left. */
+.topbar--start{ justify-content: flex-end; }
 
 .start-foot{
   display: grid;
@@ -816,13 +820,13 @@ button.card:disabled{ cursor: default; }
       <button class="tool" id="btnNew" type="button" title="Nuova partita" aria-label="Nuova partita">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.7 3.3"/><path d="M20 5.5V11h-5.5"/></svg>
       </button>
-      <button class="tool" id="btnHistory" type="button" title="Storico partite" aria-label="Storico partite">
+      <button class="tool" id="btnHistory" data-nav="history" type="button" title="Storico partite" aria-label="Storico partite">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg>
       </button>
-      <button class="tool" id="btnSettings" type="button" title="Impostazioni" aria-label="Impostazioni">
+      <button class="tool" id="btnSettings" data-nav="settings" type="button" title="Impostazioni" aria-label="Impostazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.1"/><circle cx="16" cy="12" r="2.1"/><circle cx="8" cy="17" r="2.1"/></svg>
       </button>
-      <button class="tool" id="btnAbout" type="button" title="Informazioni" aria-label="Informazioni">
+      <button class="tool" id="btnAbout" data-nav="about" type="button" title="Informazioni" aria-label="Informazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.3"/><path d="M12 7.6v1"/></svg>
       </button>
     </nav>
@@ -878,6 +882,23 @@ button.card:disabled{ cursor: default; }
 
 <!-- ============================ start ============================ -->
 <div class="view" id="viewStart">
+  <!-- The same tools as the table, so history, settings and the About screen
+       (and its Android download link) are reachable before a game starts. No
+       wordmark here — the hero below is the title — and no "nuova partita",
+       which is what the Gioca button already is. -->
+  <header class="topbar topbar--start">
+    <nav class="tools">
+      <button class="tool" data-nav="history" type="button" title="Storico partite" aria-label="Storico partite">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg>
+      </button>
+      <button class="tool" data-nav="settings" type="button" title="Impostazioni" aria-label="Impostazioni">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.1"/><circle cx="16" cy="12" r="2.1"/><circle cx="8" cy="17" r="2.1"/></svg>
+      </button>
+      <button class="tool" data-nav="about" type="button" title="Informazioni" aria-label="Informazioni">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.3"/><path d="M12 7.6v1"/></svg>
+      </button>
+    </nav>
+  </header>
   <div class="sheet-body">
     <div class="sheet-inner">
       <div class="hero">
@@ -1879,9 +1900,10 @@ for (const b of document.querySelectorAll("[data-back]"))
 el.btnNew.addEventListener("click", askRestart);
 el.confirmNo.addEventListener("click", () => { el.confirmScrim.hidden = true; });
 el.confirmYes.addEventListener("click", abandon);
-el.btnHistory.addEventListener("click", () => show("history"));
-el.btnSettings.addEventListener("click", () => show("settings"));
-el.btnAbout.addEventListener("click", () => show("about"));
+// history / settings / about, from either topbar (the table's and the start
+// screen's) — back() returns to whichever screen you were on.
+for (const b of document.querySelectorAll("[data-nav]"))
+  b.addEventListener("click", () => show(b.dataset.nav));
 
 el.startPlay.addEventListener("click", () => { show("table"); newHand(); });
 el.changeOpponent.addEventListener("click", () => show("start"));
