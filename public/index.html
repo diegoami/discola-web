@@ -945,6 +945,7 @@ button.card:disabled{ cursor: default; }
             <option value="Napoletane">Napoletane</option>
             <option value="Romagnole">Romagnole</option>
             <option value="Francesi">Francesi</option>
+            <option value="Bresciane">Bresciane</option>
           </select>
         </label>
         <label class="field" for="feltSel">Panno
@@ -1002,8 +1003,9 @@ button.card:disabled{ cursor: default; }
       <p><strong>Discola</strong> è un gioco di briscola a due scritto in Delphi 3
       nel 1997 da Diego Amicabile. Questa è la versione web.</p>
 
-      <p>Le carte sono le immagini originali del programma: cinque mazzi —
-      Trevisane, Piacentine, Napoletane, Romagnole e Francesi.</p>
+      <p>Le carte dei cinque mazzi originali — Trevisane, Piacentine, Napoletane,
+      Romagnole e Francesi — sono le immagini del programma del 1997. A queste si
+      aggiunge un mazzo Bresciane.</p>
 
       <p>L&rsquo;icona del gioco è il fante di spade delle Trevisane: in Veneto lo
       si chiama <em>la vecia</em>, e nessuno sa più bene perché — di vecchia non
@@ -1209,14 +1211,19 @@ const state = {
   sound: true
 };
 
-const DECKS = ["Trevisane", "Piacentine", "Napoletane", "Romagnole", "Francesi"];
+const DECKS = ["Trevisane", "Piacentine", "Napoletane", "Romagnole", "Francesi", "Bresciane"];
+// Most decks are packed PNG sprite sheets; Bresciane is a photographic scan, so
+// it ships as a JPEG (see tools/import_bresciane.mjs). Extension per deck:
+const DECK_EXT = { Bresciane: "jpg" };
+const deckSheet = name => `url("decks/${name.toLowerCase()}.${DECK_EXT[name] || "png"}")`;
 
 const DECK_RATIO = {
   Trevisane: 125 / 60,
   Romagnole: 112 / 71,
   Napoletane: 128 / 78,
   Piacentine: 128 / 74,
-  Francesi: 128 / 75
+  Francesi: 128 / 75,
+  Bresciane: 486 / 232
 };
 
 let timer = null;
@@ -1773,7 +1780,7 @@ function renderHistory(){
 function applyDeck(name){
   state.deck = name;
   const root = document.documentElement;
-  root.style.setProperty("--sheet", `url("decks/${name.toLowerCase()}.png")`);
+  root.style.setProperty("--sheet", deckSheet(name));
   root.style.setProperty("--ratio", DECK_RATIO[name]);
   el.deckSel.value = name;
   el.deckName.textContent = name;
@@ -1821,7 +1828,7 @@ function buildDecks(){
     b.dataset.deck = name;
     b.title = name;
     b.setAttribute("aria-label", `Mazzo ${name}`);
-    b.style.setProperty("--sheet", `url("decks/${name.toLowerCase()}.png")`);
+    b.style.setProperty("--sheet", deckSheet(name));
     b.style.setProperty("--ratio", DECK_RATIO[name]);
     b.innerHTML = `<span class="card" style="--col:0;--row:0"></span>`;
     b.addEventListener("click", () => { applyDeck(name); save(); });

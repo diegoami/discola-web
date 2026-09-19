@@ -129,3 +129,21 @@ Pure standard library, no dependencies:
 ```sh
 python3 tools/pack_cards.py /path/to/briscola-JS public/decks/
 ```
+
+## The Bresciane deck
+
+The five original decks are the 1997 bitmaps. A sixth, **Bresciane**, is imported
+from [`mhamilt/Italian-decks`](https://github.com/mhamilt/Italian-decks) by
+`tools/import_bresciane.mjs`, which composes the source's per-card images into
+the same 11x4 sheet and writes `public/decks/bresciane.jpg` (JPEG, not PNG: the
+source is photographic and lossless PNG of it runs to ~12 MB).
+
+Provenance and licence, plainly: the source repo is labelled GPLv3, but the
+images are a scan of a commercial Teodomiro Dal Negro deck — the Asso di denari
+carries the maker's stamp. That is the same copyright grey area as the original
+decks, not a cleanly-licensed set. Noted so it is a deliberate choice, not a
+surprise.
+
+```sh
+node tools/import_bresciane.mjs
+```

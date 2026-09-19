@@ -74,7 +74,7 @@ const SCREEN_VIEWPORTS = ['Android small', 'iPhone Pro Max', 'tablet portrait',
 // The tightest ones; worth re-running the table budget against inflated spacing.
 const TIGHT = ['phone landscape', 'laptop short', 'iPad', 'tablet portrait', 'Android small'];
 
-const DECKS = ['Trevisane', 'Romagnole', 'Napoletane', 'Piacentine', 'Francesi'];
+const DECKS = ['Trevisane', 'Romagnole', 'Napoletane', 'Piacentine', 'Francesi', 'Bresciane'];
 
 /* ---- getting to each screen ----------------------------------------------- */
 
