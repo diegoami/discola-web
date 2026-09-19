@@ -26,16 +26,17 @@ longevity and zero operational surface beat features.
 ## 2. Scope
 
 **In scope.** Two-player Briscola against the computer. The four original
-opponents. The five original card decks. Settings that existed in 1997 (deck,
-felt colour, animation speed, show-points, sound). Match history kept on the
-device. Five screens, two dialogs. Italian UI.
+opponents. The five original card decks, plus an imported Bresciane deck (§10).
+Settings that existed in 1997 (deck, felt colour, animation speed, show-points,
+sound). Match history kept on the device. Five screens, two dialogs. Italian UI.
+The web build is also packaged as an Android app (§12).
 
 **Out of scope, deliberately.**
 
 | Not built | Why |
 |---|---|
 | Multiplayer, accounts, server | Any server is an operational liability that outlives interest in the project. It must keep working untouched for years. |
-| A framework or build step | A single HTML file with no toolchain still opens in ten years. A 2026 build pipeline will not. |
+| A framework or build step *for the web build* | A single HTML file with no toolchain still opens in ten years. A 2026 build pipeline will not. Packaging tooling exists for the native apps only (Capacitor for Android), and it wraps `public/` unchanged — the web build stays a directory of static files that opens with no toolchain. See [`ANDROID.md`](ANDROID.md). |
 | Four-player Briscola, other variants | The original was two-player. Scope is fidelity, not a card-game suite. |
 | Difficulty slider | `Opzioni.Difficolta` existed in the Pascal but nothing ever read it. Porting a dead setting would be inventing behaviour. |
 | Localisation | The game is Italian and its terms of art are Italian. Translating *briscola*, *tallone*, *carico* loses more than it gains. |
@@ -344,9 +345,13 @@ wrote the same settings to `Discola.ini`.
 
 ## 10. Assets
 
-Five PNG sprite sheets in `public/decks/`, 2.2 MB total, one per deck. Each is an
+Six sprite sheets in `public/decks/`, ~2.8 MB total, one per deck. Each is an
 11 × 4 grid: **column = card number − 1**, **row = suit** in `TSeme` order
 (denari, coppe, spade, bastoni), and **column 10, row 0 is the card back**.
+
+The five original decks are PNG; the sixth, **Bresciane**, is a JPEG (~0.6 MB) —
+photographic scans compress poorly as lossless PNG (~12 MB), so `DECK_EXT` in
+`public/index.html` marks it JPEG and `deckSheet()` builds the right URL.
 
 Cell sizes differ per deck because the 1997 bitmaps do:
 
@@ -359,24 +364,35 @@ Cell sizes differ per deck because the 1997 bitmaps do:
 | Francesi | 75 × 128 | 825 × 512 |
 
 Cards within a deck are not all the same size, so each is centred in its cell
-over transparent padding. `tools/pack_cards.py` rebuilds the sheets from the
-original BMPs in `diegoami/briscola-JS` — pure standard library, no Pillow:
+over transparent padding. `tools/pack_cards.py` rebuilds the five original sheets
+from the BMPs in `diegoami/briscola-JS`; `tools/import_bresciane.mjs` builds the
+Bresciane sheet from `mhamilt/Italian-decks` (see [`ANDROID.md`](ANDROID.md) and
+the README for its provenance and licence caveat). Both are pure standard
+library plus, for the JPEG, the Chromium the UI check already uses.
 
 ```sh
 python3 tools/pack_cards.py /path/to/briscola-JS public/decks/
+node tools/import_bresciane.mjs
 ```
 
 A card is rendered as a `background-position` offset into the sheet, so the
 whole deck is one HTTP request and swapping decks is a variable change.
+
+**Fonts.** Bodoni Moda, Barlow and Barlow Condensed are self-hosted in
+`public/fonts/` (latin subset, ~0.2 MB), not fetched from Google. The page has
+no external subresources at all, which is what lets the Android app run offline
+and makes "nothing leaves the device" literally true. The UI check asserts it.
 
 ## 11. Testing
 
 `node tools/check_ui.mjs`. Needs `playwright-core` and a Chromium binary; it is
 a local command, not CI. The `ui-check` skill in `.claude/skills/` documents it.
 
-Two passes: every screen and dialog at five device shapes, then the card table
-at nineteen viewports in all five decks, then the table again with spacing
-tokens inflated.
+Passes: a document/head check; a **fonts** pass (every character is in the
+shipped subset, every `@font-face` loads with the network cut, and nothing is
+fetched from the network); every screen and dialog at five device shapes; the
+card table at nineteen viewports in all **six** decks; then the table again with
+spacing tokens inflated.
 
 Every threshold is calibrated against a defect that shipped:
 
@@ -389,6 +405,7 @@ Every threshold is calibrated against a defect that shipped:
 | rows drift apart | cards hit their cap and the grid gave the leftover to the gaps |
 | Gioca on screen | readable type pushed the primary action past the fold |
 | inflated spacing | `--chrome` was hand-estimated and wrong, three times |
+| fonts load offline / no network subresources | the three faces were a `<link>` to Google; offline the wordmark fell back to a generic serif 12% narrower than every threshold was calibrated against, and each launch leaked the device IP |
 
 **The rule: fix the page, not the threshold.** If a threshold is genuinely
 wrong, change it and then confirm it still fails the commit that introduced the
@@ -401,9 +418,14 @@ layout while failing every good one.
 Netlify, site `discola`, linked to this repository. Every push to `main`
 redeploys; there is no build step. `netlify.toml` publishes `public/` — and only
 `public/`, so the docs, the tooling and netlify.toml itself are never served —
-caches
-`decks/*` for a year (the sprite sheets never change once packed) and
+caches `decks/*` and `fonts/*` for a year (they never change once built) and
 revalidates `index.html` on every load so a deploy reaches players immediately.
+It also redirects `/android` to the latest GitHub release.
+
+**Android.** The same `public/` is packaged as an APK with Capacitor (`mobile/`),
+signed and published as a GitHub release on the public `diegoami/discola-releases`
+repo; the website links to it. The build, signing and release scripts are in
+[`ANDROID.md`](ANDROID.md). The web build is unchanged by any of this.
 
 ## 13. Known gaps
 
@@ -418,8 +440,14 @@ revalidates `index.html` on every load so a deploy reaches players immediately.
   opponent. This matches the 1997 behaviour and is deliberate, but it is a
   reasonable thing to change.
 - **Sound is synthesised.** The original's MIDI soundtrack is gone.
-- **`public/decks/` is committed.** 2.2 MB of PNGs in the repository, so the site works
-  standalone rather than depending on `briscola-JS` at build time.
+- **`public/decks/` is committed.** ~2.8 MB of sheets in the repository, so the
+  site works standalone rather than depending on `briscola-JS` at build time.
+- **Every deck sheet loads on the start screen**, because the picker previews all
+  of them. Adding decks grows that eager load; the Bresciane JPEG adds ~0.6 MB.
+  Lazy-loading the previews is the fix if it ever bites.
+- **The Bresciane deck is not cleanly licensed.** It is a scan of a commercial
+  Dal Negro deck — the same copyright grey area as the original art, a deliberate
+  choice, documented in the README and the import script.
 - **History is per-device.** No export, no sync. Clearing site data loses it.
 
 ## 14. Glossary

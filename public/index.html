@@ -506,6 +506,10 @@ button.card:disabled{ cursor: default; }
 /* ---- start screen --------------------------------------------------------- */
 
 .hero{ display: grid; gap: .3rem; text-align: center; }
+/* A discreet link under the title to the project page (rules, download, credits).
+   Small and brass so it reads as secondary to the Gioca action. */
+.hero-link{ margin: .1rem 0 0; font-size: var(--t-tiny); }
+.hero-link a{ color: var(--brass); }
 .hero h1{
   font-family: var(--font-display);
   font-size: var(--t-title);
@@ -919,6 +923,7 @@ button.card:disabled{ cursor: default; }
       <div class="hero">
         <h1>Discola</h1>
         <p>Briscola a due. Il primo a 61 punti su 120 vince la partita.</p>
+        <p class="hero-link"><a href="https://github.com/diegoami/discola-releases">Regole, download e crediti</a></p>
         <p class="last-result" id="lastResult" hidden></p>
       </div>
 
