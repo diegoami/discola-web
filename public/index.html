@@ -568,12 +568,15 @@ button.card:disabled{ cursor: default; }
 
 /* One row of five real cards. The chosen deck is named beside the section
    label instead of under every swatch, which is what let the row fit. */
-.decks{ display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; }
+/* One row, however many decks: the column count is set from JS (--deck-cols =
+   DECKS.length) and the previews shrink to fit rather than wrapping. */
+.decks{ display: grid; grid-template-columns: repeat(var(--deck-cols, 6), 1fr); gap: .4rem; }
 
 .deck-opt{
   display: grid;
   justify-items: center;
-  padding: .4rem;
+  min-width: 0;               /* let the grid item shrink so the row never overflows */
+  padding: .3rem;
   border: 1px solid var(--rail-line);
   border-radius: 4px;
   background: rgba(0,0,0,.16);
@@ -585,8 +588,14 @@ button.card:disabled{ cursor: default; }
 /* Both --cw and --ch are redeclared here: --ch on :root was already substituted
    against the root's --cw, so overriding --cw alone would not resize anything. */
 .deck-opt .card{
-  --cw: var(--deck-sw);
-  --ch: calc(var(--deck-sw) * var(--ratio));
+  /* Fill the column rather than a fixed width, so decks fit one row at any
+     count. Always the top-left cell (ace of denari): the 11x4 sheet is scaled
+     so a single cell fills the element. */
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / var(--ratio);
+  background-size: 1100% 400%;
+  background-position: 0 0;
 }
 
 /* ---- controls ------------------------------------------------------------- */
@@ -1821,6 +1830,7 @@ function buildOpponents(){
 // most characteristic card in all five. The name goes beside the section label,
 // not under the swatch, so all five fit one row on a phone.
 function buildDecks(){
+  el.decks.style.setProperty("--deck-cols", DECKS.length);
   el.decks.replaceChildren(...DECKS.map(name => {
     const b = document.createElement("button");
     b.type = "button";
