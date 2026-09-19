@@ -28,10 +28,16 @@
  */
 import { chromium } from 'playwright-core';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
 
-const FILE = path.resolve(process.argv[2] ?? new URL('../public/index.html', import.meta.url).pathname);
-const CHROME = process.env.CHROME || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const URL_ = 'file://' + FILE;
+// fileURLToPath, not URL.pathname: on Windows the latter yields "/C:/..." and
+// path.resolve then prefixes the cwd drive letter, doubling it.
+const FILE = path.resolve(process.argv[2] ?? fileURLToPath(new URL('../public/index.html', import.meta.url)));
+// Whatever 'npx playwright install chromium' put on this machine: the path
+// differs per OS and per Playwright revision, so do not hard-code one.
+const CHROME = process.env.CHROME || chromium.executablePath();
+const URL_ = pathToFileURL(FILE).href;
 
 /* ---- viewports ------------------------------------------------------------ */
 
@@ -224,6 +230,88 @@ async function checkDocument(browser) {
   return bad.length ? 1 : 0;
 }
 
+/* ---- fonts: the page must not need the internet ---------------------------- */
+
+// The three faces used to be a <link> to fonts.googleapis.com. Nothing failed
+// when they did not load: the browser fell back to a generic serif and the
+// wordmark set 12% narrower than every threshold below was calibrated against.
+// This check never saw it, because this check has always had the network up.
+// An APK is meant to run with the radio off, so that fallback is what it would
+// have shipped. These assertions are why it cannot come back.
+
+// The latin subset the woff2 files were cut to. A character outside it has no
+// glyph in what we ship and falls back on its own, mid-word.
+const LATIN = (cp) =>
+  cp <= 0xFF || cp === 0x131 || (cp >= 0x152 && cp <= 0x153) || (cp >= 0x2BB && cp <= 0x2BC) ||
+  cp === 0x2C6 || cp === 0x2DA || cp === 0x2DC || cp === 0x304 || cp === 0x308 || cp === 0x329 ||
+  (cp >= 0x2000 && cp <= 0x206F) || cp === 0x20AC || cp === 0x2122 || cp === 0x2191 ||
+  cp === 0x2193 || cp === 0x2212 || cp === 0x2215 || cp === 0xFEFF || cp === 0xFFFD;
+
+// Only the ones the page uses; an unknown entity is left alone and will read as
+// ASCII, which is harmless here because ASCII is inside the subset anyway.
+const ENTITIES = {
+  rsquo: 0x2019, lsquo: 0x2018, ldquo: 0x201C, rdquo: 0x201D, laquo: 0xAB, raquo: 0xBB,
+  middot: 0xB7, nbsp: 0xA0, mdash: 0x2014, ndash: 0x2013, hellip: 0x2026,
+};
+
+async function checkFonts(browser) {
+  console.log('\nfonts');
+  let failed = 0;
+
+  const source = readFileSync(FILE, 'utf8')
+    .replace(/&([a-z]+);/gi, (m, name) => (ENTITIES[name] ? String.fromCodePoint(ENTITIES[name]) : m));
+  const outside = new Map();
+  for (const ch of source) {
+    const cp = ch.codePointAt(0);
+    if (cp > 0x7F && !LATIN(cp)) outside.set(ch, 'U+' + cp.toString(16).toUpperCase().padStart(4, '0'));
+  }
+  console.log(`  ${outside.size ? 'FAIL' : 'pass'}  every character is in the latin subset`);
+  if (outside.size) {
+    failed++;
+    for (const [ch, cp] of outside)
+      console.log(`        ${cp} ${ch} — no glyph in fonts/; widen the subset or do not use it`);
+  }
+
+  // Everything but the page itself is cut off, which is what an APK sees.
+  const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  const external = [];
+  await page.route('**', (route) => {
+    const url = route.request().url();
+    if (url.startsWith('file://') || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
+    external.push(url);
+    return route.abort();
+  });
+  await page.goto(URL_);
+  // Ask for each face explicitly. A browser only fetches a face when something
+  // on the current screen uses it, so reading .status after load tells you
+  // which weights the start screen happens to draw with — not whether the
+  // files are there. load() is the question we actually mean.
+  const faces = await page.evaluate(async () => {
+    const declared = [...document.fonts];
+    return Promise.all(declared.map(async (f) => {
+      try { await f.load(); } catch { /* status below carries the verdict */ }
+      return { family: f.family, weight: f.weight, status: f.status };
+    }));
+  });
+  await page.close();
+
+  const unloaded = faces.filter((f) => f.status !== 'loaded');
+  const ok = faces.length > 0 && unloaded.length === 0;
+  console.log(`  ${ok ? 'pass' : 'FAIL'}  all ${faces.length} @font-face rules load with the network down`);
+  if (!ok) {
+    failed++;
+    if (!faces.length) console.log('        no @font-face rules at all — the page is on system fonts');
+    unloaded.forEach((f) => console.log(`        ${f.family} ${f.weight}: ${f.status}`));
+  }
+
+  console.log(`  ${external.length ? 'FAIL' : 'pass'}  no subresource comes from the network`);
+  if (external.length) {
+    failed++;
+    [...new Set(external)].forEach((u) => console.log(`        ${u}`));
+  }
+  return failed;
+}
+
 /* ---- pass 1: every screen -------------------------------------------------- */
 
 async function checkScreens(browser) {
@@ -339,6 +427,7 @@ async function checkTable(browser, only, inflate) {
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
 let failed = 0;
 failed += await checkDocument(browser);
+failed += await checkFonts(browser);
 failed += await checkScreens(browser);
 failed += await checkTable(browser, null, false);
 failed += await checkTable(browser, TIGHT, true);

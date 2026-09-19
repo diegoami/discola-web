@@ -5,6 +5,24 @@
 [build]
   publish = "public"
 
+# The self-hosted fonts are subset and versioned by content; like the decks they
+# never change once shipped, so cache them hard too.
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# The Android build. /android points at the latest GitHub release rather than a
+# versioned asset URL, so the link survives every release; the release page also
+# shows the notes and the checksum, which is where someone about to sideload an
+# APK should land. Built and hosted outside Netlify — see ANDROID.md §6 for why
+# a build plugin is the wrong tool here.
+[[redirects]]
+  from = "/android"
+  to = "https://github.com/diegoami/discola-releases/releases/latest"
+  status = 302
+  force = true
+
 # The deck sprite sheets are the original 1997 bitmaps and never change once a
 # deck is packed, so they can be cached hard. The page itself must not be, or
 # players keep an old build after a deploy.

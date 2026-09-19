@@ -1,0 +1,16 @@
+{
+  "name": "discola-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A two-player Briscola game, ported to the web from the Delphi 3 original of 1997",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "check": "node tools/check_ui.mjs",
+    "setup": "npm install && npx playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}

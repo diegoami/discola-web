@@ -193,6 +193,11 @@ Apple Developer account; Linux AppImage costs nothing.
 
 **Goal.** An APK, and optionally a Play listing.
 
+**Written out in full in [`ANDROID.md`](ANDROID.md)**, which corrects this
+iteration where the repo turned out not to match it: the page fetches its fonts
+from Google at runtime, there is no icon anywhere, and this repo is private so
+its release assets cannot be linked from the site.
+
 `mobile/` with `capacitor.config.ts`, `webDir` at `public/`, Android
 platform added. No plugins: no SQLite, no filesystem — `localStorage` covers
 both storage keys.

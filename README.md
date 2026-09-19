@@ -63,20 +63,58 @@ The original release installer cannot be run on a modern computer: its
 `SETUP.EXE` is a 16-bit NE executable, and 64-bit Windows has no 16-bit
 subsystem. That is what this port is for.
 
+## Running it locally
+
+```sh
+npm start          # http://localhost:8080
+```
+
+Or open `public/index.html` straight from disk. The server exists because a
+service worker, a web app manifest and the Android wrapper all need a real
+origin rather than `file://`, and because it binds `0.0.0.0`, so the portrait
+layout can be opened on a phone on the same network.
+
 ## Checking the UI
 
 `tools/check_ui.mjs` drives every screen and dialog across nineteen viewports
 and all five decks, asserting the things that break silently: overlapping
 cards, a hand below the fold, rows drifting apart, text below its size floor,
-tap targets under 32px, more than one screen visible at once, script errors.
+tap targets under 32px, more than one screen visible at once, script errors, and
+a page that would have needed the network to look right.
 
 ```sh
-npm i playwright-core && npx playwright install chromium
-node tools/check_ui.mjs
+npm run setup     # once: playwright-core and a Chromium binary
+npm run check
 ```
 
 Run it after any UI change. Every threshold in it is calibrated against a
 defect that actually shipped; the file says which.
+
+## The fonts
+
+Bodoni Moda, Barlow and Barlow Condensed are served from `public/fonts/` —
+172 KB of `latin`-subset woff2 — not from Google. The page has no external
+subresources at all, which is what lets it work with the network off and is
+what makes "nothing leaves the device" true rather than nearly true.
+
+`tools/check_ui.mjs` asserts all three of those: every character in the source
+is inside the shipped subset, every `@font-face` loads with the network cut,
+and nothing is fetched from the network. Adding a character outside the subset
+or a CDN link fails the check.
+
+## The app icon
+
+The icon is the fante di spade of the Trevisane deck — *la vecia*, in Veneto,
+moustache notwithstanding. `tools/make_icons.py` crops its top half out of the
+sprite sheet and writes the web sizes into `public/icons/` and the 1024px
+sources for `@capacitor/assets` into `assets/`:
+
+```sh
+python3 tools/make_icons.py
+```
+
+Pure standard library, and nearest-neighbour throughout — the source is a 50x50
+patch of 1997 bitmap, and smoothing it would be redrawing the art.
 
 ## Rebuilding the sprite sheets
 

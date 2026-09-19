@@ -1,0 +1,8 @@
+{
+  "appId": "com.discola.app",
+  "appName": "Discola",
+  "webDir": "../public",
+  "android": {
+    "allowMixedContent": false
+  }
+}

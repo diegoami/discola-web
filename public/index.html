@@ -3,11 +3,64 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Discola</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap">
+<!-- La vecia — the fante di spade, cut from the Trevisane sheet by
+     tools/make_icons.py. Declaring an icon is also what stops the browser
+     asking for /favicon.ico and logging a 404 on every load. -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0d2620">
+<!-- No <link rel=preload> for the fonts. A font preload has to carry
+     `crossorigin`, which makes it a CORS fetch, and over file:// the origin is
+     "null" so the browser blocks it and logs an error on every load. Opening
+     public/index.html straight from disk is a supported way to play this, so
+     the preload costs more than the few milliseconds it saves: the @font-face
+     rules below fetch the same files from the same directory either way. -->
 
 <style>
+/* ---------------------------------------------------------------------------
+   The three faces, served from fonts/ rather than fonts.googleapis.com.
+
+   They used to be a <link> to Google. That is fine on the web and wrong in an
+   APK, which is supposed to work with the radio off: with the network blocked
+   none of them loaded, Bodoni Moda fell back to a generic serif, and the
+   wordmark set 12% narrower than every threshold in tools/check_ui.mjs was
+   calibrated against. It also made "nothing leaves the device" untrue — every
+   cold start told Google's CDN the device's IP.
+
+   Only the `latin` subset is here. Every character this page can render is
+   inside it; there is an assertion in check_ui.mjs that says so and fails if
+   someone adds one that is not.
+
+   Bodoni Moda is one variable file for all three weights — Google served the
+   same bytes for 400, 600 and 700 — so it is declared over a weight range and
+   the wght axis does the rest.
+   --------------------------------------------------------------------------- */
+@font-face{
+  font-family:'Bodoni Moda'; font-style:normal; font-weight:400 700; font-display:swap;
+  src:url(fonts/bodoni-moda.woff2) format('woff2');
+}
+@font-face{
+  font-family:'Barlow'; font-style:normal; font-weight:400; font-display:swap;
+  src:url(fonts/barlow-400.woff2) format('woff2');
+}
+@font-face{
+  font-family:'Barlow'; font-style:normal; font-weight:500; font-display:swap;
+  src:url(fonts/barlow-500.woff2) format('woff2');
+}
+@font-face{
+  font-family:'Barlow'; font-style:normal; font-weight:600; font-display:swap;
+  src:url(fonts/barlow-600.woff2) format('woff2');
+}
+@font-face{
+  font-family:'Barlow Condensed'; font-style:normal; font-weight:500; font-display:swap;
+  src:url(fonts/barlow-condensed-500.woff2) format('woff2');
+}
+@font-face{
+  font-family:'Barlow Condensed'; font-style:normal; font-weight:600; font-display:swap;
+  src:url(fonts/barlow-condensed-600.woff2) format('woff2');
+}
+
 /* ---------------------------------------------------------------------------
    Discola — a card table, lit from above.
    One committed visual world (green baize under warm light), so no theme swap:
@@ -931,6 +984,13 @@ button.card:disabled{ cursor: default; }
       <p>Le carte sono le immagini originali del programma: cinque mazzi —
       Trevisane, Piacentine, Napoletane, Romagnole e Francesi.</p>
 
+      <p>L&rsquo;icona del gioco è il fante di spade delle Trevisane: in Veneto lo
+      si chiama <em>la vecia</em>, e nessuno sa più bene perché — di vecchia non
+      ha niente, e i baffi ce li ha eccome. Quando è stata scelta per l&rsquo;icona,
+      chi ha ritagliato la carta ha fatto notare che era &laquo;un uomo coi
+      baffi&raquo; e che la vecia doveva essere un&rsquo;altra carta. Sui baffi aveva
+      ragione. Sul nome no: in Veneto è la vecia, e basta.</p>
+
       <p>Anche l&rsquo;avversario è quello originale, con i quattro profili di
       allora: Valerio, Graziano, Piero e Franco. Ognuno ha la sua serie di pesi e
       gioca di conseguenza — Graziano brucia le briscole presto, Franco se le
@@ -943,6 +1003,10 @@ button.card:disabled{ cursor: default; }
       <p>Giochi una carta con un clic o con i tasti <strong>1</strong>,
       <strong>2</strong>, <strong>3</strong>. Lo storico delle partite resta nel
       browser, su questo dispositivo.</p>
+
+      <p>C&rsquo;è anche un&rsquo;<a href="https://github.com/diegoami/discola-releases/releases/latest">app
+      per Android</a>: la stessa versione, da installare sul telefono e giocare
+      senza connessione.</p>
 
       <p style="margin:0">
         <a href="https://github.com/diegoami/discola-web">Sorgente della versione web</a> &middot;
