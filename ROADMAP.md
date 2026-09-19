@@ -7,9 +7,13 @@ stack is the way to get there.
 
 ## Status
 
-Nothing here is built. Discola today is one `public/index.html`, no build step, no
-dependencies, deployed to Netlify on push. This is a plan and a set of
-recommendations, not work in progress.
+Route A is largely built — see [`ANDROID.md`](ANDROID.md) for the live state.
+Iteration 1's offline goal is met on the fonts side (self-hosted, no network at
+runtime) though the service worker is not written; Iteration 4 is done bar
+publishing a release: a signed APK builds from `mobile/` and runs offline. The
+engine extraction (Iteration 2), desktop via Tauri (Iteration 3) and the
+Geoclick stack (Iteration 5) are still just plans. What follows is the original
+reasoning, kept because the route decision it argues for is what was taken.
 
 ---
 
