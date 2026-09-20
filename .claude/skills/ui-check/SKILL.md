@@ -41,7 +41,9 @@ node tools/check_ui.mjs "$PWD/public/.old.html"; rm public/.old.html
 **Screens pass** — all five screens plus the confirm and end-of-match dialogs,
 at five real device shapes. Asserts exactly one screen is visible, no sideways
 scroll, no text below its size floor, no text clipped by a container that
-cannot scroll, no tap target under 32px, and no script or console errors.
+cannot scroll, no tap target under 32px, and no script or console errors. It also
+requires an opaque background under every `select` and `option`, and that the
+deck picker stays on one row.
 
 **Table pass** — the card table at all nineteen viewports in all six decks.
 Asserts the trick never overlaps either hand, your hand is never below the
@@ -62,6 +64,8 @@ shipped:
 | your hand above the fold | a portrait tablet pushed the player's own hand off screen |
 | trick vs hands | a phone in landscape collapsed the middle row and the played cards landed on top of the hand |
 | rows drift apart | cards hit their cap, and the grid handed the leftover height to the gaps until a third of the table was empty |
+| opaque select/option | the deck dropdown opened as light text on a white Windows system menu |
+| one deck row | a hard-coded column count wrapped the sixth deck onto a second row, moving the controls below it |
 | inflated spacing | `--chrome` was hand-estimated three times and was wrong three times |
 
 If you believe a threshold is genuinely wrong, change it — then run the check

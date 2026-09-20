@@ -220,11 +220,31 @@ const audit = () => {
         out.push(`${name(el)} tap target ${Math.round(r.width)}x${Math.round(r.height)}, want 32`);
     }
   }
+
+  // The select's popup is drawn by the OS and is not in the document, so its
+  // legibility cannot be measured. What decides it is in the document: the
+  // select and its options must carry an opaque background. Transparent ones
+  // let Windows draw light text on a white system menu.
+  for (const sel of document.querySelectorAll('select, select option')) {
+    const bg = getComputedStyle(sel).backgroundColor;
+    const alpha = bg.startsWith('rgba') ? Number(bg.slice(bg.lastIndexOf(',') + 1, -1)) : 1;
+    if (!(alpha >= 1))
+      out.push(`${name(sel)} has a transparent background (${bg}) — the system popup will be unreadable`);
+  }
+
+  // The deck picker is one row by construction (--deck-cols comes from JS). A
+  // seventh deck, or a hard-coded repeat(6, 1fr) creeping back, wraps it in
+  // half — with no overflow, clipped text or small tap target for the rules
+  // above to catch.
+  const deckOpts = [...document.querySelectorAll('.deck-opt')].filter(shown);
+  if (deckOpts.length) {
+    const tops = [...new Set(deckOpts.map(o => Math.round(o.getBoundingClientRect().top)))];
+    if (tops.length > 1)
+      out.push(`the deck picker is on ${tops.length} rows, not one `
+        + `(${deckOpts.length} decks at tops ${tops.sort((a, b) => a - b).join(', ')})`);
+  }
   return out;
 };
-
-// Local runs have no network, so the Google Fonts stylesheet always fails.
-const noise = m => /ERR_CERT_AUTHORITY_INVALID|ERR_CONNECTION|ERR_NAME_NOT_RESOLVED|fonts\.googleapis/.test(m);
 
 /* ---- pass 0: the document itself ------------------------------------------- */
 
@@ -287,7 +307,11 @@ async function checkFonts(browser) {
   let failed = 0;
 
   const source = readFileSync(FILE, 'utf8')
-    .replace(/&([a-z]+);/gi, (m, name) => (ENTITIES[name] ? String.fromCodePoint(ENTITIES[name]) : m));
+    .replace(/&([a-z]+);/gi, (m, name) => (ENTITIES[name] ? String.fromCodePoint(ENTITIES[name]) : m))
+    // Numeric entities too: &#8594; is U+2192, outside the subset, and without
+    // this it would read as ASCII and pass.
+    .replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(Number(d)));
   const outside = new Map();
   for (const ch of source) {
     const cp = ch.codePointAt(0);
@@ -351,7 +375,9 @@ async function checkScreens(browser) {
       const page = await browser.newPage({ viewport: { width, height } });
       const errs = [];
       page.on('pageerror', e => errs.push('script error: ' + e.message));
-      page.on('console', m => { if (m.type() === 'error' && !noise(m.text())) errs.push('console: ' + m.text()); });
+      // Every request the page makes is file:// now that the fonts are
+      // self-hosted, so a console network error is a defect, not local noise.
+      page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 
       await page.goto(URL_);
       await page.evaluate(() => localStorage.removeItem('discola.history'));
