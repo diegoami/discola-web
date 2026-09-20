@@ -15,6 +15,7 @@ import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { compareVersions } from './versions.mjs';
 
 const RELEASES_REPO = 'diegoami/discola-releases';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -22,10 +23,11 @@ const CONFIRM = process.argv.includes('--confirm');
 
 const fail = (msg) => { console.error(`\npublish_release: ${msg}`); process.exit(1); };
 
-// --- which version: the newest dist-release/vX.Y.Z/ ---
+// --- which version: the newest dist-release/vX.Y.Z/, by number not by string ---
+// String order would pick v1.9.0 over v1.10.0 once a component gains a digit.
 const distRoot = path.join(ROOT, 'dist-release');
 if (!existsSync(distRoot)) fail('no dist-release/ — run tools/package_release.mjs first.');
-const tags = readdirSync(distRoot).filter((d) => /^v\d+\.\d+\.\d+$/.test(d)).sort();
+const tags = readdirSync(distRoot).filter((d) => /^v\d+\.\d+\.\d+$/.test(d)).sort(compareVersions);
 if (!tags.length) fail('dist-release/ has no vX.Y.Z directory — run tools/package_release.mjs first.');
 const tag = tags[tags.length - 1];
 const version = tag.slice(1);
