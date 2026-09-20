@@ -6,6 +6,56 @@ opponent, loaded as a classic script so `file://` still works): five screens, tw
 dialogs, six card decks drawn from sprite sheets of the original bitmaps (five
 PNG, one JPEG).
 
+## Read this much, and no more
+
+Normally inspect: `public/index.html`, `public/engine.js`, `tools/*`, the root
+`*.md`, `.github/workflows/*`, `.claude/skills/*`.
+
+Normally ignore: `node_modules/`, `.git/`, `public/decks/`, `public/fonts/`,
+`public/icons/`, `assets/`, `dist-release/`, Gradle wrapper files, and any
+binary. Read `package-lock.json` only when dependencies are the task, and open
+files under `mobile/android/` individually instead of walking the tree.
+
+Never read or paste `mobile/android/keystore.properties` or `*.jks`.
+
+Ignoring a path here does not mean it should be deleted or gitignored.
+
+## Change the smallest thing
+
+Prefer targeted reads and diffs to repeating whole files: search first, then read
+the range you need, and show changes as a diff (`git diff -- <path>`,
+`git show HEAD:<path>`) rather than reprinting a file. Make edits with focused
+replacements instead of rewriting a file to change a few lines.
+
+## Keep command output short
+
+Prefer the repository's own commands over ad-hoc exploration, and cap their
+output. On PowerShell:
+
+```powershell
+npm run check 2>&1 | Select-Object -Last 40
+npm test 2>&1 | Select-Object -Last 20
+git diff --stat
+gh pr view <n> --json title,state --jq .
+```
+
+On bash, `| tail -40` instead of `Select-Object -Last 40`. Use `node --check
+<file>` for a syntax check instead of running a script, and scope file searches
+to source directories rather than searching from the repository root.
+
+## Sessions and handoff
+
+Start a fresh session after a completed logical unit -- a merged PR, a finished
+fix, a documentation pass -- or when a thread has grown long. Carry forward a
+short handoff:
+
+- **Completed:** what is now true (and any verification that ran).
+- **Files / decisions:** the paths touched and the decisions made, with reasons.
+- **Next:** the next task, or "nothing open".
+
+Durable facts belong in the repository (this file, the docs, the PR body), not
+in the conversation.
+
 ## After any UI change, run the UI check
 
 ```sh
