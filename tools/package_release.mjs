@@ -26,6 +26,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareVersions } from './versions.mjs';
+import { parseCertSha256, normalizeSha256 } from './apk_cert.mjs';
 
 const WIN = process.platform === 'win32';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -101,16 +102,18 @@ const res = run(apksigner, ['verify', '--print-certs', apk],
   { encoding: 'utf8', ...(javaHome ? { env: { ...env, JAVA_HOME: javaHome } } : {}) });
 if (res.status !== 0) fail(`the APK does not verify:\n${res.stdout ?? ''}${res.stderr ?? ''}`);
 process.stdout.write(res.stdout);
-const digest = (/SHA-256 digest:\s*([0-9a-f]+)/i.exec(res.stdout) || [])[1];
-if (!digest) fail('apksigner verify printed no SHA-256 digest — the signer cannot be confirmed.');
+// accept both plain and colon-separated prints, and reject a truncated one
+const digest = parseCertSha256(res.stdout);
+if (!digest) fail('apksigner verify printed no complete SHA-256 digest — the signer cannot be confirmed.');
 
 // The certificate decides whether this APK can upgrade an installed copy.
 // When the expected fingerprint is recorded, a differently-signed APK fails
 // here instead of installing nowhere and being noticed by a player.
 const expectedFile = path.join(ANDROID, 'cert.sha256');
 if (existsSync(expectedFile)) {
-  const expected = readFileSync(expectedFile, 'utf8').trim().replace(/:/g, '').toLowerCase();
-  if (digest.toLowerCase() !== expected)
+  const expected = normalizeSha256(readFileSync(expectedFile, 'utf8'));
+  if (!expected) fail(`${path.relative(ROOT, expectedFile)} is not a 64-hex-character SHA-256.`);
+  if (digest !== expected)
     fail(`the APK is signed by the wrong key.\n  expected ${expected}\n  got      ${digest}`);
 } else {
   console.log('\n  note: mobile/android/cert.sha256 is not recorded yet. Save this fingerprint');
