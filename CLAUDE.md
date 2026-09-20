@@ -21,6 +21,17 @@ them; the check catches all of them.
 
 The `ui-check` skill explains what it covers and how to read a failure.
 
+## After any engine change, run the unit tests
+
+```sh
+npm test
+```
+
+They are deterministic (seeded RNG) and cover what the UI check cannot see:
+card ranking and briscola, the 120-point total, the trick winner drawing first,
+both leader paths, and a full hand. They live in `tools/engine.test.mjs`. Both
+this and the UI check run in CI on every pull request and push to `main`.
+
 ## The card size is a budget
 
 `--cw` is `(viewport height - --chrome) / --rows / --ratio`, clamped. `--chrome`

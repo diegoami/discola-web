@@ -92,6 +92,19 @@ npm run check
 Run it after any UI change. Every threshold in it is calibrated against a
 defect that actually shipped; the file says which.
 
+## Testing the engine
+
+The rules and the opponent have their own deterministic tests — ranking and
+briscola, the 120-point total, the draw order, both leader paths — with the
+shuffle driven by a seeded RNG:
+
+```sh
+npm test
+```
+
+Both `npm test` and `npm run check` run in CI (`.github/workflows/ci.yml`) on
+every pull request and every push to `main`.
+
 ## The fonts
 
 Bodoni Moda, Barlow and Barlow Condensed are served from `public/fonts/` —
