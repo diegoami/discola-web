@@ -106,6 +106,21 @@ const SCREENS = [
                            seed: seedHistory },
   { name: 'about',         open: async p => { await p.click('#startPlay'); await p.click('#btnAbout'); } },
   { name: 'confirm',       open: async p => { await p.click('#startPlay'); await p.click('#btnNew'); } },
+  // An abandoned hand must stop counting as "in play". `abandon()` cancels the
+  // queued timers but used to leave `state.dealt` true, so Back from a sheet
+  // walked back into the dead table — playable if it was your turn, stalled if
+  // an opponent timer had been cancelled.
+  { name: 'abandoned',     open: async p => {
+      await p.click('#startPlay');
+      await p.click('#btnNew');
+      await p.click('#confirmYes');
+      await p.click('#viewStart [data-nav="settings"]');
+      await p.click('#viewSettings [data-back]');
+    },
+    check: () => {
+      const start = document.querySelector('#viewStart');
+      return start && !start.hidden ? [] : ['Back after abandoning did not return to Start'];
+    } },
   { name: 'result',        open: async p => {
       await p.click('#startPlay');
       // end the hand where it stands rather than playing forty cards

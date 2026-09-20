@@ -1654,6 +1654,11 @@ function abandon(){
   clearTimeout(timer);
   el.scrim.hidden = true;
   el.confirmScrim.hidden = true;
+  // A hand that has been abandoned is no longer in play, so `dealt` — which
+  // `back()` reads to decide between the table and the start screen — must not
+  // keep pointing at a table whose timers were just cancelled. Without this the
+  // abandoned (or finished) table reappears, and can be playable or stalled.
+  state.dealt = false;
   show("start");
 }
 
