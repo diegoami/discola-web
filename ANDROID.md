@@ -292,6 +292,13 @@ apksigner verify --print-certs app-release.apk
 Compare its SHA-256 against the fingerprint `keytool -list` printed. Equal means
 that APK will install as an upgrade over the last one; different means it will
 not, and you want to know before publishing rather than from a player.
+
+To make that automatic, record the fingerprint once in
+`mobile/android/cert.sha256` (the SHA-256 as `apksigner` prints it; colons are
+ignored). `tools/package_release.mjs` then refuses any APK signed by a different
+key before staging it, instead of publishing one that cannot update an installed
+copy. Until the file exists the script prints the fingerprint to record.
+
 ### Not losing it
 
 - Put the password in a password manager **at the moment the key is created**,
