@@ -177,6 +177,14 @@ plays per profile. That last one is what makes any later refactor safe.
 **Note.** This is the first Geoclick-shaped thing in the repo — a `packages/*`
 workspace — and it is worth having even if Route B is never taken.
 
+**Done — with one deviation.** The engine is `public/engine.js`, a classic script
+rather than `packages/engine` as an ES module: an ES-module import is blocked
+over `file://`, and opening `public/index.html` from disk is supported and is how
+the UI check loads the page. It still has no dependencies and no DOM, takes its
+randomness and profiles as inputs, and is unit-tested — with Node's built-in
+`node:test` instead of Vitest, to add no dependency at all. `index.html` now holds
+only the view; the rules and the opponent are all in the engine.
+
 ### Iteration 3 — Desktop via Tauri (1–2 days)
 
 **Goal.** A signed desktop build.

@@ -1091,6 +1091,9 @@ button.card:disabled{ cursor: default; }
   </div>
 </div>
 
+<!-- The rules engine, as a classic script: an ES-module import is blocked over
+     file://, and opening this page from disk is supported. -->
+<script src="engine.js"></script>
 <script>
 "use strict";
 
@@ -1104,96 +1107,15 @@ button.card:disabled{ cursor: default; }
    tidied-up relative of it.
    =========================================================================== */
 
-/* --- cards (UMazzo.pas) ---------------------------------------------------- */
+/* --- the rules engine -------------------------------------------------------
 
-// TSeme order: Denari, Coppe, Spade, Bastoni. The sprite sheet uses the same
-// order for its rows, and column n-1 for card number n.
-const SUITS = ["denari", "coppe", "spade", "bastoni"];
+   The cards, the twelve weights and the opponent live in engine.js, loaded
+   above. It has no DOM, no timers and no storage: it takes randomness and the
+   profiles as inputs, and exposes a game state machine the view drives. This
+   file is the view — rendering, input, scheduling and persistence.
+   =========================================================================== */
 
-const BASSO = 0; // the human player, at the bottom of the table
-const ALTO  = 1; // the computer, at the top
-
-// TCarta.Valore
-function valore(n){
-  if (n === 1) return 11;
-  if (n === 3) return 10;
-  if (n >= 8)  return n - 6;
-  return 0;
-}
-
-// TCarta.piuAlta's local veroValore: the asso and the tre outrank the re
-function veroValore(n){
-  if (n === 3) return 11;
-  if (n === 1) return 12;
-  return n;
-}
-
-// TCarta.piuAlta — does `self` beat `other`? `led` is true when self led the trick.
-function piuAlta(self, other, led, briscola){
-  if (self.s === briscola){
-    if (other.s !== briscola) return true;
-    return veroValore(self.n) > veroValore(other.n);
-  }
-  if (other.s === briscola) return false;
-  if (self.s !== other.s) return led;
-  return veroValore(self.n) > veroValore(other.n);
-}
-
-// TMazzo.Init — 40 cards, suit-major
-function buildDeck(){
-  const cards = [];
-  for (let s = 0; s < 4; s++)
-    for (let n = 1; n <= 10; n++)
-      cards.push({ s, n });
-  return cards;
-}
-
-// TMazzo.Mescola — 200 + Random(100) random swaps
-function mescola(cards){
-  const swaps = 200 + Math.floor(Math.random() * 100);
-  for (let i = 0; i < swaps; i++){
-    const a = Math.floor(Math.random() * 40);
-    const b = Math.floor(Math.random() * 40);
-    const t = cards[a]; cards[a] = cards[b]; cards[b] = t;
-  }
-}
-
-/* --- opponent profiles (Global.pas SetProfiles) ---------------------------- */
-
-const WEIGHT_KEYS = [
-  "FIXED_BRISCOLA_PENALTY", "VARIANT_BRISCOLA_PENALTY", "VARIANT_CARICO_PENALTY",
-  "VARIANT_STROZZO_PENALTY", "FIXED_TRE_PENALTY", "VARIANT_WINNING_CARD_PENALTY",
-  "FIXED_WINNER_BRISCOLA_PENALTY", "VARIANT_WINNER_BRISCOLA_PENALTY",
-  "FIXED_LOSER_BRISCOLA_PENALTY", "VARIANT_LOSER_BRISCOLA_PENALTY",
-  "VARIANT_PASSIVE_STROZZO_PENALTY", "ASSO_PENALTY"
-];
-
-function weights(v){
-  const o = {};
-  WEIGHT_KEYS.forEach((k, i) => { o[k] = v[i]; });
-  return o;
-}
-
-// Pascal Random(n) is an integer in 0..n-1; bare Random is a real in [0,1).
-const randInt = n => Math.floor(Math.random() * n);
-const rnd = () => Math.random();
-
-// SetProfiles runs once at startup, so Piero's randomised temperament is fixed
-// for the session — you never play the same Piero twice, but you do play the
-// same Piero all evening. That is the original behaviour.
-function makeProfiles(){
-  return {
-    Valerio:  weights([3,   0.7, 0.045, 0.45, 2.5, 0.6, 4, 1.2, 5.5, 1.6, 0.18, 1.5]),
-    Graziano: weights([2,   0.8, 0.065, 0.30, 1.5, 0.5, 3, 1.1, 4.5, 1.4, 0.10, 1.0]),
-    Piero:    weights([
-      2 + randInt(3),      0.5 + rnd() / 3,  0.045 + rnd() / 20,
-      0.3 + rnd() / 5,     1 + randInt(2),   0.5 + rnd() / 4,
-      3 + randInt(2),      0.9 + rnd(),      5 + randInt(2),
-      0.8 + rnd() / 2,     0.15 + rnd() / 10, 1 + rnd()
-    ]),
-    Franco:   weights([4.5, 0.5, 0.085, 0.50, 3.0, 0.7, 5, 1.0, 6.0, 1.2, 0.23, 2.0])
-  };
-}
+const { SUITS, BASSO, ALTO, WEIGHT_KEYS, makeProfiles, createGame } = DiscolaEngine;
 
 const PROFILES = makeProfiles();
 
@@ -1205,21 +1127,16 @@ const DOSSIER = {
 };
 
 
-/* --- game state ------------------------------------------------------------ */
+/* --- game state ------------------------------------------------------------
 
-const state = {
-  cards: [],
-  next: 0,            // TMazzo.Tallone - 1
-  briscola: 0,        // SemeBriscola
-  hands: [[null,null,null], [null,null,null]],
-  played: [null, null],
-  scores: [0, 0],
-  seen: [],           // Giocatori[Alto].CarteViste
-  perPrimo: BASSO,
-  deveGiocare: BASSO,
-  partitaPrimo: BASSO,
-  over: false,
-  dealt: false,       // has a hand been dealt yet this session
+   The engine owns the cards, hands, scores and turn state. `state` is that
+   object; the view-only fields — cheat, opponent, deck, felt, speed, settings —
+   are added here. Rendering reads it directly; it is only ever mutated through
+   the engine's turn methods and these settings. */
+
+const game = createGame({ profiles: PROFILES });
+const state = game.state;
+Object.assign(state, {
   cheat: false,
   opponent: "Valerio",
   deck: "Trevisane",
@@ -1227,7 +1144,7 @@ const state = {
   speed: 900,
   showPoints: true,
   sound: true
-};
+});
 
 const DECKS = ["Trevisane", "Piacentine", "Napoletane", "Romagnole", "Francesi", "Bresciane"];
 // Most decks are packed PNG sprite sheets; Bresciane is a photographic scan, so
@@ -1253,211 +1170,47 @@ function later(fn, ms){
   timer = setTimeout(() => { if (mine === epoch) fn(); }, ms);
 }
 
-/* --- dealing (TMazzo.pop / TGiocatore.Pesca) ------------------------------- */
+/* --- turns, driven by the engine ------------------------------------------- */
 
-function pop(){
-  // Pesca only draws while cards remain; past that a player's hand just thins out.
-  if (state.next >= 40) return null;
-  return state.cards[state.next++];
-}
-
-function pesca(who){
-  const card = pop();
-  if (card === null) return;
-  if (who === ALTO) state.seen.push(card);
-  const hand = state.hands[who];
-  let i = 0;
-  while (hand[i] !== null && i < 2) i++;
-  hand[i] = card;
-}
-
-// TForm1.Redo
+// TForm1.Redo. The engine deals and reports who leads; the view renders and
+// schedules the opponent when it moves first.
 function newHand(){
   epoch++;
   clearTimeout(timer);
-
-  state.cards = buildDeck();
-  mescola(state.cards);
-  state.next = 0;
-  state.briscola = state.cards[39].s;   // the bottom card names the trump suit
-  state.seen = [];
-  state.played = [null, null];
-  state.scores = [0, 0];
-  state.over = false;
-  state.dealt = true;
-
-  for (const who of [BASSO, ALTO]){
-    state.hands[who] = [null, null, null];
-    pesca(who); pesca(who); pesca(who);
-  }
-
-  state.perPrimo = state.partitaPrimo;
-  state.deveGiocare = state.perPrimo;
-
-  // whoever did not lead this hand leads the next one
-  if (state.perPrimo === ALTO){
-    state.partitaPrimo = BASSO;
-    render();
-    later(computerPlay, state.speed);
-    return;
-  }
-  state.partitaPrimo = ALTO;
+  const dealt = game.startHand();
   render();
-}
-
-/* --- the opponent (TGiocatore.CompGioca) ----------------------------------- */
-
-// SemiAndati and CountCarte walked CarteViste from index 1 in the 1997 source,
-// not 0, so the opponent never counted the first card it was dealt — a TList is
-// zero-based. Fixed here. It changes almost nothing: over 40,000 simulated hands
-// per profile the win rate moved by at most 0.56 percentage points and the mean
-// score by at most 0.2 points of 120, both inside the noise floor. One forgotten
-// card out of the twenty-odd tracked rarely flips a comparison that briscola and
-// card values already dominate.
-function semiAndati(suit){
-  let total = 0;
-  for (let i = 0; i < state.seen.length; i++)
-    if (state.seen[i].s === suit) total += valore(state.seen[i].n);
-  return total;
-}
-
-function countCarte(suit){
-  let count = 0;
-  for (let i = 0; i < state.seen.length; i++)
-    if (state.seen[i].s === suit) count++;
-  return count;
-}
-
-function compGioca(against){
-  const P = PROFILES[state.opponent];
-  const hand = state.hands[ALTO];
-  const brisc = state.briscola;
-
-  let bestSlot = 0;
-  let bestScore = -150;
-
-  if (against === null){
-    // leading: shed the cheapest card that is not a briscola and not worth points
-    for (let i = 0; i < 3; i++){
-      const c = hand[i];
-      if (!c) continue;
-      const v = valore(c.n);
-      let score;
-      if (c.s === brisc){
-        score = 100 - P.FIXED_BRISCOLA_PENALTY - v * P.VARIANT_BRISCOLA_PENALTY;
-      } else {
-        score = 100 - v * (1 - P.VARIANT_CARICO_PENALTY * countCarte(brisc));
-        if (v < 10) score += semiAndati(c.s) * P.VARIANT_STROZZO_PENALTY;
-      }
-      if (v === 10) score -= P.FIXED_TRE_PENALTY;
-      if (score > bestScore){ bestScore = score; bestSlot = i; }
-    }
-    return bestSlot;
-  }
-
-  // following: weigh what the trick is worth against what taking it costs
-  const cartaval = valore(against.n);
-  for (let i = 0; i < 3; i++){
-    const c = hand[i];
-    if (!c) continue;
-    const led = state.perPrimo === ALTO;
-    const prende = piuAlta(c, against, led, brisc);
-    const miaval = valore(c.n);
-
-    let score = prende
-      ? cartaval + miaval * P.VARIANT_WINNING_CARD_PENALTY
-      : -cartaval * P.VARIANT_WINNING_CARD_PENALTY - miaval;
-
-    if (c.s === brisc){
-      score -= prende
-        ? miaval * P.VARIANT_WINNER_BRISCOLA_PENALTY + P.FIXED_WINNER_BRISCOLA_PENALTY
-        : miaval * P.VARIANT_LOSER_BRISCOLA_PENALTY + P.FIXED_LOSER_BRISCOLA_PENALTY;
-    } else if (miaval < 10){
-      score -= semiAndati(c.s) * P.VARIANT_PASSIVE_STROZZO_PENALTY;
-    }
-
-    // taking this trick would hand the opponent the face-up briscola
-    if (state.next === 38 && prende){
-      score -= valore(state.cards[39].n) * P.VARIANT_WINNER_BRISCOLA_PENALTY
-             + P.FIXED_WINNER_BRISCOLA_PENALTY;
-    }
-    if (miaval === 11) score -= P.ASSO_PENALTY;
-
-    if (score > bestScore){ bestScore = score; bestSlot = i; }
-  }
-  return bestSlot;
+  if (dealt.computerToMove) later(computerPlay, state.speed);
 }
 
 /* --- turns (TForm1.Gioca1Click / Gioca2Click / EffettuaPescaggi) ----------- */
 
-function aggiornaPunti(){
-  const worth = valore(state.played[BASSO].n) + valore(state.played[ALTO].n);
-  state.scores[state.perPrimo] += worth;
-}
+// Each wrapper performs one engine step, then does the view's part: sound,
+// render, and scheduling the next step. The engine reports what happened rather
+// than calling back, which is what keeps it free of timers and the DOM.
 
 function humanPlay(slot){
-  if (state.over) return;
-  if (state.deveGiocare !== BASSO || state.played[BASSO]) return;
-  const card = state.hands[BASSO][slot];
-  if (!card) return;
-
-  state.hands[BASSO][slot] = null;
-  state.played[BASSO] = card;
-  state.seen.push(card);          // the opponent watches what you put down
-  state.deveGiocare = ALTO;
-  blip(520);
-
-  if (state.perPrimo === ALTO){
-    // you followed, so the trick is complete
-    state.perPrimo = piuAlta(card, state.played[ALTO], false, state.briscola) ? BASSO : ALTO;
-    state.deveGiocare = state.perPrimo;
-    aggiornaPunti();
-    render();
-    sweep();
-    later(resolve, state.speed);
-    return;
-  }
+  const play = game.humanPlay(slot);
+  if (!play.ok) return;
+  blip(play.sound);
   render();
-  later(computerPlay, state.speed);
+  if (play.trickComplete){ sweep(); later(resolve, state.speed); }
+  else if (play.computerToMove) later(computerPlay, state.speed);
 }
 
 function computerPlay(){
-  if (state.over || state.deveGiocare !== ALTO) return;
-
-  const slot = compGioca(state.played[BASSO]);
-  const card = state.hands[ALTO][slot];
-  if (!card) return;
-
-  state.hands[ALTO][slot] = null;
-  state.played[ALTO] = card;
-  state.deveGiocare = BASSO;
-  blip(420);
-
-  if (state.perPrimo === BASSO){
-    // the opponent followed, so the trick is complete
-    state.perPrimo = piuAlta(state.played[BASSO], card, true, state.briscola) ? BASSO : ALTO;
-    state.deveGiocare = state.perPrimo;
-    aggiornaPunti();
-    render();
-    sweep();
-    later(resolve, state.speed);
-    return;
-  }
+  const play = game.computerPlay();
+  if (!play.ok) return;
+  blip(play.sound);
   render();
+  if (play.trickComplete){ sweep(); later(resolve, state.speed); }
+  else if (play.computerToMove) later(computerPlay, state.speed);
 }
 
 function resolve(){
-  state.played = [null, null];
-
-  const handsEmpty = state.hands[BASSO].every(c => c === null);
-  if (handsEmpty){ render(); finish(); return; }
-
-  // the winner of the trick draws first
-  pesca(state.perPrimo);
-  pesca(state.perPrimo === BASSO ? ALTO : BASSO);
+  const step = game.resolve();
   render();
-
-  if (state.deveGiocare === ALTO) later(computerPlay, state.speed);
+  if (step.handOver){ finish(); return; }
+  if (step.computerToMove) later(computerPlay, state.speed);
 }
 
 function finish(){

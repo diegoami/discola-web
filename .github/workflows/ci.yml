@@ -1,0 +1,32 @@
+name: CI
+
+# The UI check is the only regression gate for the viewport, font, offline and
+# overlap defects this project has shipped, and main deploys to Netlify on push.
+# Running it here means a green check is required before that happens, rather
+# than trusting someone to remember a two-minute local command.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: unit tests and UI check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      # Locked install: playwright-core and nothing else, as the project promises.
+      - run: npm ci
+
+      # playwright-core's own CLI installs the matching Chromium revision;
+      # --with-deps adds the shared libraries the runner image lacks.
+      - run: npx playwright-core install --with-deps chromium
+
+      - run: npm test
+      - run: npm run check

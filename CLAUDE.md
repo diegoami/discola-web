@@ -1,8 +1,10 @@
 # Discola
 
 A two-player Briscola game, ported to the web from the Delphi 3 original of
-1997. One self-contained `public/index.html`: five screens, two dialogs, six card
-decks drawn from sprite sheets of the original bitmaps (five PNG, one JPEG).
+1997. `public/index.html` (the view) plus `public/engine.js` (the rules and the
+opponent, loaded as a classic script so `file://` still works): five screens, two
+dialogs, six card decks drawn from sprite sheets of the original bitmaps (five
+PNG, one JPEG).
 
 ## After any UI change, run the UI check
 
@@ -31,8 +33,9 @@ in landscape and 4 in portrait, where the trick and the tallone stack.
 
 The rules come from `UMazzo.pas` and the opponent from
 `TGiocatore.CompGioca` in `UGiocatore.pas`, with the twelve tuned weights per
-profile from `Global.pas`. Keep it that way: if the opponent's play needs
-changing, change the weights, not the scoring formula.
+profile from `Global.pas`. They live in `public/engine.js`: keep it that way —
+if the opponent's play needs changing, change the weights, not the scoring
+formula. `index.html` is the view and holds no game logic.
 
 One 1997 behaviour is preserved deliberately and marked in the source — Piero's
 weights are rolled once per session, because `SetProfiles` ran from

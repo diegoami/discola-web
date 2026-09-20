@@ -1,13 +1,15 @@
 # Discola — web port
 
 A two-player Briscola game, originally written in Delphi 3 in 1997. This is a
-port to a single self-contained HTML page, so it runs on any modern computer
-without an installer.
+port to the web — one HTML page and one plain-JS engine file — so it runs on any
+modern computer without an installer.
 
 **Play it:** <https://discola.netlify.app>
 
 Or open `public/index.html` locally, or serve `public/` with any static web
-server — it is plain static files with no build step.
+server — it is plain static files with no build step. `engine.js` is loaded as a
+classic script rather than an ES module, so opening the page from `file://`
+keeps working.
 
 ## What is faithful to the original
 
