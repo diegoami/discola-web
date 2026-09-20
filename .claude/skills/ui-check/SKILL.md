@@ -5,7 +5,7 @@ description: Run Discola's UI checks across every screen, dialog and viewport. U
 
 # UI check
 
-Discola is one HTML file with five screens and two dialogs, and it has to work
+Discola is one HTML page plus a plain-JS engine file, with five screens and two dialogs, and it has to work
 from a 360px phone to a 1920px desktop, in both orientations, with six decks
 whose cards have different aspect ratios. Nearly every UI defect this project
 shipped was invisible to code review and threw no error. This check exists
