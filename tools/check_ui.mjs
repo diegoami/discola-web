@@ -16,7 +16,7 @@
  *    visible at once, text set too small to read, clipped labels, tap targets
  *    below the thumb, sideways scroll, script errors.
  *
- * 2. TABLE — the card table only, at every viewport and in all five decks.
+ * 2. TABLE — the card table only, at every viewport and in all six decks.
  *    The card size is a budget, (viewport height - chrome) / rows, and when
  *    that budget is wrong nothing throws and nothing looks broken in review:
  *    the cards quietly overlap, or your hand slides below the fold, or the
@@ -104,8 +104,36 @@ const SCREENS = [
   { name: 'history empty', open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); } },
   { name: 'history full',  open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); },
                            seed: seedHistory },
+  // Parsed storage is untrusted. These records are the shapes that used to
+  // throw during render: null, a missing score, and a timestamp outside the
+  // Date range (Intl.DateTimeFormat.format -> RangeError). One valid record
+  // rides along to prove the sanitizer keeps what it can.
+  { name: 'history malformed', open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); },
+    seed: async p => p.evaluate(() => localStorage.setItem('discola.history', JSON.stringify([
+      null,
+      42,
+      { y: 'x', a: 2, t: Date.now(), o: 'Valerio', d: 'Trevisane' },
+      { t: 1e20, o: 'Franco', d: 'Trevisane', y: 44, a: 76 },
+      { y: 44, a: 76, o: 'Nobody', d: 'Trevisane', t: Date.now() },
+      { y: 60, a: 60, o: 'Valerio', d: 'NotADeck', t: Date.now() },
+    ]))) },
   { name: 'about',         open: async p => { await p.click('#startPlay'); await p.click('#btnAbout'); } },
   { name: 'confirm',       open: async p => { await p.click('#startPlay'); await p.click('#btnNew'); } },
+  // An abandoned hand must stop counting as "in play". `abandon()` cancels the
+  // queued timers but used to leave `state.dealt` true, so Back from a sheet
+  // walked back into the dead table — playable if it was your turn, stalled if
+  // an opponent timer had been cancelled.
+  { name: 'abandoned',     open: async p => {
+      await p.click('#startPlay');
+      await p.click('#btnNew');
+      await p.click('#confirmYes');
+      await p.click('#viewStart [data-nav="settings"]');
+      await p.click('#viewSettings [data-back]');
+    },
+    check: () => {
+      const start = document.querySelector('#viewStart');
+      return start && !start.hidden ? [] : ['Back after abandoning did not return to Start'];
+    } },
   { name: 'result',        open: async p => {
       await p.click('#startPlay');
       // end the hand where it stands rather than playing forty cards
@@ -192,11 +220,31 @@ const audit = () => {
         out.push(`${name(el)} tap target ${Math.round(r.width)}x${Math.round(r.height)}, want 32`);
     }
   }
+
+  // The select's popup is drawn by the OS and is not in the document, so its
+  // legibility cannot be measured. What decides it is in the document: the
+  // select and its options must carry an opaque background. Transparent ones
+  // let Windows draw light text on a white system menu.
+  for (const sel of document.querySelectorAll('select, select option')) {
+    const bg = getComputedStyle(sel).backgroundColor;
+    const alpha = bg.startsWith('rgba') ? Number(bg.slice(bg.lastIndexOf(',') + 1, -1)) : 1;
+    if (!(alpha >= 1))
+      out.push(`${name(sel)} has a transparent background (${bg}) — the system popup will be unreadable`);
+  }
+
+  // The deck picker is one row by construction (--deck-cols comes from JS). A
+  // seventh deck, or a hard-coded repeat(6, 1fr) creeping back, wraps it in
+  // half — with no overflow, clipped text or small tap target for the rules
+  // above to catch.
+  const deckOpts = [...document.querySelectorAll('.deck-opt')].filter(shown);
+  if (deckOpts.length) {
+    const tops = [...new Set(deckOpts.map(o => Math.round(o.getBoundingClientRect().top)))];
+    if (tops.length > 1)
+      out.push(`the deck picker is on ${tops.length} rows, not one `
+        + `(${deckOpts.length} decks at tops ${tops.sort((a, b) => a - b).join(', ')})`);
+  }
   return out;
 };
-
-// Local runs have no network, so the Google Fonts stylesheet always fails.
-const noise = m => /ERR_CERT_AUTHORITY_INVALID|ERR_CONNECTION|ERR_NAME_NOT_RESOLVED|fonts\.googleapis/.test(m);
 
 /* ---- pass 0: the document itself ------------------------------------------- */
 
@@ -259,7 +307,11 @@ async function checkFonts(browser) {
   let failed = 0;
 
   const source = readFileSync(FILE, 'utf8')
-    .replace(/&([a-z]+);/gi, (m, name) => (ENTITIES[name] ? String.fromCodePoint(ENTITIES[name]) : m));
+    .replace(/&([a-z]+);/gi, (m, name) => (ENTITIES[name] ? String.fromCodePoint(ENTITIES[name]) : m))
+    // Numeric entities too: &#8594; is U+2192, outside the subset, and without
+    // this it would read as ASCII and pass.
+    .replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(Number(d)));
   const outside = new Map();
   for (const ch of source) {
     const cp = ch.codePointAt(0);
@@ -323,7 +375,9 @@ async function checkScreens(browser) {
       const page = await browser.newPage({ viewport: { width, height } });
       const errs = [];
       page.on('pageerror', e => errs.push('script error: ' + e.message));
-      page.on('console', m => { if (m.type() === 'error' && !noise(m.text())) errs.push('console: ' + m.text()); });
+      // Every request the page makes is file:// now that the fonts are
+      // self-hosted, so a console network error is a defect, not local noise.
+      page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 
       await page.goto(URL_);
       await page.evaluate(() => localStorage.removeItem('discola.history'));

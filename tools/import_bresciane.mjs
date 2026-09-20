@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build public/decks/bresciane.png from the mhamilt/Italian-decks repo, in the
+ * Build public/decks/bresciane.jpg from the mhamilt/Italian-decks repo, in the
  * same 11x4 sprite-sheet layout the other decks use.
  *
  *   node tools/import_bresciane.mjs

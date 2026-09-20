@@ -25,6 +25,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSyn
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { compareVersions } from './versions.mjs';
+import { parseCertSha256, normalizeSha256 } from './apk_cert.mjs';
 
 const WIN = process.platform === 'win32';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -83,21 +85,41 @@ if (existsSync(path.join(apkDir, 'app-release-unsigned.apk')))
 const apk = path.join(apkDir, 'app-release.apk');
 if (!existsSync(apk)) fail(`expected ${path.relative(ROOT, apk)}, but it is not there.`);
 
-// --- 4: the signature must verify ---
+// --- 4: the signature must verify, or nothing is staged ---
+// A build that cannot be checked is not a build to ship. The step above exists
+// because a silently unsigned artifact is worse than a failed build; a
+// verification that is allowed to not happen undoes exactly that.
 const buildTools = path.join(sdk, 'build-tools');
-let signer = '(not checked: apksigner not found)';
-if (existsSync(buildTools)) {
-  const ver = readdirSync(buildTools).sort().reverse()[0];
-  const apksigner = ver && path.join(buildTools, ver, WIN ? 'apksigner.bat' : 'apksigner');
-  if (apksigner && existsSync(apksigner)) {
-    console.log('\n> apksigner verify');
-    const res = run(apksigner, ['verify', '--print-certs', apk],
-      { encoding: 'utf8', ...(javaHome ? { env: { ...env, JAVA_HOME: javaHome } } : {}) });
-    if (res.status !== 0) fail(`the APK does not verify:\n${res.stdout ?? ''}${res.stderr ?? ''}`);
-    process.stdout.write(res.stdout);
-    signer = (/SHA-256 digest:\s*([0-9a-f]+)/i.exec(res.stdout) || [])[1] || 'verified';
-  }
+if (!existsSync(buildTools)) fail(`no Android build-tools under ${buildTools}.`);
+// Newest installed version by number: string order puts 9.0.0 after 35.0.0.
+const apksigner = readdirSync(buildTools).sort(compareVersions).reverse()
+  .map(v => path.join(buildTools, v, WIN ? 'apksigner.bat' : 'apksigner'))
+  .find(p => existsSync(p));
+if (!apksigner) fail(`apksigner not found in any version under ${buildTools}.`);
+
+console.log('\n> apksigner verify');
+const res = run(apksigner, ['verify', '--print-certs', apk],
+  { encoding: 'utf8', ...(javaHome ? { env: { ...env, JAVA_HOME: javaHome } } : {}) });
+if (res.status !== 0) fail(`the APK does not verify:\n${res.stdout ?? ''}${res.stderr ?? ''}`);
+process.stdout.write(res.stdout);
+// accept both plain and colon-separated prints, and reject a truncated one
+const digest = parseCertSha256(res.stdout);
+if (!digest) fail('apksigner verify printed no complete SHA-256 digest — the signer cannot be confirmed.');
+
+// The certificate decides whether this APK can upgrade an installed copy.
+// When the expected fingerprint is recorded, a differently-signed APK fails
+// here instead of installing nowhere and being noticed by a player.
+const expectedFile = path.join(ANDROID, 'cert.sha256');
+if (existsSync(expectedFile)) {
+  const expected = normalizeSha256(readFileSync(expectedFile, 'utf8'));
+  if (!expected) fail(`${path.relative(ROOT, expectedFile)} is not a 64-hex-character SHA-256.`);
+  if (digest !== expected)
+    fail(`the APK is signed by the wrong key.\n  expected ${expected}\n  got      ${digest}`);
+} else {
+  console.log('\n  note: mobile/android/cert.sha256 is not recorded yet. Save this fingerprint');
+  console.log(`  so future builds refuse a different key:  ${digest}`);
 }
+const signer = digest;
 
 // --- 5: stage it, with a checksum ---
 const outDir = path.join(ROOT, 'dist-release', tag);

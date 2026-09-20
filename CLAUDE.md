@@ -1,8 +1,8 @@
 # Discola
 
 A two-player Briscola game, ported to the web from the Delphi 3 original of
-1997. One self-contained `public/index.html`: five screens, two dialogs, five card
-decks drawn from PNG sprite sheets of the original bitmaps.
+1997. One self-contained `public/index.html`: five screens, two dialogs, six card
+decks drawn from sprite sheets of the original bitmaps (five PNG, one JPEG).
 
 ## After any UI change, run the UI check
 
