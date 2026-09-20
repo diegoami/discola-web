@@ -77,7 +77,7 @@ layout can be opened on a phone on the same network.
 ## Checking the UI
 
 `tools/check_ui.mjs` drives every screen and dialog across nineteen viewports
-and all five decks, asserting the things that break silently: overlapping
+and all six decks, asserting the things that break silently: overlapping
 cards, a hand below the fold, rows drifting apart, text below its size floor,
 tap targets under 32px, more than one screen visible at once, script errors, and
 a page that would have needed the network to look right.

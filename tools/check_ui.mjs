@@ -16,7 +16,7 @@
  *    visible at once, text set too small to read, clipped labels, tap targets
  *    below the thumb, sideways scroll, script errors.
  *
- * 2. TABLE — the card table only, at every viewport and in all five decks.
+ * 2. TABLE — the card table only, at every viewport and in all six decks.
  *    The card size is a budget, (viewport height - chrome) / rows, and when
  *    that budget is wrong nothing throws and nothing looks broken in review:
  *    the cards quietly overlap, or your hand slides below the fold, or the

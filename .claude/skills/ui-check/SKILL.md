@@ -6,7 +6,7 @@ description: Run Discola's UI checks across every screen, dialog and viewport. U
 # UI check
 
 Discola is one HTML file with five screens and two dialogs, and it has to work
-from a 360px phone to a 1920px desktop, in both orientations, with five decks
+from a 360px phone to a 1920px desktop, in both orientations, with six decks
 whose cards have different aspect ratios. Nearly every UI defect this project
 shipped was invisible to code review and threw no error. This check exists
 because reading the diff was repeatedly not enough.
@@ -43,7 +43,7 @@ at five real device shapes. Asserts exactly one screen is visible, no sideways
 scroll, no text below its size floor, no text clipped by a container that
 cannot scroll, no tap target under 32px, and no script or console errors.
 
-**Table pass** — the card table at all nineteen viewports in all five decks.
+**Table pass** — the card table at all nineteen viewports in all six decks.
 Asserts the trick never overlaps either hand, your hand is never below the
 fold, nothing overflows the table, and the rows never drift apart. Then it
 repeats the tightest viewports with the spacing tokens inflated, which fails if

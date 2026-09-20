@@ -149,7 +149,7 @@ cheapest of the three and benefits the web build too.
 
 - `manifest.webmanifest`: name, icons, `display: standalone`, portrait-primary,
   theme colour `#0d2620`.
-- A service worker precaching `public/index.html` and the five sheets (~2.2 MB).
+- A service worker precaching `public/index.html` and the six sheets (~2.2 MB).
   Cache-first for `decks/*`, network-first for the page, matching the existing
   `netlify.toml` headers.
 - Icons from the Trevisane back or the existing favicon.

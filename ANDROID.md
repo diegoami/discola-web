@@ -5,7 +5,8 @@ from <https://discola.netlify.app>. This is [`ROADMAP.md`](ROADMAP.md)'s
 Iteration 4 written out in full, with the parts that turned out to be wrong or
 missing corrected against what is actually in the repo today.
 
-Nothing here is built yet. The local test setup in §1 *is* built and verified.
+Almost all of this is built and verified on this machine, and releases have
+been cut from it. Where a part is still a plan, it says so where it appears.
 
 ---
 
@@ -17,9 +18,8 @@ npm start         # http://localhost:8080
 npm run check     # the UI check, ~2 minutes
 ```
 
-Verified on this machine: the check runs clean (69 cases — document, fonts,
-screens, table, table with inflated spacing), and the game deals and plays over
-http.
+Verified on this machine: the check runs clean (document, fonts, screens, table,
+table with inflated spacing), and the game deals and plays over http.
 
 Three things had to change to get there, all of them small:
 
