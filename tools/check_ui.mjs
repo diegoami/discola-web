@@ -104,6 +104,19 @@ const SCREENS = [
   { name: 'history empty', open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); } },
   { name: 'history full',  open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); },
                            seed: seedHistory },
+  // Parsed storage is untrusted. These records are the shapes that used to
+  // throw during render: null, a missing score, and a timestamp outside the
+  // Date range (Intl.DateTimeFormat.format -> RangeError). One valid record
+  // rides along to prove the sanitizer keeps what it can.
+  { name: 'history malformed', open: async p => { await p.click('#startPlay'); await p.click('#btnHistory'); },
+    seed: async p => p.evaluate(() => localStorage.setItem('discola.history', JSON.stringify([
+      null,
+      42,
+      { y: 'x', a: 2, t: Date.now(), o: 'Valerio', d: 'Trevisane' },
+      { t: 1e20, o: 'Franco', d: 'Trevisane', y: 44, a: 76 },
+      { y: 44, a: 76, o: 'Nobody', d: 'Trevisane', t: Date.now() },
+      { y: 60, a: 60, o: 'Valerio', d: 'NotADeck', t: Date.now() },
+    ]))) },
   { name: 'about',         open: async p => { await p.click('#startPlay'); await p.click('#btnAbout'); } },
   { name: 'confirm',       open: async p => { await p.click('#startPlay'); await p.click('#btnNew'); } },
   // An abandoned hand must stop counting as "in play". `abandon()` cancels the

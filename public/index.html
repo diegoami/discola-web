@@ -1675,12 +1675,33 @@ function askRestart(){
 const HKEY = "discola.history";
 const HCAP = 100;
 
+// The stored list is untrusted input: a partial write, a hand-edited value, an
+// older schema or an array that parses but is not records at all. Rendering is
+// what assumed otherwise — `[null]` throws on `m.y`, and a non-date `t` makes
+// Intl.DateTimeFormat.format throw a RangeError — and the storage try/catch
+// cannot help because JSON.parse already succeeded. Discard anything that is
+// not a well-formed record, and write the cleaned list back so it cannot rot.
 function loadHistory(){
+  let list;
   try{
     const raw = localStorage.getItem(HKEY);
-    const list = raw ? JSON.parse(raw) : [];
-    return Array.isArray(list) ? list : [];
+    list = raw ? JSON.parse(raw) : [];
   } catch (e){ return []; }
+  if (!Array.isArray(list)) return [];
+
+  const clean = list.filter(m =>
+    m && typeof m === "object" && !Array.isArray(m) &&
+    Object.prototype.hasOwnProperty.call(PROFILES, m.o) &&
+    Object.prototype.hasOwnProperty.call(DECK_RATIO, m.d) &&
+    Number.isFinite(m.y) && m.y >= 0 && m.y <= 120 &&
+    Number.isFinite(m.a) && m.a >= 0 && m.a <= 120 &&
+    Number.isFinite(m.t) && Math.abs(m.t) <= 8.64e15   // the Date range
+  ).slice(0, HCAP);
+
+  if (clean.length !== list.length){
+    try{ localStorage.setItem(HKEY, JSON.stringify(clean)); } catch (e){}
+  }
+  return clean;
 }
 
 function recordMatch(you, opp){
