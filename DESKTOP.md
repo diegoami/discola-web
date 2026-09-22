@@ -4,10 +4,9 @@ The recorded decision for packaging `public/` as a desktop application, and the
 comparison it was made from. Companion to [`ANDROID.md`](ANDROID.md), which does
 the same for the APK, and to [`ROADMAP.md`](ROADMAP.md) Iteration 3.
 
-**Status.** The shell, platform, distribution and signing decisions are recorded
-below. The **Iteration 0 Tauri spike has not been run yet** — the acceptance
-criteria in issue #18 are therefore only partly met, and issue #18 stays open
-until the spike result is written into the "Spike" section.
+**Status.** Decisions recorded, and the Iteration 0 Tauri spike **run on
+2026-09-22** (Windows; Tauri 2.11.6, CLI 2.11.5, WebView2 153). All six checks
+pass; results below. Issue #18's acceptance criteria are met.
 
 Repository facts are cited as `file:line`. Statements about Electron are marked
 **(general)** because they are not sourced from this repository.
@@ -50,34 +49,49 @@ security-update surface. Route B is not warranted for a 40-card game whose UI
 would be rewritten for no user-visible change, and its regression risk is real
 (`ROADMAP.md:104-106`).
 
-## Spike (pending)
+## Spike — run 2026-09-22
 
-The Iteration 0 spike (`ROADMAP.md:128-143`) is a kill-early check. Android is out
-of scope here because its Capacitor packaging evidence already exists
-(`ANDROID.md:194-204`); only the **Tauri half** remains:
+Iteration 0 (`ROADMAP.md:128-143`) is a kill-early check. Android is out of scope
+because its Capacitor packaging evidence already exists (`ANDROID.md:194-204`);
+only the **Tauri half** was run.
 
-- [ ] the game playable in a throwaway Tauri 2 shell pointed at `public/`;
-- [ ] sprite sheets loading over the Tauri asset protocol;
-- [ ] `localStorage` persisting **across restarts**;
-- [ ] the safe-area inset surviving;
-- [ ] WebAudio playing **without a user-gesture prompt**;
-- [ ] the Tauri identifier/origin recorded (`ROADMAP.md:142-143`).
+**Method.** A throwaway Tauri 2 project (`net.discoa.spike`, `frontendDist`
+pointed at a copy of `public/` at commit `a050e93`), plus a spike-only probe
+script that reports from inside the WebView. The project is not in the repository
+and nothing was changed in `public/`.
 
-A blocker in any of these is written down here rather than worked around.
+| Check | Result |
+|---|---|
+| Playable in the shell | **yes** — a hand deals and renders (3 + 3 cards, briscola named) |
+| Sprite sheets over the asset protocol | **yes** — `decks/trevisane.png` loaded, 660 × 500, from `http://tauri.localhost/decks/trevisane.png` |
+| `localStorage` across restarts | **yes** — a sentinel written on launch 1 read back as `"1"` on launch 2 |
+| Safe-area inset | `0px` top/left/bottom; layout unaffected |
+| WebAudio without a gesture | `AudioContext` constructed with no user gesture, state `running`, 48 kHz |
+| Identifier / origin recorded | identifier `net.discoa.spike`; origin `http://tauri.localhost` (protocol `http:`) |
+
+Fonts: the faces the rendered screen uses loaded over the asset protocol; declared
+but unused weights stayed lazily unloaded, as expected. No blockers.
+
+Two observations for the wrapper work, neither blocking:
+
+- The window defaulted to 1280 × 800, a size `tools/check_ui.mjs` does not
+  currently include (its nearest are 1180 × 820 and 1440 × 900). Add it alongside
+  the wrapper.
+- The Tauri origin is `http://tauri.localhost` on Windows, so `localStorage` is
+  keyed to that origin and the **identifier must not change** (`ROADMAP.md:142-143`).
 
 ## UI check against the packaged app
 
 `tools/check_ui.mjs` loads the page over `file://` (`tools/check_ui.mjs:36-40`),
-while the packaged app uses the asset protocol. Proposed method, to be confirmed
-by the spike:
+while the packaged app runs from `http://tauri.localhost`. The spike confirmed
+the check cannot target the running wrapper (the WebView is embedded, not a
+server), so the method is:
 
-1. keep running the check against `public/` unchanged — it is the same bytes the
-   wrapper loads, and it guards the layout regressions the check exists for; and
+1. keep running the check against `public/` unchanged — the wrapper embeds those
+   same bytes, and the check guards the layout regressions it exists for; and
 2. add a short **manual smoke of the packaged build** for the things the check
-   cannot see over `file://`: asset loading, storage origin and persistence.
-
-If the spike shows the check can target the wrapper's scheme directly, prefer
-that instead and record it here.
+   cannot see: asset loading over the asset protocol, the storage origin, and
+   persistence across restarts.
 
 ## Out of scope
 
@@ -86,7 +100,8 @@ until desktop builds arrive and the matrix grows.
 
 ## Next
 
-1. Run the Tauri half of the Iteration 0 spike and fill in the "Spike" section.
-2. Decide the UI-check method from the spike result.
-3. Open an implementation issue for a `desktop/` wrapper, mirroring `mobile/`'s
-   conventions, referencing #18.
+1. Open an implementation issue for a `desktop/` wrapper, mirroring `mobile/`'s
+   conventions, recording: the `net.discoa.spike` identifier must be replaced by
+   a permanent one before the first release (it keys `localStorage`), the
+   1280 × 800 viewport added to `tools/check_ui.mjs`, and the manual packaged-app
+   smoke above.
