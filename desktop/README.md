@@ -24,8 +24,10 @@ npm run build        # tauri build --no-bundle
 
 The executable lands at `src-tauri/target/release/discola.exe`.
 
-Installers, code signing and release automation are deliberately out of scope for
-now; see [`../DESKTOP.md`](../DESKTOP.md).
+Installers and code signing remain deferred. Packaging and publishing — both
+targets, one release — are `tools/package_release.mjs` and
+`tools/publish_release.mjs`; see [`../DESKTOP.md`](../DESKTOP.md)'s Releasing
+section.
 
 ## Icons
 

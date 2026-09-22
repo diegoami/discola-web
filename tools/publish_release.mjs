@@ -5,17 +5,20 @@
  *   node tools/publish_release.mjs            # dry run: check everything, do nothing
  *   node tools/publish_release.mjs --confirm  # actually create the release
  *
- * Reads dist-release/vX.Y.Z/ (from tools/package_release.mjs) and needs `gh`
- * logged in with access to the releases repo. Outward-facing and hard to take
- * back once the tag is public, so it does nothing without --confirm.
+ * Reads dist-release/vX.Y.Z/ (from tools/package_release.mjs) — every staged
+ * asset, verified against SHA256SUMS.txt, including the set itself: a missing
+ * or unlisted file fails the run — and needs `gh` logged in with access to the
+ * releases repo. Outward-facing and hard to take back once the tag is public,
+ * so it does nothing without --confirm.
  */
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { existsSync, writeFileSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareVersions } from './versions.mjs';
+import { CHECKSUM_FILE, verifyChecksums } from './checksums.mjs';
+import { buildNotes } from './release_notes.mjs';
 
 const RELEASES_REPO = 'diegoami/discola-releases';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -32,35 +35,35 @@ if (!tags.length) fail('dist-release/ has no vX.Y.Z directory — run tools/pack
 const tag = tags[tags.length - 1];
 const version = tag.slice(1);
 const dir = path.join(distRoot, tag);
-const apkName = `Discola-${version}-android.apk`;
 
-// --- the staged files must be intact ---
-for (const f of [apkName, 'SHA256SUMS.txt'])
-  if (!existsSync(path.join(dir, f))) fail(`missing ${path.relative(ROOT, path.join(dir, f))}.`);
-for (const line of readFileSync(path.join(dir, 'SHA256SUMS.txt'), 'utf8').trim().split('\n')) {
-  const [hash, name] = line.split(/\s+/);
-  const actual = createHash('sha256').update(readFileSync(path.join(dir, name))).digest('hex');
-  if (actual !== hash) fail(`${name} does not match SHA256SUMS.txt — repackage.`);
-}
+// --- every staged file must verify, and the set must be exactly the manifest ---
+let assets;
+try { assets = verifyChecksums(dir); } catch (e) { fail(e.message); }
+const names = [...assets.keys()].sort();
+
+// --- which platforms the notes must describe ---
+const platforms = [];
+if (names.some((n) => n.endsWith('-android.apk'))) platforms.push('android');
+if (names.some((n) => n.endsWith('-windows-x64.exe'))) platforms.push('windows');
 
 // --- gh must be usable and the tag must be new ---
 const gh = (args, opts = {}) => spawnSync('gh', args, { encoding: 'utf8', ...opts });
 if (gh(['--version']).status !== 0) fail('the GitHub CLI (gh) is not installed or not on PATH.');
 const seen = gh(['release', 'view', tag, '-R', RELEASES_REPO]);
-if (seen.status === 0) fail(`${tag} already exists on ${RELEASES_REPO}. Bump versionName first.`);
+if (seen.status === 0) fail(`${tag} already exists on ${RELEASES_REPO}. Bump the version first.`);
 
 // --- release notes, in Italian to match the game ---
-const notes =
-  `Discola ${version} per Android.\n\n` +
-  `**Installazione:** apri il file \`.apk\` sul telefono e consenti ` +
-  `l'installazione da questa fonte. Lo storico delle partite resta sul ` +
-  `dispositivo; niente lascia il telefono.\n\n` +
-  `**Gioca nel browser:** https://discola.netlify.app/\n\n` +
-  `Checksum SHA-256 in \`SHA256SUMS.txt\`.\n`;
+// The subtitle is the one release-specific line; future releases edit or drop it.
+let notes;
+try {
+  notes = buildNotes(version, platforms, {
+    subtitle: 'la prima versione per Windows, e Android aggiornato',
+  });
+} catch (e) { fail(e.message); }
 
 console.log(`publish ${tag} to ${RELEASES_REPO}`);
-console.log(`  ${apkName}`);
-console.log(`  SHA256SUMS.txt`);
+for (const name of names) console.log(`  ${name}`);
+console.log(`  ${CHECKSUM_FILE}`);
 
 if (!CONFIRM) {
   console.log('\n--- dry run --- nothing was published.');
@@ -73,7 +76,7 @@ if (!CONFIRM) {
 const notesFile = path.join(os.tmpdir(), `discola-${tag}-notes.md`);
 writeFileSync(notesFile, notes);
 const res = gh(['release', 'create', tag,
-  path.join(dir, apkName), path.join(dir, 'SHA256SUMS.txt'),
+  ...names.map((n) => path.join(dir, n)), path.join(dir, CHECKSUM_FILE),
   '-R', RELEASES_REPO, '--title', `Discola ${version}`, '--notes-file', notesFile],
   { stdio: 'inherit' });
 if (res.status !== 0) fail('gh release create failed.');

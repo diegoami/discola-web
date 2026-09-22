@@ -6,8 +6,9 @@ the same for the APK, and to [`ROADMAP.md`](ROADMAP.md) Iteration 3.
 
 **Status.** Decisions recorded. The Iteration 0 Tauri spike was **run on
 2026-09-22** (Windows; Tauri 2.11.6, CLI 2.11.5, WebView2 153) and all six checks
-passed. The [`desktop/`](desktop/README.md) wrapper is **built and smoke-tested**;
-installers, code signing and release automation remain deferred.
+passed. The [`desktop/`](desktop/README.md) wrapper is **built and smoke-tested**,
+and 1.0.4 ships it: packaging and publishing run locally for both targets (see
+[Releasing](#releasing)). Installers and code signing remain deferred.
 
 Repository facts are cited as `file:line`. Statements about Electron are marked
 **(general)** because they are not sourced from this repository.
@@ -112,16 +113,47 @@ source carries no test code.
 | WebAudio without a gesture | `AudioContext` state `running`, 48 kHz |
 | Game renders | 3 + 3 cards dealt, briscola named, window 1280 × 800 |
 
+## Releasing
+
+Both targets ship as one GitHub Release on
+[`diegoami/discola-releases`](https://github.com/diegoami/discola-releases),
+numbered on the shared version line (1.0.4 is the first). The process is local
+by design, for the reasons in [`ANDROID.md`](ANDROID.md) §5 — the machine doing
+a release holds the Android signing key and the Rust toolchain.
+
+```sh
+node tools/package_release.mjs    # builds both, stages dist-release/vX.Y.Z/
+node tools/publish_release.mjs    # dry run: checks, prints the notes
+node tools/publish_release.mjs --confirm
+```
+
+`package_release.mjs` fails unless every version declaration — Android's
+`versionName`, `tauri.conf.json`, `Cargo.toml`, `desktop/package.json` and both
+lockfiles — agrees, and stages `Discola-X.Y.Z-android.apk`,
+`Discola-X.Y.Z-windows-x64.exe` and `SHA256SUMS.txt`. `publish_release.mjs`
+re-verifies the staged set and publishes nothing without `--confirm`. A version
+bump touches all of those declarations in one change; the packager is what
+catches a missed one.
+
+The Windows executable is **unsigned** (the decision recorded above), so
+SmartScreen warns on first run. The warning is documented where a user meets it
+— the release notes — and reads:
+
+> L'eseguibile non è firmato digitalmente, quindi Windows mostrerà l'avviso
+> «Windows ha protetto il PC»: clicca «Ulteriori informazioni», poi «Esegui
+> comunque». È portabile, senza installer: mettilo dove preferisci.
+
+Signing and installers would remove the warning and add a Start-menu entry;
+both stay deferred until a broader distribution is wanted.
+
 ## Out of scope
 
-CI and release automation for a desktop matrix: `ANDROID.md:359-362` defers that
-until desktop builds arrive and the matrix grows. Installers/bundling and code
+CI for a desktop matrix: releases stay local ([`ANDROID.md`](ANDROID.md) §5),
+and a CI build would put the signing key in a secret to save a command. A CI
+job is worth adding only if the matrix grows. Installers/bundling and code
 signing are likewise deferred (`DESKTOP.md:24`).
 
 ## Next
 
-1. First release: bump the version, build, and publish the executable on
-   `diegoami/discola-releases`, documenting the SmartScreen warning for an
-   unsigned binary.
-2. Add a `desktop/` job to CI only if the matrix grows (`ANDROID.md:359-362`).
-3. Revisit installers and code signing if a broader distribution is wanted.
+1. Add a `desktop/` job to CI only if the matrix grows.
+2. Revisit installers and code signing if a broader distribution is wanted.
