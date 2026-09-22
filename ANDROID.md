@@ -199,7 +199,7 @@ toolchain, which is the property `SPEC.md` §2 is protecting.
 
 Both are installed here now: JDK 21 (Gradle needs ≤ 24; this machine's is at
 `%USERPROFILE%\.jdks\jbr-21.0.11`) and the Android SDK at
-`%LOCALAPPDATA%AndroidSdk` — command-line tools `15859902`, `platform-tools`,
+`%LOCALAPPDATA%\Android\Sdk` — command-line tools `15859902`, `platform-tools`,
 `platforms;android-35`, `build-tools;35.0.0`, licences accepted. Android Studio
 is installed now, GUI only — its bundled JBR is Java 25, too new for the
 project's Gradle 8.14.3, so packaging must point `JAVA_HOME` at JDK 21.

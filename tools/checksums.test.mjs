@@ -50,6 +50,10 @@ test('rejects duplicate names', () => {
   assert.throws(() => parseChecksums(`${H1}  a.apk\n${H2}  a.apk\n`), /duplicate name/);
 });
 
+test('rejects lines that are not in sorted order', () => {
+  assert.throws(() => parseChecksums(`${H2}  b.apk\n${H1}  a.apk\n`), /out of order: a\.apk after b\.apk/);
+});
+
 test('rejects CRLF, a missing final newline, and blank lines', () => {
   assert.throws(() => parseChecksums(`${H1}  a.apk\r\n`), /is not "<64-hex>  <name>"/);
   assert.throws(() => parseChecksums(`${H1}  a.apk`), /does not end with a newline/);

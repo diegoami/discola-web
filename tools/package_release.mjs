@@ -74,8 +74,14 @@ const read = (rel) => readFileSync(path.join(ROOT, rel), 'utf8');
 const gradle = read('mobile/android/app/build.gradle');
 const version = /versionName\s+["']([^"']+)["']/.exec(gradle)?.[1];
 if (!version) fail('could not read versionName from mobile/android/app/build.gradle');
+// versionCode is Android's upgrade counter, not a version string: it has no
+// counterpart to compare against, but it must exist and be positive — a
+// missing or zero counter would ship an APK that cannot upgrade an install.
+const versionCode = Number(/versionCode\s+(\d+)/.exec(gradle)?.[1]);
+if (!Number.isInteger(versionCode) || versionCode < 1)
+  fail('could not read a positive versionCode from mobile/android/app/build.gradle');
 const tag = `v${version}`;
-console.log(`packaging Discola ${tag}`);
+console.log(`packaging Discola ${tag} (versionCode ${versionCode})`);
 
 // Every declaration the version appears in, both lockfiles included: a bump
 // that misses one would ship an exe whose metadata disagrees with the tag, or
@@ -168,7 +174,13 @@ const exeBytes = readFileSync(exe);
 if (exeBytes.length < 1024 * 1024)
   fail(`the desktop executable is only ${exeBytes.length} bytes — that is not a build.`);
 if (exeBytes[0] !== 0x4d || exeBytes[1] !== 0x5a)
-  fail('the desktop executable does not start with the PE magic "MZ" — not a Windows binary.');
+  fail('the desktop executable does not start with the DOS magic "MZ" — not a Windows binary.');
+// The MZ stub alone is not a Windows executable: the header at e_lfanew
+// (offset 0x3C) must carry the PE signature.
+const peOffset = exeBytes.readUInt32LE(0x3c);
+if (peOffset + 4 > exeBytes.length || exeBytes[peOffset] !== 0x50 ||
+    exeBytes[peOffset + 1] !== 0x45 || exeBytes[peOffset + 2] !== 0 || exeBytes[peOffset + 3] !== 0)
+  fail('the desktop executable has no PE signature — not a Windows binary.');
 
 // --- 8: stage both, replacing any earlier directory ---
 const outDir = path.join(ROOT, 'dist-release', tag);

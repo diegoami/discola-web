@@ -33,14 +33,15 @@ export function sha256(data){
 /**
  * Parse a manifest into a Map(name → hash). Throws on anything that is not
  * canonical: a short or uppercase digest, one space instead of two, CRLF
- * endings, a path instead of a basename, `.`/`..`, a duplicate name, or a
- * missing final newline. An empty string parses to an empty Map.
+ * endings, a path instead of a basename, `.`/`..`, a duplicate name, lines out
+ * of order, or a missing final newline. An empty string parses to an empty Map.
  */
 export function parseChecksums(text){
   const entries = new Map();
   if (text === '') return entries;
   if (!text.endsWith('\n')) throw new Error('the manifest does not end with a newline');
   const lines = text.slice(0, -1).split('\n');
+  let previous = '';
   lines.forEach((line, i) => {
     const m = LINE.exec(line);
     if (!m) throw new Error(`line ${i + 1} is not "<64-hex>  <name>": ${JSON.stringify(line)}`);
@@ -48,6 +49,9 @@ export function parseChecksums(text){
     // The charset alone would allow "..", which would resolve outside the dir.
     if (name === '.' || name === '..') throw new Error(`line ${i + 1} is not a file name: ${name}`);
     if (entries.has(name)) throw new Error(`duplicate name on line ${i + 1}: ${name}`);
+    if (previous && name < previous)
+      throw new Error(`line ${i + 1} is out of order: ${name} after ${previous}`);
+    previous = name;
     entries.set(name, hash);
   });
   return entries;
