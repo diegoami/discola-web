@@ -24,6 +24,14 @@ Outputs, and who consumes them:
   public/icons/apple-touch-icon.png  180
   public/icons/favicon-32.png    32  <link rel=icon>, and what stops the
                                      browser asking for /favicon.ico
+  desktop/src-tauri/icons/32x32.png          32  Tauri bundle.icon
+  desktop/src-tauri/icons/128x128.png       128  Tauri bundle.icon
+  desktop/src-tauri/icons/128x128@2x.png    256  Tauri bundle.icon
+  desktop/src-tauri/icons/icon.png          512  Tauri bundle.icon
+  desktop/src-tauri/icons/icon.ico   16/32/48/256  the Windows resource
+
+The .ico is a real multi-size icon (PNG frames, Vista+ ICO), not a single image
+with a small header: Windows picks the size it needs from the frames.
 """
 import os
 import struct
@@ -106,10 +114,10 @@ def read_png(path):
     return width, height, rows
 
 
-def write_png(path, width, height, pixels):
-    """Write an RGBA PNG. Filter 0 throughout: these are nearest-neighbour
-    upscales, so every row is long runs of identical bytes and zlib already
-    has everything it needs. pack_cards.py's adaptive search costs minutes at
+def png_bytes(width, height, pixels):
+    """An RGBA PNG. Filter 0 throughout: these are nearest-neighbour upscales,
+    so every row is long runs of identical bytes and zlib already has
+    everything it needs. pack_cards.py's adaptive search costs minutes at
     1024x1024 and saves nothing worth having on this kind of image."""
 
     def chunk(tag, payload):
@@ -123,12 +131,32 @@ def write_png(path, width, height, pixels):
             raw += bytes(px)
 
     ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
-           + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
+            + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
+
+
+def write_png(path, width, height, pixels):
+    png = png_bytes(width, height, pixels)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as fh:
         fh.write(png)
     return len(png)
+
+
+def write_ico(path, images):
+    """A multi-size ICO from (size, png bytes) frames. PNG-in-ICO is accepted
+    since Vista; Windows selects the frame it wants instead of scaling one."""
+    header = struct.pack("<HHH", 0, 1, len(images))
+    entries, offset = bytearray(), 6 + 16 * len(images)
+    for size, data in images:
+        dim = 0 if size >= 256 else size      # 0 means 256 in the ICO header
+        entries += struct.pack("<BBBBHHII", dim, dim, 0, 0, 1, 32, len(data), offset)
+        offset += len(data)
+    blob = header + bytes(entries) + b"".join(data for _, data in images)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as fh:
+        fh.write(blob)
+    return len(blob)
 
 
 def scale(tile, size):
@@ -181,6 +209,15 @@ def main():
     fg = [[(0, 0, 0, 0)] * n for _ in range(n)]
     over(fg, scale(tile, inner), (n - inner) // 2, (n - inner) // 2)
     emit("assets/icon-foreground.png", n, fg)
+
+    # Desktop icons, referenced by desktop/src-tauri/tauri.conf.json's bundle.icon.
+    desk = "desktop/src-tauri/icons"
+    for name, size in [("32x32.png", 32), ("128x128.png", 128),
+                       ("128x128@2x.png", 256), ("icon.png", 512)]:
+        emit(f"{desk}/{name}", size, scale(tile, size))
+    ico = write_ico(f"{desk}/icon.ico",
+                    [(s, png_bytes(s, s, scale(tile, s))) for s in (16, 32, 48, 256)])
+    written.append((f"{desk}/icon.ico", 256, ico))
 
     for path, size, nbytes in written:
         print(f"{path:38} {size:>4}px  {nbytes / 1024:6.1f} KB")
