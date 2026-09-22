@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Cut the app icon out of the Trevisane sheet.
 
-    python3 tools/make_icons.py            # writes assets/ and public/icons/
+    python3 tools/make_icons.py            # writes assets/, public/icons/, desktop icons
+    python3 tools/make_icons.py --check    # compare committed icons by pixel
 
 The icon is the fante di spade — in Veneto, la vecia. It is card number 8 of
 the Spade suit, which on the 11x4 grid that tools/pack_cards.py writes is
@@ -61,9 +62,13 @@ SAFE = 0.66
 def read_png(path):
     """Return (width, height, rows of (r,g,b,a)) for an 8-bit RGB/RGBA PNG."""
     with open(path, "rb") as fh:
-        data = fh.read()
+        return decode_png(fh.read(), path)
+
+
+def decode_png(data, name):
+    """read_png for bytes already in hand (an ICO frame, say)."""
     if data[:8] != b"\x89PNG\r\n\x1a\n":
-        raise ValueError(f"{path}: not a PNG")
+        raise ValueError(f"{name}: not a PNG")
 
     pos, idat, ihdr = 8, bytearray(), None
     while pos < len(data):
@@ -80,7 +85,7 @@ def read_png(path):
 
     width, height, depth, colour, _, _, interlace = ihdr
     if depth != 8 or interlace != 0 or colour not in (2, 6):
-        raise ValueError(f"{path}: want 8-bit non-interlaced RGB or RGBA, got depth {depth} colour {colour}")
+        raise ValueError(f"{name}: want 8-bit non-interlaced RGB or RGBA, got depth {depth} colour {colour}")
     channels = 4 if colour == 6 else 3
 
     raw = zlib.decompress(bytes(idat))
@@ -174,7 +179,15 @@ def over(dst, src, x0, y0):
                 dst[y0 + y][x0 + x] = px
 
 
-def main():
+ICO_SIZES = (16, 32, 48, 256)
+
+
+def generate():
+    """Build every output in memory. Nothing is written.
+
+    Returns (png_outputs, ico_frames, ico_path): png_outputs is
+    [(path, size, pixels)], ico_frames is [(size, png bytes)].
+    """
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(root)
 
@@ -190,34 +203,96 @@ def main():
     paper = (242, 239, 230, 255)
     tile = [[px if px[3] else paper for px in row] for row in tile]
 
-    written = []
-
-    def emit(path, size, pixels):
-        written.append((path, size, write_png(path, size, size, pixels)))
-
+    pngs = []
     for path, size in [("assets/icon-only.png", 1024),
                        ("public/icons/icon-512.png", 512),
                        ("public/icons/icon-192.png", 192),
                        ("public/icons/apple-touch-icon.png", 180),
                        ("public/icons/favicon-32.png", 32)]:
-        emit(path, size, scale(tile, size))
+        pngs.append((path, size, scale(tile, size)))
 
     # The adaptive icon, as two layers Android composites and masks itself.
     n = 1024
-    emit("assets/icon-background.png", n, [[FELT] * n for _ in range(n)])
+    pngs.append(("assets/icon-background.png", n, [[FELT] * n for _ in range(n)]))
     inner = int(n * SAFE) // 2 * 2
     fg = [[(0, 0, 0, 0)] * n for _ in range(n)]
     over(fg, scale(tile, inner), (n - inner) // 2, (n - inner) // 2)
-    emit("assets/icon-foreground.png", n, fg)
+    pngs.append(("assets/icon-foreground.png", n, fg))
 
     # Desktop icons, referenced by desktop/src-tauri/tauri.conf.json's bundle.icon.
     desk = "desktop/src-tauri/icons"
     for name, size in [("32x32.png", 32), ("128x128.png", 128),
                        ("128x128@2x.png", 256), ("icon.png", 512)]:
-        emit(f"{desk}/{name}", size, scale(tile, size))
-    ico = write_ico(f"{desk}/icon.ico",
-                    [(s, png_bytes(s, s, scale(tile, s))) for s in (16, 32, 48, 256)])
-    written.append((f"{desk}/icon.ico", 256, ico))
+        pngs.append((f"{desk}/{name}", size, scale(tile, size)))
+
+    ico_frames = [(s, png_bytes(s, s, scale(tile, s))) for s in ICO_SIZES]
+    return pngs, ico_frames, f"{desk}/icon.ico"
+
+
+def decode_ico(data, name):
+    """[(size, png bytes)] from a PNG-in-ICO this script wrote."""
+    reserved, kind, count = struct.unpack_from("<HHH", data, 0)
+    if reserved != 0 or kind != 1:
+        raise ValueError(f"{name}: not an ICO")
+    frames = []
+    for i in range(count):
+        w, _h, _cols, _res, _planes, _bpp, length, offset = struct.unpack_from("<BBBBHHII", data, 6 + 16 * i)
+        frames.append((w or 256, data[offset: offset + length]))
+    return frames
+
+
+def check():
+    """Compare the committed icons to a fresh generation by pixels.
+
+    Byte comparison would fail on any machine whose zlib compresses
+    differently: PNG bytes are not canonical, the art is.
+    """
+    pngs, ico_frames, ico_path = generate()
+    bad = []
+    for path, size, pixels in pngs:
+        if not os.path.exists(path):
+            bad.append(f"{path}: missing")
+            continue
+        try:
+            w, h, rows = read_png(path)
+        except Exception as exc:                      # unreadable is a failure too
+            bad.append(f"{path}: cannot read ({exc})")
+            continue
+        if w != size or h != size or rows != pixels:
+            bad.append(f"{path}: pixels differ from a fresh generation")
+    if not os.path.exists(ico_path):
+        bad.append(f"{ico_path}: missing")
+    else:
+        try:
+            with open(ico_path, "rb") as fh:
+                frames = decode_ico(fh.read(), ico_path)
+            if [s for s, _ in frames] != [s for s, _ in ico_frames]:
+                bad.append(f"{ico_path}: frames {[s for s, _ in frames]}, want {list(ICO_SIZES)}")
+            else:
+                expected = {s: decode_png(d, f"generated frame {s}")[2] for s, d in ico_frames}
+                for size, data in frames:
+                    w, h, rows = decode_png(data, f"{ico_path}[{size}]")
+                    if w != size or h != size or rows != expected[size]:
+                        bad.append(f"{ico_path}: frame {size} pixels differ")
+        except Exception as exc:
+            bad.append(f"{ico_path}: cannot read ({exc})")
+    for line in bad:
+        print(f"  FAIL  {line}")
+    if bad:
+        sys.exit(f"{len(bad)} icon(s) differ from tools/make_icons.py — re-run it")
+    print("icons match tools/make_icons.py (compared by pixel, not byte)")
+
+
+def main():
+    if "--check" in sys.argv[1:]:
+        check()
+        return
+
+    pngs, ico_frames, ico_path = generate()
+    written = []
+    for path, size, pixels in pngs:
+        written.append((path, size, write_png(path, size, size, pixels)))
+    written.append((ico_path, ICO_SIZES[-1], write_ico(ico_path, ico_frames)))
 
     for path, size, nbytes in written:
         print(f"{path:38} {size:>4}px  {nbytes / 1024:6.1f} KB")
