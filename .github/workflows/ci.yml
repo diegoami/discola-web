@@ -29,4 +29,9 @@ jobs:
       - run: npx playwright-core install --with-deps chromium
 
       - run: npm test
+
+      # The icons are compared by pixel, not byte: zlib output differs across
+      # builds, the art does not. `make_icons.py` is pure standard library.
+      - run: python3 tools/make_icons.py --check
+
       - run: npm run check

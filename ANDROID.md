@@ -116,8 +116,24 @@ web sizes into `public/icons/`. The scale is nearest-neighbour on purpose: the
 source is a 50x50 patch of 1997 bitmap, and interpolation is redrawing by
 another name, which `CLAUDE.md` rules out.
 
+It also writes the desktop icons into `desktop/src-tauri/icons/`, including a
+multi-size `icon.ico`.
+
 Re-run it only if the crop should change. The constants at the top of the file
 are the card, the crop rectangle and the adaptive-icon safe zone.
+
+**Compare by pixel, not by byte.** PNG bytes are not portable between machines:
+the same pixels compressed by different zlib builds (this repo's CI, and this
+machine's `zlib-ng`, disagree) produce different files. So there is a check that
+decodes what is committed and compares it to a fresh generation, rather than
+diffing bytes:
+
+```sh
+python3 tools/make_icons.py --check
+```
+
+It runs in CI. If it fails, either the crop changed on purpose — re-run the
+script and commit — or a committed icon was edited or corrupted.
 
 ### 2.3 The releases repo — done
 
