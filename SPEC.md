@@ -36,7 +36,7 @@ The web build is also packaged as an Android app (§12).
 | Not built | Why |
 |---|---|
 | Multiplayer, accounts, server | Any server is an operational liability that outlives interest in the project. It must keep working untouched for years. |
-| A framework or build step *for the web build* | Plain HTML and JS with no build step still opens in ten years. A 2026 build pipeline will not. Packaging tooling exists for the native apps only (Capacitor for Android), and it wraps `public/` unchanged — the web build stays a directory of static files that opens with no toolchain. See [`ANDROID.md`](ANDROID.md). |
+| A framework or build step *for the web build* | Plain HTML and JS with no build step still opens in ten years. A 2026 build pipeline will not. Packaging tooling exists for the native apps only (Capacitor for Android, Tauri for desktop), and it wraps `public/` unchanged — the web build stays a directory of static files that opens with no toolchain. See [`ANDROID.md`](ANDROID.md). |
 | Four-player Briscola, other variants | The original was two-player. Scope is fidelity, not a card-game suite. |
 | Difficulty slider | `Opzioni.Difficolta` existed in the Pascal but nothing ever read it. Porting a dead setting would be inventing behaviour. |
 | Localisation | The game is Italian and its terms of art are Italian. Translating *briscola*, *tallone*, *carico* loses more than it gains. |

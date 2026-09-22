@@ -4,9 +4,10 @@ The recorded decision for packaging `public/` as a desktop application, and the
 comparison it was made from. Companion to [`ANDROID.md`](ANDROID.md), which does
 the same for the APK, and to [`ROADMAP.md`](ROADMAP.md) Iteration 3.
 
-**Status.** Decisions recorded, and the Iteration 0 Tauri spike **run on
-2026-09-22** (Windows; Tauri 2.11.6, CLI 2.11.5, WebView2 153). All six checks
-pass; results below. Issue #18's acceptance criteria are met.
+**Status.** Decisions recorded. The Iteration 0 Tauri spike was **run on
+2026-09-22** (Windows; Tauri 2.11.6, CLI 2.11.5, WebView2 153) and all six checks
+passed. The [`desktop/`](desktop/README.md) wrapper is **built and smoke-tested**;
+installers, code signing and release automation remain deferred.
 
 Repository facts are cited as `file:line`. Statements about Electron are marked
 **(general)** because they are not sourced from this repository.
@@ -93,15 +94,34 @@ server), so the method is:
    cannot see: asset loading over the asset protocol, the storage origin, and
    persistence across restarts.
 
+## Wrapper smoke — run 2026-09-22
+
+The wrapper in [`desktop/`](desktop/README.md) was built
+(`npm ci && npm run build`, Tauri CLI 2.11.5, runtime 2.11.6) against the real
+`public/` (`frontendDist` `../../public`) and smoke-tested the same way as the
+Iteration 0 spike: a transient probe was injected into the built app to report
+from inside the WebView, then removed and the app rebuilt, so the committed
+source carries no test code.
+
+| Check | Result |
+|---|---|
+| Origin / protocol | `http://tauri.localhost`, `http:` |
+| Sprite sheet over the asset protocol | `decks/trevisane.png` loaded, 660 × 500 |
+| `localStorage` across restarts | run counter read back as `"1"` on the second launch |
+| Safe-area inset | `0px` top/left/bottom |
+| WebAudio without a gesture | `AudioContext` state `running`, 48 kHz |
+| Game renders | 3 + 3 cards dealt, briscola named, window 1280 × 800 |
+
 ## Out of scope
 
 CI and release automation for a desktop matrix: `ANDROID.md:359-362` defers that
-until desktop builds arrive and the matrix grows.
+until desktop builds arrive and the matrix grows. Installers/bundling and code
+signing are likewise deferred (`DESKTOP.md:24`).
 
 ## Next
 
-1. Open an implementation issue for a `desktop/` wrapper, mirroring `mobile/`'s
-   conventions, recording: the `net.discoa.spike` identifier must be replaced by
-   a permanent one before the first release (it keys `localStorage`), the
-   1280 × 800 viewport added to `tools/check_ui.mjs`, and the manual packaged-app
-   smoke above.
+1. First release: bump the version, build, and publish the executable on
+   `diegoami/discola-releases`, documenting the SmartScreen warning for an
+   unsigned binary.
+2. Add a `desktop/` job to CI only if the matrix grows (`ANDROID.md:359-362`).
+3. Revisit installers and code signing if a broader distribution is wanted.

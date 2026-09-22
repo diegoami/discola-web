@@ -59,6 +59,7 @@ const VIEWPORTS = [
   ['iPad Air',          820, 1180],
   ['iPad Pro',         1024, 1366],
   ['tablet landscape', 1180,  820],
+  ['desktop window',   1280,  800],   // the Tauri wrapper's default window
   ['phone landscape',   980,  385],
   ['phone desktop-mode',1045, 2265],
   ['laptop',           1440,  900],
