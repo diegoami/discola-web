@@ -197,10 +197,12 @@ Real, and it is npm tooling in a repo that has had none. But it is packaging
 tooling only: `public/` stays a directory of static files that opens with no
 toolchain, which is the property `SPEC.md` §2 is protecting.
 
-Both are installed here now: JDK 21 (Gradle needs ≤ 24) and the Android SDK at
-`%LOCALAPPDATA%AndroidSdk` — command-line tools `15859902`, `platform-tools`,
+Both are installed here now: JDK 21 (Gradle needs ≤ 24; this machine's is at
+`%USERPROFILE%\.jdks\jbr-21.0.11`) and the Android SDK at
+`%LOCALAPPDATA%\Android\Sdk` — command-line tools `15859902`, `platform-tools`,
 `platforms;android-35`, `build-tools;35.0.0`, licences accepted. Android Studio
-was not installed; it is only needed for the GUI.
+is installed now, GUI only — its bundled JBR is Java 25, too new for the
+project's Gradle 8.14.3, so packaging must point `JAVA_HOME` at JDK 21.
 
 
 ### Status: the project is generated and builds
@@ -236,7 +238,7 @@ keytool -genkeypair -v -keystore discola-release.jks \
 ```
 
 `keytool` ships with the JDK — here, under
-`C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin\`. It asks for a
+`%USERPROFILE%\.jdks\jbr-21.0.11\bin\`. It asks for a
 keystore password, then certificate details nobody checks for a sideloaded
 game, then a key password. Give both the **same password** — on JDK 21 keytool
 writes PKCS12, which has no separate key password at all, so a different one is
@@ -357,25 +359,36 @@ is worse than a failed build. Copy that check.
 ## 5. Publishing
 
 Two scripts, both modelled on `Geoclick2027/scripts/`, which have four shipped
-releases behind them:
+releases behind them. Since 1.0.4 they package **both targets as one release**,
+on the shared version line (`DESKTOP.md`):
 
-**`tools/package_release.mjs`** — `cap sync`, `gradlew assembleRelease`, refuse
-an unsigned APK, `apksigner verify`, then write
-`dist-release/vX.Y.Z/Discola-X.Y.Z-android.apk` and `SHA256SUMS.txt`.
+**`tools/package_release.mjs`** — cross-check every version declaration, then
+`cap sync`, `gradlew assembleRelease`, refuse an unsigned APK, `apksigner
+verify`; then `npm ci` + `tauri build --no-bundle` for the desktop executable,
+refusing a missing or non-PE artifact; then stage `dist-release/vX.Y.Z/` with
+`Discola-X.Y.Z-android.apk`, `Discola-X.Y.Z-windows-x64.exe` and
+`SHA256SUMS.txt`, verified by reading it back.
 
-**`tools/publish_release.mjs`** — re-hash the files against `SHA256SUMS.txt`,
-then `gh release create` on `diegoami/discola-releases`. Dry run by default,
-`--confirm` to actually publish; this is outward-facing and irreversible enough
-to deserve the extra word.
+Gradle needs `JAVA_HOME` set to JDK 21 here
+(`%USERPROFILE%\.jdks\jbr-21.0.11`); Android Studio's bundled JBR is Java 25
+and Gradle 8.14.3 rejects it.
+
+**`tools/publish_release.mjs`** — verify the staged set against
+`SHA256SUMS.txt` (a missing or unlisted file fails the run), then `gh release
+create` on `diegoami/discola-releases`, attaching every asset. Dry run by
+default, `--confirm` to actually publish; this is outward-facing and
+irreversible enough to deserve the extra word.
 
 Release notes should say, in Italian to match the game: what changed, that
-Android will warn about installing from an unknown source, and that the match
-history stays on the device.
+Android will warn about installing from an unknown source (and, since 1.0.4,
+that Windows SmartScreen will warn about the unsigned executable), and that the
+match history stays on the device.
 
 **Build locally, not in CI.** Geoclick2027 has no release workflow — it packages
 on a developer machine and uploads. For one target, on a repo with no CI today,
 adding GitHub Actions means putting the signing key in a secret to save a
-command. Revisit if desktop builds arrive and the matrix grows.
+command. Desktop builds arrived in 1.0.4 and the revisit kept this: the packager
+now builds both targets locally, and only the CI-matrix question stays open.
 
 ## 6. Linking it from the website — and the Netlify plugin question
 

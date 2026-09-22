@@ -23,6 +23,14 @@
   status = 302
   force = true
 
+# The Windows build, same pattern: one release carries both artifacts, so the
+# same latest-release page serves either platform. See DESKTOP.md.
+[[redirects]]
+  from = "/windows"
+  to = "https://github.com/diegoami/discola-releases/releases/latest"
+  status = 302
+  force = true
+
 # The deck sprite sheets are the original 1997 bitmaps and never change once a
 # deck is packed, so they can be cached hard. The page itself must not be, or
 # players keep an old build after a deploy.
