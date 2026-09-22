@@ -1,3 +1,5 @@
+> Guidance for Claude Code. The OpenCode review process lives in AGENTS.md.
+
 # Discola
 
 A two-player Briscola game, ported to the web from the Delphi 3 original of
@@ -5,6 +7,36 @@ A two-player Briscola game, ported to the web from the Delphi 3 original of
 opponent, loaded as a classic script so `file://` still works): five screens, two
 dialogs, six card decks drawn from sprite sheets of the original bitmaps (five
 PNG, one JPEG).
+
+## Process (tool-agnostic)
+
+Design first: write the proposal — problem, findings with `file:line`
+references, the design and open questions — and get it agreed before
+implementing. Implement on a branch, open a PR that references the issue, and
+review it against the agreed design. The owner merges. This file does not spawn a
+separate reviewer model; that mechanism is OpenCode-specific and lives in
+`AGENTS.md`.
+
+## Principles
+
+- Keep reviewer requirements separate from **owner decisions**, and put owner
+  decisions to the human with a recommended default.
+- Reproduce every finding before acting, and your own claims before publishing
+  them. When a check fails, suspect your harness first.
+- For each passing check, say what it would have caught had the code been wrong
+  — never let implementer and reviewer share a blind spot.
+- A passing test is not a working feature: assert what a person would notice.
+- A threshold from one measurement is a coin toss.
+- Flag out-of-scope defects rather than fixing them silently.
+- Show diffs, not whole files.
+
+## Verification
+
+- Gates: `npm run check` (UI check), `npm test` (unit tests), `npm run verify`
+  (the full suite: check then tests).
+- Run the full suite **3 times** before pushing anything that touches the primary
+  logic (`public/engine.js`, `public/index.html`), and read the pass COUNT, not
+  the absence of a FAIL.
 
 ## Read this much, and no more
 

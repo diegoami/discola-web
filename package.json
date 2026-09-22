@@ -9,6 +9,7 @@
     "start": "node tools/serve.mjs",
     "check": "node tools/check_ui.mjs",
     "test": "node --test \"tools/**/*.test.mjs\"",
+    "verify": "npm run check && npm test",
     "setup": "npm install && npx playwright install chromium"
   },
   "devDependencies": {
