@@ -201,6 +201,10 @@ passes against the packaged app.
 original lived and has the most sentimental claim. macOS notarisation costs an
 Apple Developer account; Linux AppImage costs nothing.
 
+**Decided (2026-09-22).** Tauri 2, Windows first, unsigned, published on
+`diegoami/discola-releases`. The comparison and the pending Iteration 0 spike are
+in [`DESKTOP.md`](DESKTOP.md), which supersedes the open question above.
+
 ### Iteration 4 — Android via Capacitor (2–3 days, mostly paperwork)
 
 **Goal.** An APK, and optionally a Play listing.
