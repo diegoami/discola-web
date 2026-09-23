@@ -85,11 +85,12 @@ if (onMain.status !== 0)
   fail(`could not check ${tag} against origin/main — git fetch origin, then retry:\n${onMain.stderr}`);
 
 // --- release notes, in Italian to match the game ---
-// The subtitle is the one release-specific line; future releases edit or drop it.
+// The subtitle is the one release-specific line: what changed, set on the
+// milestone's candidate, or left out. 1.0.4's ("la prima versione per Windows")
+// was dropped with the 1.0.5 bump.
 let notes;
 try {
   notes = buildNotes(version, platforms, {
-    subtitle: 'la prima versione per Windows, e Android aggiornato',
     commit: tagged,
   });
 } catch (e) { fail(e.message); }
