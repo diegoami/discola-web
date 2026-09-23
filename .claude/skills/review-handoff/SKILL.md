@@ -108,6 +108,7 @@ Rules:
   SCOPE: leave the issue for its own change. Owner decisions: put them to the
   owner with a recommended default. Nits: your call, and say which you took.
 - Reply on the thread with what happened to each finding.
-- If the review was a BLOCK, or a fix changed behaviour, rerun the gates and
-  give a new prompt for the new SHA. Otherwise record the fixes on the thread
-  and leave the merge to the owner.
+- After a BLOCK, or a fix that would itself be reviewable, rerun the gates
+  and give a new prompt for the new SHA. Otherwise, after an AGREE, post on the
+  thread the reviewed SHA, the new head SHA and what each commit changed; that
+  record extends the AGREE to the new head (`CLAUDE.md`), and the owner merges.
