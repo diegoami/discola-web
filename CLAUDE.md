@@ -17,13 +17,16 @@ review it against the agreed design. The owner merges. This file does not spawn 
 separate reviewer model; that mechanism is OpenCode-specific and lives in
 `AGENTS.md`.
 
-### Independent review (Claude Code only)
+### Independent review (when Claude implements)
 
-OpenCode: skip this section, your review process is in `AGENTS.md`.
+OpenCode implementing: skip this section, your review process is in
+`AGENTS.md`. Any tool given a review-handoff prompt: the prompt is your job,
+and this section is only context.
 
 Claude does the work itself, the design and the implementation, and does not
-spawn its own reviewer. At each milestone it gives the owner a prompt to run
-in **Codex**, the independent reviewer, in a fresh Codex session every time.
+spawn its own reviewer. At each milestone it gives the owner a prompt for the
+**independent reviewer**: a different model, in whatever tool the owner picks
+(Codex, DeepSeek, or another), in a fresh session every time.
 The review is **offered, never waited on**: the owner may not be able to run
 it, so the owner's agreement starts a branch and the owner's decision merges
 or publishes, reviewed or not. When a review does run, it is recorded on the
@@ -32,28 +35,20 @@ thread the milestone already has:
 | Milestone | Thread | Offer the prompt |
 |---|---|---|
 | Design written | the proposal issue | with the proposal |
-| Reviewable PR open, gates green | the PR | when the PR is ready to merge |
+| PR implementing a design, gates green | the PR | when the PR is ready to merge |
 | Release staged | the `release/X.Y.Z` PR, with the staged checksums in its body | before publishing; after merge, tag `vX.Y.Z` on the merge commit, then publish |
 
-Every reviewable PR body carries a `Review:` line that Claude keeps current:
+A review costs the owner a round, so it is for **milestones only**, not every
+change. Nothing else gets a prompt by default: a tooling or workflow fix that
+implements no proposal, a process wording change, a re-review after fixes, a
+docs correction. For those, Claude verifies the work itself and says how in
+the PR. When a review might still be worth it, Claude says so in one line, and
+writes the prompt only if the owner asks.
+
+Every milestone PR body carries a `Review:` line that Claude keeps current:
 `not run`, `AGREE at <sha>`, or `BLOCK at <sha>: #n, #m`. A review can still
 be run after the merge, against the merged commit; its findings are ordinary
 issues for a later PR.
-
-A review costs a round, so a PR is reviewable only when it:
-
-- implements a design proposal;
-- changes what runs, builds, is checked, deploys, packages or releases,
-  whatever the path. The test is the effect, not the location; examples, not
-  a complete list: `public/`, `mobile/`, `desktop/`, `tools/`,
-  `.github/workflows/`, `netlify.toml`, `package.json` and the lockfiles;
-- changes the process: `CLAUDE.md`, `AGENTS.md`, `.claude/skills/`;
-- is a release PR.
-
-Not reviewable: documentation that corrects facts or status, typos, comments,
-wrapping. Claude verifies those itself, says so in the PR, and the owner
-merges. When unsure, Claude says which way it leans and why, and the owner
-decides.
 
 The reviewer posts to GitHub itself, and nothing is pasted back:
 
@@ -73,8 +68,8 @@ review is in, read it from GitHub, reproduce each finding before acting on it,
 and fix it (`Fixes #n` in the PR) or rebut it with evidence on the issue.
 Recommend which fixes belong before the merge; the owner decides. Owner
 decisions go to the owner with a recommended default, not into the code. A
-re-review is offered only when a MUST-FIX was fixed by a change that is itself
-reviewable, and runs only if the owner wants it.
+re-review is not a milestone. Claude mentions it in one line only when a
+MUST-FIX was fixed by a code change, and it runs only if the owner wants it.
 
 ## Principles
 

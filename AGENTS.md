@@ -1,8 +1,8 @@
 > Guidance for OpenCode. Claude Code uses CLAUDE.md.
 >
-> **Codex:** if you were given a review-handoff prompt, you are the independent
-> reviewer of Claude's work. Follow that prompt and `CLAUDE.md`; the OpenCode
-> roles below do not apply to you.
+> **Any tool or model:** if you were given a review-handoff prompt, you are the
+> independent reviewer of Claude's work. Follow that prompt and `CLAUDE.md`;
+> the OpenCode roles below do not apply to you.
 
 # Discola — OpenCode guidance
 
@@ -41,12 +41,16 @@ The change that introduces or edits this file or `CLAUDE.md` goes straight to a
 PR that Luna reviews to AGREE, exactly as for a code change. The process reviews
 its own amendment.
 
+This governs amendments made in an OpenCode session. When Claude makes one,
+`CLAUDE.md`'s handoff applies instead: its review is offered, never waited on,
+and Luna's AGREE is not required (owner decision, #34).
+
 ## Split by tool
 
 - `AGENTS.md` (this file) holds the OpenCode review process.
 - `CLAUDE.md` holds the tool-agnostic principles, the verification gates and the
   project rules, with no reviewer-spawning mechanism. Its "Independent review
-  (Claude Code only)" section is Claude's milestone handoff to the owner; it
-  does not apply here.
+  (when Claude implements)" section is Claude's milestone handoff to the owner;
+  it does not apply here.
 
 Keep one source of truth per idea: process here, principles and rules there.

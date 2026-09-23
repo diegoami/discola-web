@@ -1,30 +1,35 @@
 ---
 name: review-handoff
-description: Write the prompt the owner runs in Codex so it independently reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a reviewable PR is ready to merge, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
+description: Write the prompt the owner gives an independent reviewer (another model, in a tool the owner picks) so it reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a PR implementing a design is ready to merge, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
 ---
 
 # Review handoff
 
-First check the milestone is one: `CLAUDE.md` says which PRs are reviewable.
-A docs correction or a typo fix is not. Do not write a prompt for it; say it
-was verified without Codex and why.
+First check that this is a milestone: a design proposal, a PR implementing
+one, or a staged release (`CLAUDE.md`). Anything else — a tooling fix with no
+proposal, a process wording change, a re-review, a docs correction — gets no
+prompt by default. Say how it was verified instead. If a review still seems
+worth it, say so in one line, and write the prompt only if the owner asks.
 
-Claude implements; Codex reviews. At each milestone, give the owner one
-prompt, ready to run in Codex, in a single fenced `text` block with nothing
-else in it. Tell the owner to run it in a **fresh Codex session**, re-reviews
-included: a reused session carries its earlier conclusions. Codex starts with
-no context and posts its results to GitHub itself, so the prompt has to carry
-everything it needs.
+Claude implements; another model reviews. The owner picks the reviewer and
+its tool (Codex, DeepSeek, or anything else that can run `gh`), so the prompt
+never assumes one: no tool-specific commands, and the reviewer signs with its
+own tool and model. At each milestone, give the owner one prompt, ready to
+paste, in a single fenced `text` block with nothing else in it. Tell the owner
+to run it in a **fresh session**, re-reviews included: a reused session
+carries its earlier conclusions. The reviewer starts with no context and posts
+its results to GitHub itself, so the prompt has to carry everything it needs.
 
 The review is offered, never waited on. Do not stop work for it: set the PR
 body's `Review:` line to `not run`, and update it when a verdict arrives
 (`AGREE at <sha>`, or `BLOCK at <sha>: #n, #m`).
 
-Codex reads `AGENTS.md`, which describes the OpenCode roles; the note at the
-top of `AGENTS.md` and the first line of the prompt tell it that a handoff
-prompt makes it the reviewer instead. Its sandbox may block network access by
-default, and every `gh` call needs it: tell the owner to approve those calls
-when Codex asks.
+A tool that loads `AGENTS.md` (Codex and OpenCode, for example) sees the
+OpenCode roles there. The note at the top of `AGENTS.md` and the prompt's first
+line both tell it that a handoff prompt makes it the reviewer instead. The first
+line alone covers a tool that loads any other instructions file.
+Every `gh` call needs network access, which some tools sandbox by default:
+tell the owner to allow it.
 
 ## Fill in before writing
 
@@ -47,10 +52,11 @@ when Codex asks.
 ## Template
 
 ```text
-You are Codex, the independent reviewer for <owner/repo>, working from a
-review-handoff prompt: this prompt, not the OpenCode roles in AGENTS.md,
-defines your job. Claude did this work. Do not trust its description. Verify
-everything against the code.
+You are the independent reviewer for <owner/repo>, working from a
+review-handoff prompt: this prompt, not the OpenCode roles in AGENTS.md or any
+other agent-instructions file your tool loads, defines your job. Claude did
+this work, not you. Do not trust its description. Verify everything against
+the code.
 
 MILESTONE: <design proposal | pull request | staged release>
 THREAD: <issue or PR URL>
@@ -93,7 +99,7 @@ Rules:
      - Why it matters: what a user or maintainer would notice
      - Suggested fix: the smallest change that resolves it
      - Effort: S, M or L
-     - Signed: — Reviewer (Codex, <model>)
+     - Signed: — Reviewer (<tool>, <model>)
 
 2. Then, always, even if you found nothing, post one comment on THREAD:
    VERDICT: AGREE | BLOCK        (BLOCK if any MUST-FIX issue was opened)
@@ -102,7 +108,7 @@ Rules:
    Owner decisions: questions only the owner can settle, or "none"
    Nits: one line each, or "none" (nits do not get issues)
    Checked and clean: what you verified and found correct
-   — Reviewer (Codex, <model>)
+   — Reviewer (<tool>, <model>)
 ```
 
 ## When the owner says the review is in
@@ -119,6 +125,6 @@ Rules:
   SCOPE: leave the issue for its own change. Owner decisions: put them to the
   owner with a recommended default. Nits: your call, and say which you took.
 - Reply on the thread with what happened to each finding.
-- Rerun the gates after any fix. Offer a re-review prompt only when a
-  MUST-FIX was fixed by a change that is itself reviewable; it runs only if the
-  owner wants it.
+- Rerun the gates after any fix. A re-review is not a milestone. Mention it in
+  one line only when a MUST-FIX was fixed by a code change, and write the prompt
+  only if the owner asks.
