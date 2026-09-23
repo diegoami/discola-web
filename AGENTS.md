@@ -42,15 +42,16 @@ PR that Luna reviews to AGREE, exactly as for a code change. The process reviews
 its own amendment.
 
 This governs amendments made in an OpenCode session. When Claude makes one,
-`CLAUDE.md`'s handoff applies instead: its review is offered, never waited on,
-and Luna's AGREE is not required (owner decision, #34).
+`CLAUDE.md`'s process applies instead: Claude verifies the PR, the owner merges,
+and Luna's AGREE is not required (owner decision, #34). A process change is not
+a milestone.
 
 ## Split by tool
 
 - `AGENTS.md` (this file) holds the OpenCode review process.
 - `CLAUDE.md` holds the tool-agnostic principles, the verification gates and the
-  project rules, with no reviewer-spawning mechanism. Its "Independent review
-  (when Claude implements)" section is Claude's milestone handoff to the owner;
-  it does not apply here.
+  project rules, with no reviewer-spawning mechanism. Its "Milestones and the
+  independent review (when Claude implements)" section is Claude's per-release
+  handoff to the owner; it does not apply here.
 
 Keep one source of truth per idea: process here, principles and rules there.

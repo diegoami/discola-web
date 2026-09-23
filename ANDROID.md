@@ -375,12 +375,18 @@ Gradle needs `JAVA_HOME` set to JDK 21 here
 (`%USERPROFILE%\.jdks\jbr-21.0.11`); Android Studio's bundled JBR is Java 25
 and Gradle 8.14.3 rejects it.
 
-**Tag the source** — after the release PR merges, `git tag -a vX.Y.Z
-<merge-commit> -m "Discola X.Y.Z"` and `git push origin vX.Y.Z`. The packager
-refuses a working tree that differs from `HEAD` (untracked files, and ignored
-ones under `public/`, count) and records `HEAD`'s tree before building. The publisher
-refuses unless that tag is on `origin` with the same tree (`DESKTOP.md`
-§Releasing).
+**Tag the source.** A release is a milestone (`CLAUDE.md`), reviewed on its
+candidate commit on `main` before it is tagged. After AGREE:
+
+1. Package from exactly that commit. The packager refuses a working tree that
+   differs from `HEAD` (untracked files count, and so do ignored ones under
+   `public/`), and it records the commit before building.
+2. Run the smoke on the packaged builds.
+3. Run `git tag -a vX.Y.Z <candidate-sha> -m "Discola X.Y.Z"` and
+   `git push origin vX.Y.Z`.
+
+The publisher refuses unless that tag is on `origin/main` at the packaged
+commit (`DESKTOP.md` §Releasing).
 
 **`tools/publish_release.mjs`** — verify the staged set against
 `SHA256SUMS.txt` (a missing or unlisted file fails the run), check the source

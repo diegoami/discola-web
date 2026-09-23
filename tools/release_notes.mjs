@@ -27,7 +27,9 @@ const SECTIONS = {
 // Windows first: 1.0.4 is its debut, and it is the unfamiliar download.
 const ORDER = ['windows', 'android'];
 
-export function buildNotes(version, platforms, { subtitle } = {}){
+export function buildNotes(version, platforms, { subtitle, commit } = {}){
+  if (commit !== undefined && !/^[0-9a-f]{40}([0-9a-f]{24})?$/.test(commit))
+    throw new Error(`the source commit is not a full object id: ${commit}`);
   if (!platforms.length) throw new Error('a release needs at least one platform');
   const unique = [...new Set(platforms)];
   for (const p of unique)
@@ -43,5 +45,8 @@ export function buildNotes(version, platforms, { subtitle } = {}){
 
   return `${title}\n\n${sections}\n\n${history}\n\n` +
     `**Gioca nel browser:** https://discola.netlify.app/\n\n` +
-    `Checksum SHA-256 in \`SHA256SUMS.txt\`.\n`;
+    `Checksum SHA-256 in \`SHA256SUMS.txt\`.\n` +
+    // The milestone tag's commit, so a binary names its source; the source
+    // repo is private, so the commit, not a link.
+    (commit ? `\nCompilato dal commit \`${commit}\` (tag \`v${version}\`).\n` : '');
 }

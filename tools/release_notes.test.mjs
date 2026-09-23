@@ -44,3 +44,11 @@ test('an unknown or empty platform list is an error', () => {
   assert.throws(() => buildNotes('1.0.4', ['linux']), /unknown platform: linux/);
   assert.throws(() => buildNotes('1.0.4', []), /at least one platform/);
 });
+
+test('the notes name the tagged commit when given, and refuse a short one', () => {
+  const sha = 'e888af0ab9dcfb28a4e1123f336cceb90ae3d80a';
+  const notes = buildNotes('1.0.5', ['android'], { commit: sha });
+  assert.ok(notes.endsWith(`\nCompilato dal commit \`${sha}\` (tag \`v1.0.5\`).\n`), notes);
+  assert.doesNotMatch(buildNotes('1.0.5', ['android']), /Compilato/);
+  assert.throws(() => buildNotes('1.0.5', ['android'], { commit: 'e888af0' }), /full object id/);
+});
