@@ -3,13 +3,10 @@
  *
  * The packager records the commit and tree it built (`dist-release/vX.Y.Z.source`,
  * beside the staged directory so the SHA256SUMS.txt set stays exactly the
- * assets). The publisher refuses to publish unless `vX.Y.Z` exists on origin and
- * points at a commit with that same tree.
- *
- * Trees, not commits: a release is packaged on its `release/X.Y.Z` branch before
- * the merge and tagged on the merge commit after it. A merge of an up-to-date
- * branch has the head's tree, so the tag is checkable although the packager
- * never saw the commit it lands on.
+ * assets). The publisher refuses to publish unless `vX.Y.Z` exists on origin,
+ * on main, at that very commit: a release is packaged from the reviewed
+ * candidate on main and tagged there (CLAUDE.md, milestones). The tree is
+ * recorded for the reader; the check is on the commit.
  *
  * Record format, LF endings:
  *

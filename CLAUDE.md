@@ -17,59 +17,65 @@ review it against the agreed design. The owner merges. This file does not spawn 
 separate reviewer model; that mechanism is OpenCode-specific and lives in
 `AGENTS.md`.
 
-### Independent review (when Claude implements)
+### Milestones and the independent review (when Claude implements)
 
 OpenCode implementing: skip this section, your review process is in
 `AGENTS.md`. Any tool given a review-handoff prompt: the prompt is your job,
 and this section is only context.
 
-Claude does the work itself, the design and the implementation, and does not
-spawn its own reviewer. At each milestone it gives the owner a prompt for the
-**independent reviewer**: a different model, in whatever tool the owner picks
+**A milestone is a release**: an annotated tag `vX.Y.Z` on `main`, on the exact
+commit the published release is built from. Nothing else is a milestone: not a
+proposal, a PR, a run of PRs, or a change to a given file or to the process.
+Binaries go to `diegoami/discola-releases`, but the tag goes on this
+repository's `main`, and the release notes name the tagged commit. Each PR is
+still verified by Claude against its agreed design, and the owner still merges
+it, as above.
+
+The independent review happens **per milestone, before the tag**, never per
+PR. The reviewer is a model that is not Claude, in whatever tool the owner picks
 (Codex, DeepSeek, or another), in a fresh session every time.
-The review is **offered, never waited on**: the owner may not be able to run
-it, so the owner's agreement starts a branch and the owner's decision merges
-or publishes, reviewed or not. When a review does run, it is recorded on the
-thread the milestone already has:
 
-| Milestone | Thread | Offer the prompt |
-|---|---|---|
-| Design written | the proposal issue | with the proposal |
-| PR implementing a design, gates green | the PR | when the PR is ready to merge |
-| Release staged | the `release/X.Y.Z` PR, with the staged checksums in its body | before publishing; after merge, tag `vX.Y.Z` on the merge commit, then publish |
-
-A review costs the owner a round, so it is for **milestones only**, not every
-change. Nothing else gets a prompt by default: a tooling or workflow fix that
-implements no proposal, a process wording change, a re-review after fixes, a
-docs correction. For those, Claude verifies the work itself and says how in
-the PR. When a review might still be worth it, Claude says so in one line, and
-writes the prompt only if the owner asks.
-
-Every milestone PR body carries a `Review:` line that Claude keeps current:
-`not run`, `AGREE at <sha>`, or `BLOCK at <sha>: #n, #m`. A review can still
-be run after the merge, against the merged commit; its findings are ordinary
-issues for a later PR.
+1. **Call it.** The owner calls a milestone, or Claude proposes one when a
+   release is due or a coherent set of work has landed.
+2. **Open the milestone issue.** It lists the proposed tag, the candidate commit
+   on `main` (full SHA), the previous milestone tag, the PRs merged since then,
+   and the gate results on the candidate.
+3. **Hand off.** Claude gives the owner one prompt from the `review-handoff`
+   skill. The reviewer checks out the candidate SHA and reviews
+   `git diff <previous tag>..<candidate SHA>`. It opens one issue per reproduced
+   finding and posts one verdict comment on the milestone issue.
+4. **The tag waits.** On BLOCK, the findings are fixed in ordinary PRs. The
+   candidate moves to the new `main` commit, and Claude gives a re-review
+   prompt without being asked. If a third round still doesn't end in AGREE,
+   the milestone goes to the owner.
+5. **AGREE.** Claude packages the release from the reviewed SHA and runs the
+   manual smoke of the packaged build (`DESKTOP.md`). Then it tags exactly that
+   SHA, never a later commit, and the owner publishes. Work merged after the
+   candidate belongs to the next milestone.
+6. **Tag without a review.** The owner may do this, and the milestone issue
+   records it.
 
 The reviewer posts to GitHub itself, and nothing is pasted back:
 
 - **one issue per reproduced finding**, labelled `review` plus the matching
   category label (`bug`, `robustness`, `tests`, `design`, `cleanup`,
-  `documentation`), linking back to the thread and the SHA;
-- **always one verdict comment** on the thread — AGREE, or BLOCK when any
-  finding is MUST-FIX; the SHA reviewed, the issues it opened, what it checked
-  and found clean — so a review that finds nothing still leaves a record.
+  `documentation`), linking back to the milestone issue and the SHA;
+- **always one verdict comment** on the milestone issue: AGREE, or BLOCK when
+  any finding is MUST-FIX. It names the SHA reviewed, the issues it opened,
+  and what it checked and found clean, so a review that finds nothing still
+  leaves a record.
 
-Severities: **MUST-FIX** (fix before merging if the review arrives in time,
-otherwise first), **SHOULD**, and **OUT OF SCOPE** (not caused by the change).
-None of them locks anything; the owner decides.
+Every issue and comment body is written to a file as UTF-8 without a
+byte-order mark and passed with `--body-file`.
 
-The `review-handoff` skill holds the prompt template. When the owner says the
-review is in, read it from GitHub, reproduce each finding before acting on it,
-and fix it (`Fixes #n` in the PR) or rebut it with evidence on the issue.
-Recommend which fixes belong before the merge; the owner decides. Owner
-decisions go to the owner with a recommended default, not into the code. A
-re-review is not a milestone. Claude mentions it in one line only when a
-MUST-FIX was fixed by a code change, and it runs only if the owner wants it.
+Severities: **MUST-FIX** (fixed before the tag), **SHOULD**, and **OUT OF
+SCOPE** (not caused by the work under review). The owner decides what waits
+for the next milestone.
+
+When the owner says the review is in, read it from GitHub, and reproduce each
+finding before acting on it. Then fix it in a PR (`Fixes #n`), or rebut it
+with evidence on the issue. Owner decisions go to the owner with a
+recommended default, not into the code.
 
 ## Principles
 

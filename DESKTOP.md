@@ -121,26 +121,39 @@ numbered on the shared version line (1.0.4 is the first). The process is local
 by design, for the reasons in [`ANDROID.md`](ANDROID.md) §5 — the machine doing
 a release holds the Android signing key and the Rust toolchain.
 
+A release is a milestone (`CLAUDE.md`). The version bump merges to `main` like
+any other PR. The candidate is a commit on `main`, and it is reviewed on its
+milestone issue before anything is tagged. After AGREE:
+
 ```sh
-node tools/package_release.mjs    # on release/X.Y.Z, clean tree: builds both, stages dist-release/vX.Y.Z/
-# merge the release PR, then tag its merge commit
-git tag -a vX.Y.Z <merge-commit> -m "Discola X.Y.Z"
+git fetch origin && git checkout <candidate-sha>   # detached, clean tree
+node tools/package_release.mjs    # builds both from the candidate, stages dist-release/vX.Y.Z/
+# manual smoke of both packaged builds (see "UI check against the packaged app")
+git tag -a vX.Y.Z <candidate-sha> -m "Discola X.Y.Z"
 git push origin vX.Y.Z
 node tools/publish_release.mjs    # dry run: checks, prints the notes
 node tools/publish_release.mjs --confirm
 ```
 
+The build is packaged and smoke-tested before the tag, because a build that
+fails its smoke must not leave a tag behind. The tag then goes on the same
+commit, so the published binaries are built from exactly the tagged commit.
+The publisher proves it.
+
 The tag is what ties a published binary to its source, since
-`diegoami/discola-releases` holds binaries only. `package_release.mjs` refuses a
-working tree whose content differs from `HEAD`: modified or staged files,
-untracked files, and ignored files under `public/`, which the build bundles.
-Line-ending differences alone don't count. Before building, it records `HEAD`'s
-commit and tree in `dist-release/vX.Y.Z.source`. `publish_release.mjs` refuses, dry run included,
-unless `vX.Y.Z` is on `origin` at a commit with that tree. It compares trees, not
-commits, because the build happens on the branch and the tag goes on the merge.
-If `main` moved before the merge, the trees differ: package again from the merge
-commit. v1.0.1–v1.0.4 are tagged after the fact; v1.0.0 was built from
-uncommitted source and has no tag (#32).
+`diegoami/discola-releases` holds binaries only.
+
+- **`package_release.mjs`** refuses a working tree whose content differs from
+  `HEAD`: modified or staged files, untracked files, and ignored files under
+  `public/`, which the build bundles. Line-ending differences alone don't
+  count. Before building, it records `HEAD`'s commit and tree in
+  `dist-release/vX.Y.Z.source`.
+- **`publish_release.mjs`** refuses, dry run included, unless `vX.Y.Z` is on
+  `origin`, on `origin/main`, at the very commit that was packaged. The release
+  notes name that commit.
+
+v1.0.1–v1.0.4 were tagged after the fact. v1.0.0 was built from uncommitted
+source and has no tag (#32).
 
 `package_release.mjs` fails unless every version declaration — Android's
 `versionName`, `tauri.conf.json`, `Cargo.toml`, `desktop/package.json` and both
