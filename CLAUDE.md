@@ -22,8 +22,9 @@ separate reviewer model; that mechanism is OpenCode-specific and lives in
 OpenCode: skip this section, your review process is in `AGENTS.md`.
 
 Claude does the work itself, the design and the implementation, and does not
-spawn its own reviewer. At each milestone it gives the owner a prompt to run
-in **Codex**, the independent reviewer, in a fresh Codex session every time.
+spawn its own reviewer. At each milestone it gives the owner a prompt for the
+**independent reviewer**: a different model, in whatever tool the owner picks
+(Codex, DeepSeek, or another), in a fresh session every time.
 The review is **offered, never waited on**: the owner may not be able to run
 it, so the owner's agreement starts a branch and the owner's decision merges
 or publishes, reviewed or not. When a review does run, it is recorded on the
