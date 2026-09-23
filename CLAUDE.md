@@ -23,18 +23,29 @@ OpenCode: skip this section, your review process is in `AGENTS.md`.
 
 Claude does the work itself, the design and the implementation, and does not
 spawn its own reviewer. At each milestone it stops and gives the owner a prompt
-to paste into an independent model, which reviews the repository and reports
-issues. The milestones are:
+to run in an independent model. The review is recorded on GitHub, on the
+thread the milestone already has:
 
-1. a design proposal is written, before implementing it;
-2. a PR is open with the gates green, before the owner merges;
-3. a release is staged, before it is published.
+| Milestone | Thread | Gate |
+|---|---|---|
+| Design written | the proposal issue | no branch before AGREE |
+| PR open, gates green | the PR | the owner merges only on an AGREE naming the head SHA |
+| Release staged | the `release/X.Y.Z` PR, with the staged checksums in its body | merge, tag `vX.Y.Z` on the merge commit, then publish |
 
-Write the prompt with the `review-handoff` skill; it holds the template. When
-the owner pastes the review back, reproduce each finding before acting on it.
-Fix it, or rebut it with evidence, and record what happened to each finding on
-the PR or the issue. Findings that are owner decisions go to the owner with a
-recommended default, not into the code.
+The reviewer posts to GitHub itself, and nothing is pasted back:
+
+- **one issue per reproduced finding**, labelled `review` plus the matching
+  category label (`bug`, `robustness`, `tests`, `design`, `cleanup`,
+  `documentation`), linking back to the thread and the SHA;
+- **always one verdict comment** on the thread — AGREE or BLOCK, the SHA
+  reviewed, the issues it opened, what it checked and found clean — so a
+  review that finds nothing still leaves a record.
+
+The `review-handoff` skill holds the prompt template. When the owner says the
+review is in, read it from GitHub, reproduce each finding before acting on it,
+and fix it (`Fixes #n` in the PR) or rebut it with evidence on the issue.
+Owner decisions go to the owner with a recommended default, not into the code.
+A new head needs a new review.
 
 ## Principles
 
