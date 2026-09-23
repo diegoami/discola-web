@@ -122,10 +122,23 @@ by design, for the reasons in [`ANDROID.md`](ANDROID.md) §5 — the machine doi
 a release holds the Android signing key and the Rust toolchain.
 
 ```sh
-node tools/package_release.mjs    # builds both, stages dist-release/vX.Y.Z/
+node tools/package_release.mjs    # on release/X.Y.Z, clean tree: builds both, stages dist-release/vX.Y.Z/
+# merge the release PR, then tag its merge commit
+git tag -a vX.Y.Z <merge-commit> -m "Discola X.Y.Z"
+git push origin vX.Y.Z
 node tools/publish_release.mjs    # dry run: checks, prints the notes
 node tools/publish_release.mjs --confirm
 ```
+
+The tag is what ties a published binary to its source, since
+`diegoami/discola-releases` holds binaries only. `package_release.mjs` refuses a
+dirty working tree and records the commit and tree it built in
+`dist-release/vX.Y.Z.source`. `publish_release.mjs` refuses, dry run included,
+unless `vX.Y.Z` is on `origin` at a commit with that tree. It compares trees, not
+commits, because the build happens on the branch and the tag goes on the merge.
+If `main` moved before the merge, the trees differ: package again from the merge
+commit. v1.0.1–v1.0.4 are tagged after the fact; v1.0.0 was built from
+uncommitted source and has no tag (#32).
 
 `package_release.mjs` fails unless every version declaration — Android's
 `versionName`, `tauri.conf.json`, `Cargo.toml`, `desktop/package.json` and both
