@@ -1,6 +1,6 @@
 {
   "name": "discola-desktop",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "description": "Tauri wrapper around public/ for the Discola desktop build",
   "scripts": {
