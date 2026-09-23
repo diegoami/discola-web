@@ -1,14 +1,20 @@
 ---
 name: review-handoff
-description: Write the prompt the owner runs in an independent model so it reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a PR is open with the gates green, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
+description: Write the prompt the owner runs in Codex so it independently reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a PR is open with the gates green, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
 ---
 
 # Review handoff
 
-Claude implements; an independent model reviews. At each milestone, stop and
-give the owner one prompt, ready to run, in a single fenced `text` block with
-nothing else in it. The reviewer starts with no context and posts its results
-to GitHub itself, so the prompt has to carry everything it needs.
+Claude implements; Codex reviews. At each milestone, stop and give the owner
+one prompt, ready to run in Codex, in a single fenced `text` block with nothing
+else in it. Codex starts with no context and posts its results to GitHub
+itself, so the prompt has to carry everything it needs.
+
+Codex reads `AGENTS.md`, which describes the OpenCode roles; the note at the
+top of `AGENTS.md` and the first line of the prompt tell it that a handoff
+prompt makes it the reviewer instead. Its sandbox may block network access by
+default, and every `gh` call needs it: tell the owner to approve those calls
+when Codex asks.
 
 ## Fill in before writing
 
@@ -30,8 +36,10 @@ to GitHub itself, so the prompt has to carry everything it needs.
 ## Template
 
 ```text
-You are an independent reviewer for <owner/repo>. Another model did this work.
-Do not trust its description. Verify everything against the code.
+You are Codex, the independent reviewer for <owner/repo>, working from a
+review-handoff prompt: this prompt, not the OpenCode roles in AGENTS.md,
+defines your job. Claude did this work. Do not trust its description. Verify
+everything against the code.
 
 MILESTONE: <design proposal | pull request | staged release>
 THREAD: <issue or PR URL>
@@ -73,7 +81,7 @@ Rules:
      - Why it matters: what a user or maintainer would notice
      - Suggested fix: the smallest change that resolves it
      - Effort: S, M or L
-     - Signed: — Reviewer (<your model name>)
+     - Signed: — Reviewer (Codex, <model>)
 
 2. Then, always, even if you found nothing, post one comment on THREAD:
    VERDICT: AGREE | BLOCK        (BLOCK if any BLOCK issue was opened)
@@ -82,7 +90,7 @@ Rules:
    Owner decisions: questions only the owner can settle, or "none"
    Nits: one line each, or "none" (nits do not get issues)
    Checked and clean: what you verified and found correct
-   — Reviewer (<your model name>)
+   — Reviewer (Codex, <model>)
 ```
 
 ## When the owner says the review is in

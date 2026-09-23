@@ -1,4 +1,8 @@
 > Guidance for OpenCode. Claude Code uses CLAUDE.md.
+>
+> **Codex:** if you were given a review-handoff prompt, you are the independent
+> reviewer of Claude's work. Follow that prompt and `CLAUDE.md`; the OpenCode
+> roles below do not apply to you.
 
 # Discola — OpenCode guidance
 

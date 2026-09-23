@@ -23,8 +23,8 @@ OpenCode: skip this section, your review process is in `AGENTS.md`.
 
 Claude does the work itself, the design and the implementation, and does not
 spawn its own reviewer. At each milestone it stops and gives the owner a prompt
-to run in an independent model. The review is recorded on GitHub, on the
-thread the milestone already has:
+to run in **Codex**, the independent reviewer. The review is recorded on
+GitHub, on the thread the milestone already has:
 
 | Milestone | Thread | Gate |
 |---|---|---|
