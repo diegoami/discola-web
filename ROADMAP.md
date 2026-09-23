@@ -7,13 +7,19 @@ stack is the way to get there.
 
 ## Status
 
-Route A is largely built — see [`ANDROID.md`](ANDROID.md) for the live state.
-Iteration 1's offline goal is met on the fonts side (self-hosted, no network at
-runtime) though the service worker is not written; Iteration 4 is done bar
-publishing a release: a signed APK builds from `mobile/` and runs offline. The
-engine extraction (Iteration 2), desktop via Tauri (Iteration 3) and the
-Geoclick stack (Iteration 5) are still just plans. What follows is the original
-reasoning, kept because the route decision it argues for is what was taken.
+Route A is built. The live state is in [`ANDROID.md`](ANDROID.md) and
+[`DESKTOP.md`](DESKTOP.md); what follows is the original reasoning, kept because
+the route decision it argues for is what was taken.
+
+| Iteration | State |
+|---|---|
+| 0 — Spike | Done; run 2026-09-22, recorded in `DESKTOP.md` |
+| 1 — PWA and offline | Partly: fonts are self-hosted and nothing is fetched at runtime; no manifest or service worker |
+| 2 — Extract the engine | Done: `public/engine.js`, tested by `tools/engine.test.mjs` (#13) |
+| 3 — Desktop via Tauri | Done: `desktop/`, Windows only, first shipped in 1.0.4 (#22, #26) |
+| 4 — Android via Capacitor | Done: `mobile/`, a signed APK, sideloaded; no Play listing |
+| 5 — Geoclick stack | Not started (optional) |
+| 6 — Releases | Done: `diegoami/discola-releases`, one release per version carrying the APK, the Windows exe and `SHA256SUMS.txt` |
 
 ---
 
@@ -266,6 +272,11 @@ The thing *not* worth sharing is a component library. The two apps look nothing
 alike and should not.
 
 ## 6. Open questions
+
+Where these stand now: releases are sideloaded from `discola-releases` and no
+Play listing has been pursued (1, and with it 4); desktop is Windows only for
+now, per `DESKTOP.md` (2); Route A was taken (3); orientation is still open and
+tracked in `ANDROID.md` §8 (5).
 
 1. **What is the actual goal** — playing it on your own phone and desktop, or
    publishing it? Sideloading an APK skips Iteration 4's paperwork entirely.
