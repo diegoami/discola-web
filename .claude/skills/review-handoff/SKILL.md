@@ -1,13 +1,15 @@
 ---
 name: review-handoff
-description: Write the prompt the owner gives an independent reviewer (another model, in a tool the owner picks) so it reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a reviewable PR is ready to merge, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
+description: Write the prompt the owner gives an independent reviewer (another model, in a tool the owner picks) so it reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a PR implementing a design is ready to merge, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
 ---
 
 # Review handoff
 
-First check the milestone is one: `CLAUDE.md` says which PRs are reviewable.
-A docs correction or a typo fix is not. Do not write a prompt for it; say it
-was verified without a review and why.
+First check that this is a milestone: a design proposal, a PR implementing
+one, or a staged release (`CLAUDE.md`). Anything else — a tooling fix with no
+proposal, a process wording change, a re-review, a docs correction — gets no
+prompt by default. Say how it was verified instead. If a review still seems
+worth it, say so in one line, and write the prompt only if the owner asks.
 
 Claude implements; another model reviews. The owner picks the reviewer and
 its tool (Codex, DeepSeek, or anything else that can run `gh`), so the prompt
@@ -22,9 +24,10 @@ The review is offered, never waited on. Do not stop work for it: set the PR
 body's `Review:` line to `not run`, and update it when a verdict arrives
 (`AGREE at <sha>`, or `BLOCK at <sha>: #n, #m`).
 
-Some tools load `AGENTS.md` (Codex and OpenCode do), which describes the
-OpenCode roles; the note at the top of `AGENTS.md` and the first line of the
-prompt tell the reviewer that a handoff prompt makes it the reviewer instead.
+A tool that loads `AGENTS.md` (Codex and OpenCode, for example) sees the
+OpenCode roles there. The note at the top of `AGENTS.md` and the prompt's first
+line both tell it that a handoff prompt makes it the reviewer instead. The first
+line alone covers a tool that loads any other instructions file.
 Every `gh` call needs network access, which some tools sandbox by default:
 tell the owner to allow it.
 
@@ -122,6 +125,6 @@ Rules:
   SCOPE: leave the issue for its own change. Owner decisions: put them to the
   owner with a recommended default. Nits: your call, and say which you took.
 - Reply on the thread with what happened to each finding.
-- Rerun the gates after any fix. Offer a re-review prompt only when a
-  MUST-FIX was fixed by a change that is itself reviewable; it runs only if the
-  owner wants it.
+- Rerun the gates after any fix. A re-review is not a milestone. Mention it in
+  one line only when a MUST-FIX was fixed by a code change, and write the prompt
+  only if the owner asks.
