@@ -6,6 +6,7 @@
  *   node tools/package_release.mjs
  *
  * Steps, in order, stopping at the first failure:
+ *   0. refuse a dirty working tree, and note the commit and tree being built
  *   1. cross-check every version declaration (Android, Tauri, Cargo, npm and
  *      both lockfiles) — the shared version line is enforced here, before
  *      anything is built
@@ -16,7 +17,8 @@
  *   6. desktop: npm ci, then tauri build --no-bundle
  *   7. refuse an implausible executable (missing, truncated, not a PE binary)
  *   8. stage dist-release/vX.Y.Z/ with both assets and SHA256SUMS.txt, then
- *      re-read and verify what was just staged
+ *      re-read and verify what was just staged; record the source beside it in
+ *      dist-release/vX.Y.Z.source, which publish_release.mjs checks the tag against
  *
  * The version comes from mobile/android/app/build.gradle's versionName, and the
  * step 1 cross-check is what keeps every desktop declaration honest against it.
@@ -28,13 +30,14 @@
  * here is imported by the game or the web build.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, copyFileSync, rmSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareVersions } from './versions.mjs';
 import { parseCertSha256, normalizeSha256 } from './apk_cert.mjs';
 import { sha256, writeChecksums, verifyChecksums } from './checksums.mjs';
+import { formatSource } from './source_tag.mjs';
 
 const WIN = process.platform === 'win32';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -43,6 +46,23 @@ const ANDROID = path.join(MOBILE, 'android');
 const DESKTOP = path.join(ROOT, 'desktop');
 
 const fail = (msg) => { console.error(`\npackage_release: ${msg}`); process.exit(1); };
+
+// --- 0: build only committed source, and remember which ---
+// v1.0.0 shipped an index.html that no commit contains, so it cannot be tagged.
+// Untracked files count: anything under public/ would be bundled into the APK.
+// Checked before the build, because cap sync rewrites tracked Gradle files.
+const git = (args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' });
+const dirty = git(['status', '--porcelain']);
+if (dirty.status !== 0) fail(`git status failed:\n${dirty.stderr}`);
+if (dirty.stdout.trim())
+  fail(`the working tree is not clean, so this build would match no commit:\n${dirty.stdout}` +
+       '\nCommit or stash the changes, then package again.');
+const source = {
+  commit: git(['rev-parse', 'HEAD']).stdout.trim(),
+  tree: git(['rev-parse', 'HEAD^{tree}']).stdout.trim(),
+};
+// A failed rev-parse fails here, not after a long build.
+try { formatSource(source); } catch (e) { fail(`could not read HEAD: ${e.message}`); }
 
 const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT ||
   (WIN ? path.join(process.env.LOCALAPPDATA ?? '', 'Android', 'Sdk')
@@ -184,7 +204,9 @@ if (peOffset + 4 > exeBytes.length || exeBytes[peOffset] !== 0x50 ||
 
 // --- 8: stage both, replacing any earlier directory ---
 const outDir = path.join(ROOT, 'dist-release', tag);
+const sourceFile = path.join(ROOT, 'dist-release', `${tag}.source`);
 rmSync(outDir, { recursive: true, force: true });
+rmSync(sourceFile, { force: true });
 mkdirSync(outDir, { recursive: true });
 const apkName = `Discola-${version}-android.apk`;
 const exeName = `Discola-${version}-windows-x64.exe`;
@@ -196,9 +218,11 @@ writeChecksums(outDir, new Map([
 ]));
 // Read back what was just written, before claiming success.
 const staged = [...verifyChecksums(outDir)].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+writeFileSync(sourceFile, formatSource(source));
 
 console.log(`\ndone.`);
 console.log(`  dist-release/${tag}/`);
 for (const [name, hash] of staged) console.log(`  ${hash}  ${name}`);
 console.log(`  cert   ${signer}`);
+console.log(`  source ${source.commit} (tree ${source.tree})`);
 console.log(`\nnext: node tools/publish_release.mjs   (dry run; --confirm to publish)`);
