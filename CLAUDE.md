@@ -17,6 +17,25 @@ review it against the agreed design. The owner merges. This file does not spawn 
 separate reviewer model; that mechanism is OpenCode-specific and lives in
 `AGENTS.md`.
 
+### Independent review (Claude Code only)
+
+OpenCode: skip this section, your review process is in `AGENTS.md`.
+
+Claude does the work itself, the design and the implementation, and does not
+spawn its own reviewer. At each milestone it stops and gives the owner a prompt
+to paste into an independent model, which reviews the repository and reports
+issues. The milestones are:
+
+1. a design proposal is written, before implementing it;
+2. a PR is open with the gates green, before the owner merges;
+3. a release is staged, before it is published.
+
+Write the prompt with the `review-handoff` skill; it holds the template. When
+the owner pastes the review back, reproduce each finding before acting on it.
+Fix it, or rebut it with evidence, and record what happened to each finding on
+the PR or the issue. Findings that are owner decisions go to the owner with a
+recommended default, not into the code.
+
 ## Principles
 
 - Keep reviewer requirements separate from **owner decisions**, and put owner

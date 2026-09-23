@@ -41,6 +41,8 @@ its own amendment.
 
 - `AGENTS.md` (this file) holds the OpenCode review process.
 - `CLAUDE.md` holds the tool-agnostic principles, the verification gates and the
-  project rules, with no reviewer-spawning mechanism.
+  project rules, with no reviewer-spawning mechanism. Its "Independent review
+  (Claude Code only)" section is Claude's milestone handoff to the owner; it
+  does not apply here.
 
 Keep one source of truth per idea: process here, principles and rules there.
