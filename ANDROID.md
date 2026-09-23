@@ -214,7 +214,8 @@ Done on this machine, past tense:
   `local.properties` are gitignored, as is the regenerated
   `capacitor-cordova-android-plugins/`).
 - Identity in the generated project is `com.discola.app` / `Discola`, matching
-  `capacitor.config.json`. `versionName` set to `1.0.0`, `versionCode 1`.
+  `capacitor.config.json`. `versionName` started at `1.0.0`, `versionCode 1`;
+  both have moved with each release since (§5).
 - Launcher icons generated at every density from `assets/` by
   `@capacitor/assets` — la vecia on the felt.
 - **A debug APK builds** (`gradlew assembleDebug`, 6.5 MB) and, loaded in a
@@ -224,9 +225,10 @@ Done on this machine, past tense:
   and stays unsigned when absent, so a debug build and a fresh clone still work.
   The release key exists at `C:\Users\diego\discola-release.jks`.
 
-Left to do: create `mobile/android/keystore.properties` from the example (the
-one secret still missing is the password), then `node tools/package_release.mjs`
-for a signed APK and `node tools/publish_release.mjs --confirm` to release it.
+Signed releases have been cut this way since v1.0.0 (2026-09-19): with
+`mobile/android/keystore.properties` in place, `node tools/package_release.mjs`
+builds and verifies the signed APK and `node tools/publish_release.mjs --confirm`
+releases it (§5).
 
 ## 4. Signing
 
@@ -435,12 +437,11 @@ the page is opened from disk — and so the APK never advertises a link to itsel
 | 2 | ~~Icons~~ — done: `tools/make_icons.py`, wired into the page | — | — |
 | 3 | ~~Create `diegoami/discola-releases`~~ — done, public | — | — |
 | 4 | ~~Android SDK, `cap add android`, debug APK builds & runs offline~~ — done | — | — |
-| 5 | Key done; wiring + `keystore.properties` done; signed build pending the password | — | — |
-| 6 | ~~`package_release.mjs` and `publish_release.mjs`~~ written; cut v1.0.0 | ¼ day | — |
-| 7 | Netlify redirect + the About-screen link; run the check | 1 hour | — |
+| 5 | ~~Release key, `keystore.properties`, signed build~~ — done | — | — |
+| 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.4 released | — | — |
+| 7 | ~~Netlify `/android` redirect + the About-screen link~~ — done | — | — |
 
-Roughly four days, and steps 1–3 are worth doing whatever happens to the rest.
-A Play Store listing is deliberately not in this table: sideloading needs none
+All seven steps are done. A Play Store listing is deliberately not in this table: sideloading needs none
 of it, and `ROADMAP.md` §Iteration 4 is right that the paperwork outweighs the
 code. §6's open question — publish or just install it yourself — decides whether
 that work ever happens.
@@ -450,8 +451,9 @@ that work ever happens.
 1. **Portrait-only, or both orientations?** Both work today and the check covers
    both; portrait-only is one line and removes a class of bug from a device
    nobody is going to rotate mid-trick.
-2. **Version numbering.** Discola has no `CHANGELOG.md` and no version anywhere.
-   The APK needs a `versionCode` that only ever increases. Start at 1.0.0 /
-   `versionCode 1` and add a changelog when there is a second release.
+2. ~~**Version numbering.**~~ Settled: one version line across Android and
+   desktop, cross-checked by `tools/package_release.mjs` before anything builds,
+   with `versionCode` required to be a positive integer (5 at 1.0.4). There is
+   still no `CHANGELOG.md`; what changed is in each GitHub release's notes.
 3. **Does the easter egg survive?** `6winouj64ie` needs a hardware keyboard.
    Harmless, but it is the one feature the Android build silently loses.
