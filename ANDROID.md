@@ -377,7 +377,8 @@ and Gradle 8.14.3 rejects it.
 
 **Tag the source** — after the release PR merges, `git tag -a vX.Y.Z
 <merge-commit> -m "Discola X.Y.Z"` and `git push origin vX.Y.Z`. The packager
-refuses a dirty working tree and records the tree it built. The publisher
+refuses a working tree that differs from `HEAD` (untracked files, and ignored
+ones under `public/`, count) and records `HEAD`'s tree before building. The publisher
 refuses unless that tag is on `origin` with the same tree (`DESKTOP.md`
 §Releasing).
 

@@ -37,7 +37,7 @@ import { fileURLToPath } from 'node:url';
 import { compareVersions } from './versions.mjs';
 import { parseCertSha256, normalizeSha256 } from './apk_cert.mjs';
 import { sha256, writeChecksums, verifyChecksums } from './checksums.mjs';
-import { formatSource } from './source_tag.mjs';
+import { formatSource, treeProblems } from './source_tag.mjs';
 
 const WIN = process.platform === 'win32';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,14 +49,15 @@ const fail = (msg) => { console.error(`\npackage_release: ${msg}`); process.exit
 
 // --- 0: build only committed source, and remember which ---
 // v1.0.0 shipped an index.html that no commit contains, so it cannot be tagged.
-// Untracked files count: anything under public/ would be bundled into the APK.
-// Checked before the build, because cap sync rewrites tracked Gradle files.
+// Untracked files count, and ignored ones under public/: the build bundles them.
+// treeProblems says why it avoids git status.
+let problems;
+try { problems = treeProblems(ROOT); } catch (e) { fail(e.message); }
+if (problems.length)
+  fail('the working tree is not exactly HEAD, so this build would match no commit:\n' +
+       problems.map((p) => `  ${p}`).join('\n') +
+       '\n\nCommit, stash or remove them, then package again.');
 const git = (args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' });
-const dirty = git(['status', '--porcelain']);
-if (dirty.status !== 0) fail(`git status failed:\n${dirty.stderr}`);
-if (dirty.stdout.trim())
-  fail(`the working tree is not clean, so this build would match no commit:\n${dirty.stdout}` +
-       '\nCommit or stash the changes, then package again.');
 const source = {
   commit: git(['rev-parse', 'HEAD']).stdout.trim(),
   tree: git(['rev-parse', 'HEAD^{tree}']).stdout.trim(),

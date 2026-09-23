@@ -17,7 +17,35 @@
  *     tree <hex>
  */
 
+import { spawnSync } from 'node:child_process';
+
 const OID = /^[0-9a-f]{40}([0-9a-f]{24})?$/;
+
+/**
+ * Why the working tree at `cwd` is not exactly HEAD, one line per path, or []
+ * when it is. Throws if git fails. Deliberately not `git status --porcelain`:
+ *
+ * - tracked changes come from `git diff HEAD`, which compares content after
+ *   eol conversion. With core.autocrlf=true, `cap sync` rewrites CRLF-checked-out
+ *   Gradle files as LF and status reports them modified with nothing to commit.
+ * - untracked files come from `git ls-files --others`, which, unlike status,
+ *   ignores status.showUntrackedFiles=no.
+ * - ignored files count too under `bundled` (public/), since the build copies
+ *   that whole directory; a global core.excludesFile can hide anything there.
+ */
+export function treeProblems(cwd, bundled = ['public/']){
+  const git = (args) => {
+    const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
+    if (r.status !== 0) throw new Error(`git ${args[0]} failed: ${r.stderr.trim()}`);
+    return r.stdout.split('\n').filter(Boolean);
+  };
+  return [
+    ...git(['diff', '--name-only', '--no-ext-diff', 'HEAD', '--']).map((p) => `modified   ${p}`),
+    ...git(['ls-files', '--others', '--exclude-standard']).map((p) => `untracked  ${p}`),
+    ...git(['ls-files', '--others', '--ignored', '--exclude-standard', '--', ...bundled])
+      .map((p) => `ignored    ${p}`),
+  ];
+}
 
 /** Serialize `{ commit, tree }` as a source record. */
 export function formatSource({ commit, tree }){

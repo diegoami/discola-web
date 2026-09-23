@@ -132,8 +132,10 @@ node tools/publish_release.mjs --confirm
 
 The tag is what ties a published binary to its source, since
 `diegoami/discola-releases` holds binaries only. `package_release.mjs` refuses a
-dirty working tree and records the commit and tree it built in
-`dist-release/vX.Y.Z.source`. `publish_release.mjs` refuses, dry run included,
+working tree whose content differs from `HEAD`: modified or staged files,
+untracked files, and ignored files under `public/`, which the build bundles.
+Line-ending differences alone don't count. Before building, it records `HEAD`'s
+commit and tree in `dist-release/vX.Y.Z.source`. `publish_release.mjs` refuses, dry run included,
 unless `vX.Y.Z` is on `origin` at a commit with that tree. It compares trees, not
 commits, because the build happens on the branch and the tag goes on the merge.
 If `main` moved before the merge, the trees differ: package again from the merge
