@@ -8,17 +8,20 @@
  * Reads dist-release/vX.Y.Z/ (from tools/package_release.mjs) — every staged
  * asset, verified against SHA256SUMS.txt, including the set itself: a missing
  * or unlisted file fails the run — and needs `gh` logged in with access to the
- * releases repo. Outward-facing and hard to take back once the tag is public,
- * so it does nothing without --confirm.
+ * releases repo. It also refuses, dry run included, unless vX.Y.Z is tagged on
+ * origin at a commit with the tree recorded in dist-release/vX.Y.Z.source, so
+ * every published binary names its source. Outward-facing and hard to take back
+ * once the tag is public, so it does nothing without --confirm.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, writeFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareVersions } from './versions.mjs';
 import { CHECKSUM_FILE, verifyChecksums } from './checksums.mjs';
 import { buildNotes } from './release_notes.mjs';
+import { parseSource, tagCommit } from './source_tag.mjs';
 
 const RELEASES_REPO = 'diegoami/discola-releases';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -52,6 +55,32 @@ if (gh(['--version']).status !== 0) fail('the GitHub CLI (gh) is not installed o
 const seen = gh(['release', 'view', tag, '-R', RELEASES_REPO]);
 if (seen.status === 0) fail(`${tag} already exists on ${RELEASES_REPO}. Bump the version first.`);
 
+// --- the source must be tagged: vX.Y.Z on origin, with the tree that was built ---
+// Packaged on the release branch before the merge, tagged on the merge commit
+// after it; the two trees agree when the branch was up to date with main.
+const sourceFile = path.join(distRoot, `${tag}.source`);
+if (!existsSync(sourceFile))
+  fail(`dist-release/${tag}.source is missing — package again with tools/package_release.mjs.`);
+let source;
+try { source = parseSource(readFileSync(sourceFile, 'utf8')); }
+catch (e) { fail(`dist-release/${tag}.source: ${e.message}`); }
+const git = (args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' });
+// Unfiltered: with a ref pattern, ls-remote omits the peeled ^{} line.
+const remote = git(['ls-remote', '--tags', 'origin']);
+if (remote.status !== 0) fail(`git ls-remote origin failed:\n${remote.stderr}`);
+const tagged = tagCommit(remote.stdout, tag);
+if (!tagged)
+  fail(`${tag} is not tagged on origin. Tag the release PR's merge commit, then publish:\n` +
+       `  git tag -a ${tag} <merge-commit> -m "Discola ${version}"\n  git push origin ${tag}`);
+const taggedTree = git(['rev-parse', '--verify', '--quiet', `${tagged}^{tree}`]).stdout.trim();
+if (!taggedTree) fail(`origin's ${tag} (${tagged}) is not in this clone — git fetch origin --tags.`);
+if (taggedTree !== source.tree)
+  fail(`origin's ${tag} does not have the tree that was built.\n` +
+       `  built   ${source.commit}  tree ${source.tree}\n` +
+       `  tagged  ${tagged}  tree ${taggedTree}\n` +
+       'If main moved before the merge, package again from the merge commit; ' +
+       'if the tag is on the wrong commit, fix it on origin.');
+
 // --- release notes, in Italian to match the game ---
 // The subtitle is the one release-specific line; future releases edit or drop it.
 let notes;
@@ -64,6 +93,7 @@ try {
 console.log(`publish ${tag} to ${RELEASES_REPO}`);
 for (const name of names) console.log(`  ${name}`);
 console.log(`  ${CHECKSUM_FILE}`);
+console.log(`source ${tag} on origin → ${tagged}`);
 
 if (!CONFIRM) {
   console.log('\n--- dry run --- nothing was published.');

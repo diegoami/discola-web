@@ -375,11 +375,18 @@ Gradle needs `JAVA_HOME` set to JDK 21 here
 (`%USERPROFILE%\.jdks\jbr-21.0.11`); Android Studio's bundled JBR is Java 25
 and Gradle 8.14.3 rejects it.
 
+**Tag the source** — after the release PR merges, `git tag -a vX.Y.Z
+<merge-commit> -m "Discola X.Y.Z"` and `git push origin vX.Y.Z`. The packager
+refuses a working tree that differs from `HEAD` (untracked files, and ignored
+ones under `public/`, count) and records `HEAD`'s tree before building. The publisher
+refuses unless that tag is on `origin` with the same tree (`DESKTOP.md`
+§Releasing).
+
 **`tools/publish_release.mjs`** — verify the staged set against
-`SHA256SUMS.txt` (a missing or unlisted file fails the run), then `gh release
-create` on `diegoami/discola-releases`, attaching every asset. Dry run by
-default, `--confirm` to actually publish; this is outward-facing and
-irreversible enough to deserve the extra word.
+`SHA256SUMS.txt` (a missing or unlisted file fails the run), check the source
+tag, then `gh release create` on `diegoami/discola-releases`, attaching every
+asset. Dry run by default, `--confirm` to actually publish; this is
+outward-facing and irreversible enough to deserve the extra word.
 
 Release notes should say, in Italian to match the game: what changed, that
 Android will warn about installing from an unknown source (and, since 1.0.4,
