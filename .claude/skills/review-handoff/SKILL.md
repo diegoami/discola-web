@@ -1,9 +1,13 @@
 ---
 name: review-handoff
-description: Write the prompt the owner runs in Codex so it independently reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a PR is open with the gates green, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
+description: Write the prompt the owner runs in Codex so it independently reviews the repository at a milestone and records the result on GitHub. Use when a design proposal is written, when a reviewable PR is open with the gates green, or when a release is staged (the milestones in CLAUDE.md), and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
 ---
 
 # Review handoff
+
+First check the milestone is one: `CLAUDE.md` says which PRs are reviewable.
+A docs correction or a typo fix is not. Do not write a prompt for it; say it
+was verified without Codex and why.
 
 Claude implements; Codex reviews. At each milestone, stop and give the owner
 one prompt, ready to run in Codex, in a single fenced `text` block with nothing
@@ -104,5 +108,6 @@ Rules:
   SCOPE: leave the issue for its own change. Owner decisions: put them to the
   owner with a recommended default. Nits: your call, and say which you took.
 - Reply on the thread with what happened to each finding.
-- If the head changed, rerun the gates and give a new prompt for the new SHA.
-  A review of an old SHA does not cover the new one.
+- If the review was a BLOCK, or a fix changed behaviour, rerun the gates and
+  give a new prompt for the new SHA. Otherwise record the fixes on the thread
+  and leave the merge to the owner.

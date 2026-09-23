@@ -29,8 +29,20 @@ GitHub, on the thread the milestone already has:
 | Milestone | Thread | Gate |
 |---|---|---|
 | Design written | the proposal issue | no branch before AGREE |
-| PR open, gates green | the PR | the owner merges only on an AGREE naming the head SHA |
+| Reviewable PR open, gates green | the PR | the owner merges only on an AGREE naming the head SHA |
 | Release staged | the `release/X.Y.Z` PR, with the staged checksums in its body | merge, tag `vX.Y.Z` on the merge commit, then publish |
+
+A review costs a round, so a PR is reviewable only when it:
+
+- implements a design proposal, or otherwise changes behaviour: `public/`,
+  `mobile/`, `desktop/`, the tools that check, build or release, or CI;
+- changes the process: `CLAUDE.md`, `AGENTS.md`, `.claude/skills/`;
+- is a release PR.
+
+Not reviewable: documentation that corrects facts or status, typos, comments,
+wrapping. Claude verifies those itself, says so in the PR, and the owner
+merges. When unsure, Claude says which way it leans and why, and the owner
+decides.
 
 The reviewer posts to GitHub itself, and nothing is pasted back:
 
@@ -45,7 +57,9 @@ The `review-handoff` skill holds the prompt template. When the owner says the
 review is in, read it from GitHub, reproduce each finding before acting on it,
 and fix it (`Fixes #n` in the PR) or rebut it with evidence on the issue.
 Owner decisions go to the owner with a recommended default, not into the code.
-A new head needs a new review.
+A new head needs a new review only if the review was a BLOCK or the fix
+changes behaviour; otherwise record the fixes on the thread and the owner
+merges.
 
 ## Principles
 
