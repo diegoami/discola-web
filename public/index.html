@@ -706,7 +706,7 @@ button.card:disabled{ cursor: default; }
   box-shadow: inset 0 0 0 1px var(--rail-line);
 }
 
-/* ---- end of match --------------------------------------------------------- */
+/* ---- the abandon confirmation: a modal over the page ---------------------- */
 
 .scrim{
   position: fixed;
@@ -718,7 +718,7 @@ button.card:disabled{ cursor: default; }
   z-index: 20;
 }
 
-.result{
+.modal{
   width: min(380px, 100%);
   padding: 1.6rem;
   border-radius: 4px;
@@ -728,25 +728,75 @@ button.card:disabled{ cursor: default; }
   display: grid;
   gap: 1rem;
 }
-.result h2{
+.modal h2{
   font-family: var(--font-display);
   font-size: 1.9rem;
   font-weight: 700;
   margin: 0;
   text-wrap: balance;
 }
+.modal__note{ font-size: .95rem; color: var(--ivory-dim); line-height: 1.5; margin: 0; }
+.modal__actions{ display: grid; gap: .5rem; }
+
+/* ---- end of match: a screen over the table --------------------------------
+
+   Not a popup over the page (#42): an absolutely positioned child of .table,
+   Tressette's and Scopetta's shape with this game's tokens. It takes none of
+   the card rows, so `--chrome` and the card budget know nothing about it, and
+   the opponent and deck pickers scroll inside it rather than squeezing the
+   table. The body is the scroller and the actions are its sibling, not its
+   child, so the way on cannot scroll below the fold at 980x385.
+   `.table > .result` outranks `.table > *`, which would make it relative.     */
+.table > .result{
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: clamp(.5rem, 2vw, 1rem);
+  padding: var(--pad-block) clamp(16px, 3vw, 2rem);
+  background: rgba(8, 26, 21, .94);
+}
+.result__body{
+  overflow: auto;
+  /* the end of the body must not hand the wheel to the table behind it */
+  overscroll-behavior: contain;
+  width: min(620px, 100%);
+  display: grid;
+  align-content: safe center;
+  gap: clamp(.6rem, 2vw, 1.1rem);
+  text-align: center;
+}
+.result__title{
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 6vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.1;
+  text-wrap: balance;
+}
 .result__tally{ display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .8rem; }
 .result__n{
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: clamp(2.4rem, 8vw, 3.4rem);
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--brass);
+  color: var(--ivory);
 }
+/* The number that won carries the brass, so the tally says who won before
+   the title is read; in a draw neither does. */
+.result__n[data-won="true"]{ color: var(--brass); }
 .result__sep{ color: var(--ivory-dim); }
-.result__note{ font-size: .95rem; color: var(--ivory-dim); line-height: 1.5; margin: 0; }
-.result__actions{ display: grid; gap: .5rem; }
+.result__note{ font-size: var(--t-body); color: var(--ivory-dim); line-height: 1.45; margin: 0; }
+.result__setup{ text-align: left; }
+.result__actions{
+  width: min(620px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
 
 /* ---- portrait ------------------------------------------------------------- */
 
@@ -892,6 +942,51 @@ button.card:disabled{ cursor: default; }
           <span class="plate__role">giocatore</span>
         </span>
         <span class="plate__score" id="youScore">0</span>
+      </div>
+    </section>
+
+    <!-- The end of the match, as a screen over the table rather than a popup
+         over the page (#42), in Tressette's and Scopetta's shape. It covers the
+         table and blocks it, so it keeps role="dialog" aria-modal="true"; the
+         top bar and the covered seats are made inert while it is up, because
+         aria-modal alone is an announcement rather than a trap. No Escape: a
+         choice is owed. The opponent and the deck are chosen here, as on the
+         start screen; Impostazioni holds the rest and Back returns here. -->
+    <section class="result" id="result" hidden role="dialog" aria-modal="true"
+             aria-labelledby="resultTitle">
+      <div class="result__body">
+        <h2 class="result__title" id="resultTitle">Hai vinto</h2>
+        <div class="result__tally">
+          <div>
+            <div class="result__n" id="resultYou">61</div>
+            <div class="eyebrow">tu</div>
+          </div>
+          <div class="result__sep">&mdash;</div>
+          <div>
+            <div class="result__n" id="resultOpp">59</div>
+            <div class="eyebrow" id="resultOppName">valerio</div>
+          </div>
+        </div>
+        <p class="result__note" id="resultNote"></p>
+
+        <div class="group result__setup">
+          <div class="group-head"><span class="eyebrow">Avversario</span></div>
+          <div class="chips" id="resultOpponents"></div>
+        </div>
+
+        <div class="group result__setup">
+          <div class="group-head">
+            <span class="eyebrow">Mazzo</span><span class="pick" id="resultDeckName">Trevisane</span>
+          </div>
+          <div class="decks" id="resultDecks"></div>
+        </div>
+      </div>
+
+      <!-- Two ways on. The opponent and the deck are on this screen, so the
+           second action is the settings sheet for everything else. -->
+      <div class="result__actions">
+        <button class="btn btn--primary" id="playAgain" type="button">Ancora</button>
+        <button class="btn" id="resultSettings" type="button">Impostazioni</button>
       </div>
     </section>
   </main>
@@ -1059,35 +1154,13 @@ button.card:disabled{ cursor: default; }
 </div>
 
 <div class="scrim" id="confirmScrim" hidden>
-  <div class="result" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <h2 id="confirmTitle">Abbandonare la partita?</h2>
-    <p class="result__note">La partita in corso va persa e non viene registrata
+    <p class="modal__note">La partita in corso va persa e non viene registrata
     nello storico.</p>
-    <div class="result__actions">
+    <div class="modal__actions">
       <button class="btn btn--primary" id="confirmNo" type="button">Continua a giocare</button>
       <button class="btn btn--quiet" id="confirmYes" type="button">Abbandona</button>
-    </div>
-  </div>
-</div>
-
-<div class="scrim" id="scrim" hidden>
-  <div class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
-    <h2 id="resultTitle">Hai vinto</h2>
-    <div class="result__tally">
-      <div>
-        <div class="result__n" id="resultYou">61</div>
-        <div class="eyebrow">tu</div>
-      </div>
-      <div class="result__sep">&mdash;</div>
-      <div>
-        <div class="result__n" id="resultOpp">59</div>
-        <div class="eyebrow" id="resultOppName">valerio</div>
-      </div>
-    </div>
-    <p class="result__note" id="resultNote"></p>
-    <div class="result__actions">
-      <button class="btn btn--primary" id="playAgain" type="button">Ancora</button>
-      <button class="btn" id="backToStart" type="button">Cambia avversario o mazzo</button>
     </div>
   </div>
 </div>
@@ -1176,6 +1249,7 @@ function later(fn, ms){
 // TForm1.Redo. The engine deals and reports who leads; the view renders and
 // schedules the opponent when it moves first.
 function newHand(){
+  showResult(false);
   epoch++;
   clearTimeout(timer);
   const dealt = game.startHand();
@@ -1231,10 +1305,23 @@ function finish(){
   el.resultTitle.textContent = title;
   el.resultYou.textContent = you;
   el.resultOpp.textContent = opp;
+  el.resultYou.dataset.won = String(you > opp);
+  el.resultOpp.dataset.won = String(opp > you);
   el.resultOppName.textContent = state.opponent.toLowerCase();
   el.resultNote.textContent = note;
-  el.scrim.hidden = false;
+  showResult(true);
   el.playAgain.focus();
+}
+
+// The end screen covers the table, and aria-modal is an announcement rather
+// than a trap: while it is up, the top bar and every child of the table it
+// covers are inert, so Tab cannot reach what the screen hides. It has to come
+// off again with the screen — inert survives a hidden ancestor, so leaving it
+// on makes the next hand untouchable.
+function showResult(on){
+  el.result.hidden = !on;
+  for (const node of document.querySelectorAll("#viewTable .topbar, #table > :not(.result)"))
+    node.inert = on;
 }
 
 /* --- sound ----------------------------------------------------------------- */
@@ -1273,7 +1360,8 @@ const el = {};
 for (const id of ["table","oppHand","youHand","slotOpp","slotYou","pile","briscolaCard",
   "stockCard","stockCount","briscolaName","lastHand","oppName","oppScore","youScore",
   "plateOpp","plateYou","opponents","decks","weightsTable","deckSel","feltSel","speedSel",
-  "pointsSel","soundSel","scrim","playAgain","backToStart","resultTitle","resultYou",
+  "pointsSel","soundSel","result","playAgain","resultSettings","resultOpponents",
+  "resultDecks","resultDeckName","resultTitle","resultYou",
   "resultOpp","resultOppName","resultNote","cheatNote","viewTable","viewStart",
   "viewSettings","viewHistory","viewAbout","btnNew","btnHistory","btnSettings",
   "confirmScrim","confirmYes","confirmNo",
@@ -1404,7 +1492,7 @@ function back(){ show(state.dealt ? "table" : "start"); }
 function abandon(){
   epoch++;
   clearTimeout(timer);
-  el.scrim.hidden = true;
+  showResult(false);
   el.confirmScrim.hidden = true;
   // A hand that has been abandoned is no longer in play, so `dealt` — which
   // `back()` reads to decide between the table and the start screen — must not
@@ -1582,7 +1670,8 @@ function applyDeck(name){
   root.style.setProperty("--ratio", DECK_RATIO[name]);
   el.deckSel.value = name;
   el.deckName.textContent = name;
-  for (const b of el.decks.children)
+  el.resultDeckName.textContent = name;
+  for (const b of [...el.decks.children, ...el.resultDecks.children])
     b.setAttribute("aria-pressed", String(b.dataset.deck === name));
 }
 
@@ -1603,42 +1692,47 @@ function shade(hex, amount){
   return "#" + ch.map(v => v.toString(16).padStart(2, "0")).join("");
 }
 
+// The opponent and deck pickers exist twice, on the start screen and on the
+// end screen, and both copies stay in step through selectOpponent/applyDeck.
 function buildOpponents(){
-  el.opponents.replaceChildren(...Object.keys(PROFILES).map(name => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "chip";
-    b.dataset.name = name;
-    b.textContent = name;
-    b.addEventListener("click", () => selectOpponent(name));
-    return b;
-  }));
+  for (const box of [el.opponents, el.resultOpponents])
+    box.replaceChildren(...Object.keys(PROFILES).map(name => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.dataset.name = name;
+      b.textContent = name;
+      b.addEventListener("click", () => selectOpponent(name));
+      return b;
+    }));
 }
 
 // Each deck option shows a real card from that deck — the asso, which is the
 // most characteristic card in all five. The name goes beside the section label,
 // not under the swatch, so all five fit one row on a phone.
 function buildDecks(){
-  el.decks.style.setProperty("--deck-cols", DECKS.length);
-  el.decks.replaceChildren(...DECKS.map(name => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "deck-opt";
-    b.dataset.deck = name;
-    b.title = name;
-    b.setAttribute("aria-label", `Mazzo ${name}`);
-    b.style.setProperty("--sheet", deckSheet(name));
-    b.style.setProperty("--ratio", DECK_RATIO[name]);
-    b.innerHTML = `<span class="card" style="--col:0;--row:0"></span>`;
-    b.addEventListener("click", () => { applyDeck(name); save(); });
-    return b;
-  }));
+  for (const box of [el.decks, el.resultDecks]){
+    box.style.setProperty("--deck-cols", DECKS.length);
+    box.replaceChildren(...DECKS.map(name => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "deck-opt";
+      b.dataset.deck = name;
+      b.title = name;
+      b.setAttribute("aria-label", `Mazzo ${name}`);
+      b.style.setProperty("--sheet", deckSheet(name));
+      b.style.setProperty("--ratio", DECK_RATIO[name]);
+      b.innerHTML = `<span class="card" style="--col:0;--row:0"></span>`;
+      b.addEventListener("click", () => { applyDeck(name); save(); });
+      return b;
+    }));
+  }
 }
 
 function selectOpponent(name){
   state.opponent = name;
   el.dossier.textContent = DOSSIER[name];
-  for (const b of el.opponents.children)
+  for (const b of [...el.opponents.children, ...el.resultOpponents.children])
     b.setAttribute("aria-pressed", String(b.dataset.name === name));
 
   const P = PROFILES[name];
@@ -1714,8 +1808,10 @@ for (const b of document.querySelectorAll("[data-nav]"))
 el.startPlay.addEventListener("click", () => { show("table"); newHand(); });
 el.changeOpponent.addEventListener("click", () => show("start"));
 
-el.playAgain.addEventListener("click", () => { el.scrim.hidden = true; newHand(); });
-el.backToStart.addEventListener("click", abandon);
+el.playAgain.addEventListener("click", newHand);
+// Back from the settings lands on the table, where the screen is still up:
+// back() goes to the table while a hand has been dealt, finished or not.
+el.resultSettings.addEventListener("click", () => show("settings"));
 
 el.deckSel.addEventListener("change", () => { applyDeck(el.deckSel.value); save(); });
 el.feltSel.addEventListener("input", () => { applyFelt(el.feltSel.value); save(); });

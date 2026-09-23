@@ -95,12 +95,12 @@ file you debug in the browser is the file in the repository.
   sheets               start / settings / history / about chrome
   controls             buttons, fields, toggles, prose
   match history        tally, log rows
-  end of match         the two dialogs
+  end of match         the confirm modal, and the end screen over the table
   portrait             --rows: 4, stacked middle
   short landscape      reclaimed chrome
   phone-shaped         the whole type scale re-expressed in vw
   reduced motion
-markup                 5 .view blocks, then 2 .scrim dialogs
+markup                 5 .view blocks (the end screen inside the table), then the confirm .scrim
 <script>
   cards                UMazzo.pas: value, ranking, deck, shuffle
   opponent profiles    Global.pas: the twelve weights x four
@@ -156,7 +156,7 @@ phantom result into history — this happened, and the epoch guard is the fix.
 newHand ──► render ──► (if opponent leads) computerPlay
 humanPlay ──► trick complete? ──► resolve ──► draw ──► computerPlay
                       └── no ──► computerPlay
-resolve ──► hands empty? ──► finish ──► record ──► result dialog
+resolve ──► hands empty? ──► finish ──► record ──► end screen
 ```
 
 ## 5. Game rules as implemented
@@ -245,15 +245,16 @@ spends them.
 
 ## 7. Screens
 
-Five `.view` blocks, exactly one visible. Two dialogs overlay any of them.
+Five `.view` blocks, exactly one visible. Two dialogs: the confirm overlays the
+page, and the end screen covers the table (and only the table).
 
 ```
 start ──Gioca──► table ──┬─ reload icon ─► confirm ─► start
                          ├─ history icon ─► history ─back─► table
                          ├─ settings icon ─► settings ─back─► table
                          └─ about icon ────► about ───back─► table
-table ──hand empty──► result ──┬─ Ancora ────► table (new hand)
-                               └─ Cambia ────► start
+table ──hand empty──► result ──┬─ Ancora ───────► table (new hand)
+                               └─ Impostazioni ─► settings ─back─► result
 ```
 
 - **start** — pick opponent and deck, then play. Nothing is dealt until Gioca.
@@ -266,7 +267,10 @@ table ──hand empty──► result ──┬─ Ancora ────► table
   and a clear button. Empty state when there is nothing yet.
 - **about** — what the game is and where it came from.
 - **confirm** — guards abandoning a hand in progress. Skipped once the hand is over.
-- **result** — end of hand; offers a rematch or a return to the start screen.
+- **result** — end of the match, a screen over the table rather than a popup (#42),
+  in Tressette's and Scopetta's shape: the score, the note, and the opponent and
+  deck pickers, which scroll, above two pinned actions, Ancora and Impostazioni.
+  The covered table and its icon bar are inert while it is up. No Escape.
 
 Escape backs out of a sheet or dismisses the confirm. Keys `1`, `2`, `3` play a
 card. Typing `6winouj64ie` turns the opponent's hand face up — the original's
