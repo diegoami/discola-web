@@ -89,6 +89,16 @@ const seedHistory = async page => page.evaluate(() => {
   ]));
 });
 
+// End the match where it stands rather than playing forty cards.
+const endMatch = async p => {
+  await p.click('#startPlay');
+  await p.evaluate(() => {
+    state.scores = [68, 52];
+    state.hands = [[null, null, null], [null, null, null]];
+    finish();
+  });
+};
+
 const SCREENS = [
   { name: 'start', open: async () => {},
     // The primary action has to be reachable without hunting for it. Readable
@@ -135,14 +145,65 @@ const SCREENS = [
       const start = document.querySelector('#viewStart');
       return start && !start.hidden ? [] : ['Back after abandoning did not return to Start'];
     } },
-  { name: 'result',        open: async p => {
-      await p.click('#startPlay');
-      // end the hand where it stands rather than playing forty cards
-      await p.evaluate(() => {
-        state.scores = [68, 52];
-        state.hands = [[null, null, null], [null, null, null]];
-        finish();
-      });
+  // The end of the match is a screen over the table, not a popup over the page
+  // (#42): inside #table, covering it, its actions in view at every size, and
+  // the table it covers unreachable while it is up.
+  { name: 'result',        open: endMatch, check: () => {
+      const out = [];
+      const panel = document.querySelector('#result');
+      const table = document.querySelector('#table');
+      if (!panel || panel.hidden) return ['the end screen is not showing'];
+      if (panel.parentElement !== table) out.push('the end screen is not a child of #table');
+      const p = panel.getBoundingClientRect(), t = table.getBoundingClientRect();
+      if (Math.abs(p.top - t.top) > 1 || Math.abs(p.bottom - t.bottom) > 1 ||
+          Math.abs(p.left - t.left) > 1 || Math.abs(p.right - t.right) > 1)
+        out.push(`the end screen does not cover the table (${Math.round(p.width)}x${Math.round(p.height)} `
+          + `vs ${Math.round(t.width)}x${Math.round(t.height)})`);
+      for (const id of ['playAgain', 'resultSettings']) {
+        const r = document.getElementById(id).getBoundingClientRect();
+        if (r.bottom > window.innerHeight + 1 || r.top < -1 || r.height === 0)
+          out.push(`#${id} is off screen (bottom ${Math.round(r.bottom)} vs ${window.innerHeight})`);
+      }
+      const open = [...document.querySelectorAll('#viewTable .topbar, #table > :not(.result)')]
+        .filter(n => !n.inert);
+      if (open.length) out.push(`${open.length} covered node(s) are not inert, e.g. ${open[0].className}`);
+      if (document.activeElement?.id !== 'playAgain') out.push('Ancora does not have the focus');
+      return out;
+    } },
+  // Impostazioni from the end screen, then Back: the finished table and its
+  // end screen, not the start screen and not a bare table.
+  { name: 'result settings back', open: async p => {
+      await endMatch(p);
+      await p.click('#resultSettings');
+      await p.click('#viewSettings [data-back]');
+    },
+    check: () => {
+      const table = document.querySelector('#viewTable'), panel = document.querySelector('#result');
+      return table.hidden || panel.hidden
+        ? ['Back from Impostazioni did not return to the end screen'] : [];
+    } },
+  // A pick made on the end screen is the one the next hand uses, and the start
+  // screen's copy of the picker agrees; Ancora takes the screen and the inert
+  // cover down together.
+  { name: 'result again',  open: async p => {
+      await endMatch(p);
+      await p.click('#resultOpponents .chip[data-name="Franco"]');
+      await p.click('#resultDecks .deck-opt[data-deck="Napoletane"]');
+      await p.click('#playAgain');
+    },
+    check: () => {
+      const out = [];
+      if (!document.querySelector('#result').hidden) out.push('Ancora left the end screen up');
+      const stuck = [...document.querySelectorAll('#viewTable .topbar, #table > *')].filter(n => n.inert);
+      if (stuck.length) out.push(`${stuck.length} table node(s) still inert after Ancora`);
+      if (state.opponent !== 'Franco' || state.deck !== 'Napoletane')
+        out.push(`the next hand is ${state.opponent} / ${state.deck}, not Franco / Napoletane`);
+      const pressed = sel => document.querySelector(sel)?.getAttribute('aria-pressed');
+      if (pressed('#opponents .chip[data-name="Franco"]') !== 'true' ||
+          pressed('#decks .deck-opt[data-deck="Napoletane"]') !== 'true')
+        out.push("the start screen's picker does not show the pick made on the end screen");
+      if (state.over || state.hands[0].filter(Boolean).length !== 3) out.push('no fresh hand was dealt');
+      return out;
     } },
 ];
 
@@ -457,7 +518,7 @@ async function checkTable(browser, only, inflate) {
       await page.goto(URL_);
       if (inflate) await page.addStyleTag({
         content: ':root{ --pad-block: 1.5rem; --step: 1.25rem; --slack: 16px; }' });
-      await page.click(`.deck-opt[data-deck="${deck}"]`);
+      await page.click(`#decks .deck-opt[data-deck="${deck}"]`);
       await page.click('#startPlay');
       await page.waitForTimeout(260);
       rows.push({ deck, ...(await page.evaluate(measure)) });
