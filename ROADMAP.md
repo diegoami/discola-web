@@ -217,8 +217,9 @@ in [`DESKTOP.md`](DESKTOP.md), which supersedes the open question above.
 
 **Written out in full in [`ANDROID.md`](ANDROID.md)**, which corrects this
 iteration where the repo turned out not to match it: the page fetches its fonts
-from Google at runtime, there is no icon anywhere, and this repo is private so
-its release assets cannot be linked from the site.
+from Google at runtime, there is no icon anywhere, and this repo was private
+then, so its release assets could not be linked from the site (it has since
+been made public, #46; binaries still go to `discola-releases`).
 
 `mobile/` with `capacitor.config.ts`, `webDir` at `public/`, Android
 platform added. No plugins: no SQLite, no filesystem — `localStorage` covers

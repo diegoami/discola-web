@@ -46,7 +46,7 @@ export function buildNotes(version, platforms, { subtitle, commit } = {}){
   return `${title}\n\n${sections}\n\n${history}\n\n` +
     `**Gioca nel browser:** https://discola.netlify.app/\n\n` +
     `Checksum SHA-256 in \`SHA256SUMS.txt\`.\n` +
-    // The milestone tag's commit, so a binary names its source; the source
-    // repo is private, so the commit, not a link.
+    // The milestone tag's commit, so a binary names its source. The full id
+    // stays checkable with any clone, whether or not a link is followed.
     (commit ? `\nCompilato dal commit \`${commit}\` (tag \`v${version}\`).\n` : '');
 }
