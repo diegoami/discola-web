@@ -577,6 +577,13 @@ button.card:disabled{ cursor: default; }
 
 .deck-opt{
   display: grid;
+  /* The swatch takes the tile's width and its own deck's height, never the
+     other way round. The tiles of one row stretch to the tallest deck, and a
+     card stretched to that height took its width from its aspect ratio, so
+     every deck shorter than the Trevisane spilled over its neighbours. A
+     minmax(0, 1fr) column pins the width; align-items stops the stretch. */
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
   justify-items: center;
   min-width: 0;               /* let the grid item shrink so the row never overflows */
   padding: .3rem;

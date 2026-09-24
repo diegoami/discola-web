@@ -244,6 +244,19 @@ const audit = () => {
       out.push(`the deck picker is on ${tops.length} rows, not one `
         + `(${deckOpts.length} decks at tops ${tops.sort((a, b) => a - b).join(', ')})`);
   }
+  // Each swatch inside its own tile. The tiles are equal and one row, so the
+  // rule above passes, while the cards inside spilled over their neighbours:
+  // stretched to the tallest deck's height, a shorter deck took its width from
+  // its aspect ratio and outgrew the tile (87-115px cards in 98px tiles at
+  // 1440x900). Nothing overflowed the page, so no other rule saw it.
+  for (const o of deckOpts) {
+    const t = o.getBoundingClientRect(), c = o.querySelector('.card')?.getBoundingClientRect();
+    if (c && (c.left < t.left - 1 || c.right > t.right + 1 || c.top < t.top - 1 || c.bottom > t.bottom + 1)) {
+      out.push(`the ${o.dataset.deck} swatch spills out of its tile `
+        + `(card ${Math.round(c.width)}x${Math.round(c.height)} in a ${Math.round(t.width)}x${Math.round(t.height)} tile)`);
+      break;
+    }
+  }
   return out;
 };
 
