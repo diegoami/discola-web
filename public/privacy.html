@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discola — Privacy</title>
+<meta name="description" content="Discola non raccoglie dati personali. Discola collects no personal data.">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<!-- The privacy policy Google Play asks for (STORES.md 1.2), in Italian and
+     English. Its public URL, https://discola.netlify.app/privacy.html, is the
+     one the Play Console and the in-game Informazioni screen link to. It has to
+     stay true: if the game ever sends anything anywhere, this page changes in
+     the same PR. Same palette and faces as the game, and no script. -->
+<style>
+@font-face{ font-family:'Bodoni Moda'; font-weight:400 700; font-display:swap;
+  src:url(fonts/bodoni-moda.woff2) format('woff2'); }
+@font-face{ font-family:'Barlow'; font-weight:400; font-display:swap;
+  src:url(fonts/barlow-400.woff2) format('woff2'); }
+@font-face{ font-family:'Barlow'; font-weight:600; font-display:swap;
+  src:url(fonts/barlow-600.woff2) format('woff2'); }
+:root{ --rail:#0d2620; --rail-line:#1f4a3d; --brass:#c8a24a; --ivory:#f2ebdc; --ivory-dim:#b9b09c; }
+body{
+  margin: 0;
+  background: var(--rail);
+  color: var(--ivory);
+  font: 1.1rem/1.55 "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main{ width: min(680px, 100% - 32px); margin: 0 auto; padding: 2rem 0 3rem; }
+h1, h2{ font-family: "Bodoni Moda", "Didot", "Times New Roman", serif; font-weight: 700; line-height: 1.15; }
+h1{ font-size: clamp(2rem, 7vw, 2.8rem); margin: 0 0 .4rem; }
+h2{ font-size: 1.5rem; margin: 2.2rem 0 .6rem; padding-top: 1.4rem; border-top: 1px solid var(--rail-line); }
+p, li{ color: var(--ivory-dim); }
+strong{ color: var(--ivory); font-weight: 600; }
+a{ color: var(--brass); }
+.lead{ font-size: 1.2rem; color: var(--ivory); }
+.date{ font-size: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Discola — Privacy</h1>
+  <p class="date">In vigore dal 25 settembre 2026 · <a href="#en" lang="en">English below</a></p>
+
+  <section lang="it">
+    <p class="lead"><strong>Discola non raccoglie dati personali.</strong> Nessun
+    account, nessuna pubblicità, nessuna statistica d&rsquo;uso, nessun
+    tracciamento.</p>
+    <ul>
+      <li><strong>Cosa resta sul dispositivo.</strong> Lo storico delle partite
+      (data, avversario, mazzo, punteggio) e le impostazioni (avversario, mazzo,
+      colore del tavolo, velocità, punti visibili, suoni) sono salvati solo sul
+      tuo dispositivo, nella memoria locale del browser o dell&rsquo;app. Non vengono mai inviati a
+      nessuno.</li>
+      <li><strong>Backup.</strong> Nell&rsquo;app Android il backup automatico e
+      il trasferimento da un telefono all&rsquo;altro sono esclusi: storico e
+      impostazioni non finiscono nel backup del tuo account Google né su un
+      altro dispositivo.</li>
+      <li><strong>Come cancellarli.</strong> Dalla schermata Storico
+      (&laquo;Cancella lo storico&raquo;), disinstallando l&rsquo;app, o
+      cancellando i dati del sito nel browser.</li>
+      <li><strong>Rete.</strong> Il gioco funziona anche senza connessione.
+      L&rsquo;app Android dichiara il permesso Internet, che è quello standard
+      del suo contenitore (Capacitor), ma non lo usa: il gioco non si collega a
+      nessun server. I link esterni, come questa pagina, si aprono nel browser.</li>
+      <li><strong>Sito web e itch.io.</strong> La versione web è ospitata da
+      Netlify, e quella su itch.io da itch.io. Come ogni servizio di hosting,
+      registrano dati tecnici delle richieste (per esempio l&rsquo;indirizzo IP)
+      secondo le loro informative; Discola non li riceve e non li usa.</li>
+      <li><strong>Minori.</strong> Discola non è rivolto specificamente ai
+      bambini e non raccoglie dati di nessuno.</li>
+      <li><strong>Modifiche e contatti.</strong> Se questa informativa cambia, la
+      data qui sopra cambia con lei. Per domande apri una segnalazione su
+      <a href="https://github.com/diegoami/discola-releases/issues">github.com/diegoami/discola-releases</a>.
+      Autore: Diego Amicabile.</li>
+    </ul>
+  </section>
+
+  <section lang="en" id="en">
+    <h2>Discola — Privacy (English)</h2>
+    <p class="lead"><strong>Discola collects no personal data.</strong> No
+    account, no ads, no usage statistics, no tracking.</p>
+    <ul>
+      <li><strong>What stays on your device.</strong> The match history (date,
+      opponent, deck, score) and the settings (opponent, deck, table colour,
+      speed, points shown, sound) are stored only on your device, in the
+      browser's or the app's local storage. They are never sent to anyone.</li>
+      <li><strong>Backup.</strong> The Android app excludes its data from
+      automatic backup and from phone-to-phone transfer: the history and the
+      settings go neither into your Google account's backup nor onto another
+      device.</li>
+      <li><strong>How to delete them.</strong> From the history screen
+      (&ldquo;Cancella lo storico&rdquo;), by uninstalling the app, or by
+      clearing the site's data in your browser.</li>
+      <li><strong>Network.</strong> The game works offline. The Android app
+      declares the Internet permission, which is the default of its container
+      (Capacitor), but does not use it: the game connects to no server. External
+      links, such as this page, open in the browser.</li>
+      <li><strong>Website and itch.io.</strong> The web version is hosted by
+      Netlify, and the itch.io one by itch.io. Like any hosting service, they
+      log technical request data (an IP address, for example) under their own
+      privacy policies; Discola neither receives nor uses it.</li>
+      <li><strong>Children.</strong> Discola is not directed at children and
+      collects no one's data.</li>
+      <li><strong>Changes and contact.</strong> If this policy changes, the date
+      at the top changes with it. For questions, open an issue at
+      <a href="https://github.com/diegoami/discola-releases/issues">github.com/diegoami/discola-releases</a>.
+      Author: Diego Amicabile.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

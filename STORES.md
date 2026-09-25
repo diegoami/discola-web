@@ -57,7 +57,7 @@ a redesign.
 | # | Step | Status |
 |---|---|---|
 | 1.1 | Android Back button goes back a screen | done (Discola) |
-| 1.2 | Privacy policy page, linked from Informazioni | todo |
+| 1.2 | Privacy policy page, linked from Informazioni | done (Discola) |
 | 1.3 | English, switchable, Italian by default | todo |
 | 1.4 | Edge-to-edge on Android 15/16 (device check) | todo |
 | 1.5 | Store assets: feature graphic, screenshots, itch.io cover | todo |
@@ -111,6 +111,60 @@ each game's own `back()` and confirm dialog: Scopetta's `back()` returns to
 `cameFrom`, and Tressette has an end-of-hand screen where Back should minimise,
 as it does on Discola's end screen. Copy the `android back` scenario and change
 the expected trail to that game's screens.
+
+#### 1.2 Privacy policy
+
+**Problem.** Google Play requires a privacy policy for every app, even one that
+collects nothing. It must be linked in the Play Console and reachable from
+inside the app.
+
+**What changed** (Discola):
+- **`public/privacy.html`:** a standalone page with the full policy, Italian
+  first and then English (`lang="en"` section), in the game's palette and
+  faces, with no script. Its URL on the site,
+  `https://discola.netlify.app/privacy.html`, is the one for the Play Console.
+- **Informazioni** (`index.html`): a short "Privacy." paragraph and
+  `#privacyLink` to that **public URL, in a new tab**. The relative
+  `privacy.html` would navigate the app's own view away from a hand in progress,
+  onto a page with no Back handler (step 1.1).
+- **Every claim was checked against the code:**
+  - no `fetch`, `XMLHttpRequest`, beacon or socket in `index.html` or
+    `engine.js`;
+  - storage is only `discola.history` and the settings key (opponent, deck,
+    felt, speed, show-points, sound);
+  - `android:allowBackup="false"`;
+  - the wipe button is labelled "Cancella lo storico".
+- **The contact is the public releases repo's issues,** not a personal email.
+- **Backup and transfer rules** (a gap this step found): Discola had only
+  `android:allowBackup="false"`. On Android 12 and later some manufacturers don't
+  disable device-to-device transfer from that alone, so the manifest comment and
+  the v1.0.3 notes promised more than the app did. Ported from Tressette#24:
+  `res/xml/data_extraction_rules.xml` (Android 12+) and `res/xml/backup_rules.xml`
+  (older), wired in through `android:dataExtractionRules` and
+  `android:fullBackupContent`. `aapt2 dump xmltree` on the built APK shows all
+  three attributes.
+
+**The check** (`tools/check_ui.mjs`, document pass, `privacy page`):
+- `#privacyLink` points at the public URL and opens a new tab;
+- `privacy.html` loads with `lang="it"` and an English section, a viewport
+  meta, UTF-8 and **no script**;
+- no paragraph is below 15px;
+- nothing is fetched from the network.
+- **Proven to fail:** with the new-tab target dropped, and a script fetching a
+  remote URL added, it reported all three.
+
+**Gotcha:** the policy has to stay true. If a game ever sends anything
+anywhere (analytics, crash reports, an online mode), its policy changes in the
+same PR, and so does the Play Data safety form.
+
+**For Tressette and Scopetta:**
+- Copy `privacy.html` and change the game name, the stored keys and the settings
+  it lists (grep `localStorage` in that game's `index.html`), the wipe button's
+  label, and the site URL.
+- Both already have the backup and transfer rules (Tressette#24, and the same
+  in Scopetta), so the backup sentence holds as written. Check it anyway if a
+  manifest changes.
+- Add the Informazioni paragraph and copy the `privacy page` check.
 
 ### Phase 2: itch.io
 

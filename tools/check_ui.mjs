@@ -396,10 +396,52 @@ async function checkDocument(browser) {
       out.push('no lang on <html> — screen readers and hyphenation have no language to work from');
     return out;
   });
+  // Google Play needs a privacy policy reachable from inside the app
+  // (STORES.md 1.2): Informazioni must link the public URL in a new tab — the
+  // relative file would take the app's own view away from a hand in progress.
+  const link = await page.evaluate(() => {
+    const a = document.querySelector('#privacyLink');
+    return a ? { href: a.getAttribute('href'), target: a.target } : null;
+  });
   await page.close();
   console.log(`  ${bad.length ? 'FAIL' : 'pass'}  head tags`);
   bad.forEach(b => console.log(`        ${b}`));
-  return bad.length ? 1 : 0;
+
+  // The policy page itself: both languages, readable, and as network-free as
+  // it claims the game is — no script, and nothing fetched but its own files.
+  const priv = [];
+  if (!link) priv.push('Informazioni has no #privacyLink');
+  else {
+    if (link.href !== 'https://discola.netlify.app/privacy.html')
+      priv.push(`#privacyLink points at ${link.href}, not the public policy URL`);
+    if (link.target !== '_blank') priv.push('#privacyLink does not open a new tab');
+  }
+  const ppage = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  const remote = [];
+  ppage.on('request', r => { if (!r.url().startsWith('file:')) remote.push(r.url()); });
+  const resp = await ppage.goto(pathToFileURL(path.join(path.dirname(FILE), 'privacy.html')).href)
+    .catch(e => ({ error: e.message }));
+  if (resp?.error) priv.push(`privacy.html does not load: ${resp.error}`);
+  else {
+    await ppage.waitForTimeout(200);
+    priv.push(...await ppage.evaluate(() => {
+      const out = [];
+      if (document.documentElement.lang !== 'it') out.push('privacy.html is not lang="it"');
+      if (!document.querySelector('[lang="en"]')) out.push('privacy.html has no English section');
+      if (!document.querySelector('meta[name="viewport"]')) out.push('privacy.html has no viewport meta');
+      if (document.characterSet !== 'UTF-8') out.push('privacy.html is not UTF-8');
+      if (document.scripts.length) out.push('privacy.html carries a script');
+      const small = [...document.querySelectorAll('li, p')]
+        .filter(e => parseFloat(getComputedStyle(e).fontSize) < 15);
+      if (small.length) out.push(`${small.length} paragraph(s) below 15px on the policy page`);
+      return out;
+    }));
+    if (remote.length) priv.push(`privacy.html fetched from the network: ${remote[0]}`);
+  }
+  await ppage.close();
+  console.log(`  ${priv.length ? 'FAIL' : 'pass'}  privacy page`);
+  priv.forEach(b => console.log(`        ${b}`));
+  return (bad.length ? 1 : 0) + (priv.length ? 1 : 0);
 }
 
 /* ---- fonts: the page must not need the internet ---------------------------- */
