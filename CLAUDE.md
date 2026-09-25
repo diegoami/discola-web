@@ -196,7 +196,12 @@ weights are rolled once per session, because `SetProfiles` ran from
 
 ## Conventions
 
-- Player-facing text is Italian. Comments and commit messages are English.
+- Player-facing text is Italian, with an English translation (`STORES.md` 1.3).
+  New text goes in both: Italian in the markup with a `data-i18n*` key, and
+  English in the `EN` table, or the `IT` and `EN` tables for strings the script
+  builds. The UI check fails on a key in only one language and on Italian left
+  on an English screen. Card, suit and deck names stay Italian in both.
+  Comments and commit messages are English.
 - No build step and no runtime dependencies. `playwright-core` is for the check
   only and is gitignored.
 - The card art is the original 1997 bitmaps. Do not redraw it. `tools/pack_cards.py`

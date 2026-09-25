@@ -45,6 +45,14 @@ cannot scroll, no tap target under 32px, and no script or console errors. It als
 requires an opaque background under every `select` and `option`, and that the
 deck picker stays on one row.
 
+**Languages** — every page is opened with an explicit locale. The game follows
+the device language, and headless Chromium reports `en-US`, so without it the
+Italian passes would silently become English ones. The screens pass runs in
+`it-IT` at five shapes, then again in `en-US` at three. There, the English audit
+fails on `<html lang>` not being `en`, or on an Italian UI word left in visible
+text or in a label. The document pass checks that the Italian and English tables
+cover exactly the same keys.
+
 **Table pass** — the card table at all nineteen viewports in all six decks.
 Asserts the trick never overlaps either hand, your hand is never below the
 fold, nothing overflows the table, and the rows never drift apart. Then it
@@ -67,6 +75,11 @@ shipped:
 | opaque select/option | the deck dropdown opened as light text on a white Windows system menu |
 | one deck row | a hard-coded column count wrapped the sixth deck onto a second row, moving the controls below it |
 | inflated spacing | `--chrome` was hand-estimated three times and was wrong three times |
+| swatch inside its tile | a deck stretched to the tallest deck's height took its width from its aspect ratio and spilled over its neighbours, at every viewport (#44) |
+| end screen covers the table | the end of the match was a popup over the page; it is a screen over the table, with its actions in view and the covered table inert (#42) |
+| android back | Capacitor's core closes the app on Back from any screen; the stand-in plugin proves Back backs out of sheets and minimises elsewhere (`STORES.md` 1.1) |
+| privacy page | Play needs a reachable policy; the link must open the public URL in a new tab, and the page must carry no script and fetch nothing (`STORES.md` 1.2) |
+| same keys in both languages, no Italian on the English page | a string added in one language only, or left untagged, shows up as Italian in the English UI (`STORES.md` 1.3) |
 
 If you believe a threshold is genuinely wrong, change it — then run the check
 against the commit that introduced the bug it names and confirm it still fails

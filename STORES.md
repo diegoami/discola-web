@@ -58,7 +58,7 @@ a redesign.
 |---|---|---|
 | 1.1 | Android Back button goes back a screen | done (Discola) |
 | 1.2 | Privacy policy page, linked from Informazioni | done (Discola) |
-| 1.3 | English, switchable, Italian by default | todo |
+| 1.3 | English, switchable, Italian by default | done (Discola) |
 | 1.4 | Edge-to-edge on Android 15/16 (device check) | todo |
 | 1.5 | Store assets: feature graphic, screenshots, itch.io cover | todo |
 
@@ -165,6 +165,78 @@ same PR, and so does the Play Data safety form.
   in Scopetta), so the backup sentence holds as written. Check it anyway if a
   manifest changes.
 - Add the Informazioni paragraph and copy the `privacy page` check.
+
+#### 1.3 English
+
+**What changed** (Discola, all in `public/index.html`):
+- **The markup stays Italian,** and each string gets a key:
+  - `data-i18n` for text;
+  - `data-i18n-html` for paragraphs that carry `<code>`, `<strong>` or a link;
+  - `data-i18n-label` for a tool's `title` plus `aria-label`;
+  - `data-i18n-aria` for `aria-label` alone.
+  Labels that wrap a control get their text in a `<span data-i18n>`, so
+  translating them can't remove the control.
+- **Two tables:**
+  - `EN` holds every markup key plus the strings the script builds (verdicts,
+    notes, dossiers, card labels, history labels, the date locale);
+  - `IT` holds only the script-built strings, **because `snapshotItalian()`
+    reads the markup's Italian into `IT` at boot**, so no Italian sentence is
+    written twice.
+  - `t(key, …args)` picks the current language. Entries can be functions for
+    strings with a name or a score in them.
+- **`applyLang(lang)`** retranslates the tagged markup, sets `<html lang>` and
+  `#langSel`, then redoes what the script built: deck labels, the dossier,
+  `render()`, the last result, Storico if open, and the end screen's verdict.
+  `finish()` keeps `{you, opp, opponent}`, so a switch while the end screen is
+  up re-renders it.
+- **The choice:**
+  - Italian unless `navigator.language` isn't Italian;
+  - a selector in Impostazioni labelled **"Lingua · Language"**, never
+    translated so it can be found from either language;
+  - saved **only once chosen** (`state.langPicked`), so until then the
+    language follows the device.
+  - `start()` decides the language **before** `selectOpponent()`, which saves,
+    or a chosen language would be overwritten at boot.
+- **Game terms stay Italian in both:** Denari, Coppe, the deck names, Briscola.
+  In English the trump line reads "trumps: spade".
+- **The privacy policy** gained "the language, if you choose one" in its list of
+  stored settings, and the English button name.
+
+**The check:**
+- **Every page is opened with an explicit locale.** Headless Chromium reports
+  `en-US`, so once the game followed the device, the existing passes would
+  silently have run in English.
+- The screens pass runs in `it-IT` at five shapes, then in `en-US` at three
+  (`EN_VIEWPORTS`), with `englishAudit`:
+  - `<html lang="en">`;
+  - no Italian UI word in visible text or in a label, outside `[lang="it"]` and
+    the bilingual language label.
+- The document pass has **"both languages cover the same keys"** (`IT` and `EN`
+  key sets equal, and every tagged key in `EN`), and re-reads `#privacyLink`
+  after switching to English, since that paragraph is rebuilt.
+- **Proven to fail:** with "Ancora" untagged and `EN.felt` deleted, it reported
+  "no English for: felt", "English strings nothing uses: again", and "Italian
+  left on the English page: Ancora" on every end-screen scenario.
+
+**Gotchas:**
+- The locale pin above is the one that would cost a week: nothing fails, the
+  Italian coverage just disappears.
+- An Italian-word list is a heuristic. Game terms must stay off it, and an
+  element deliberately in Italian can be marked `lang="it"`.
+- `innerHTML` from `data-i18n-html` only ever comes from the two tables, never
+  from input.
+
+**For Tressette and Scopetta:**
+- Same shape. Grep each game's `index.html` for `textContent =` and template
+  strings to find what the script builds. Tressette's counting grid is the big
+  item there.
+- **Parts are already bilingual.** Scopetta's rules screen (`viewRules`) shows
+  both languages one after the other. Tressette's Informazioni ends with an
+  English section (`<section lang="en">`, "The rules"). Keep them as they are,
+  or show only the current language's section, but leave the Italian one marked
+  `lang="it"`, so the English audit skips it.
+- Copy `englishAudit`, the locale pin and the key-parity check, then extend
+  the Italian-word list with each game's own terms that are *not* game terms.
 
 ### Phase 2: itch.io
 
