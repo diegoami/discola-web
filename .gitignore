@@ -4,3 +4,6 @@ node_modules
 
 # Packaged release artifacts (built by tools/package_release.mjs).
 dist-release
+
+# Store assets rendered by tools/store_assets.mjs (STORES.md 1.5).
+dist-store

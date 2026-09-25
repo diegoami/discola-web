@@ -59,8 +59,8 @@ a redesign.
 | 1.1 | Android Back button goes back a screen | done (Discola) |
 | 1.2 | Privacy policy page, linked from Informazioni | done (Discola) |
 | 1.3 | English, switchable, Italian by default | done (Discola) |
-| 1.4 | Edge-to-edge on Android 15/16 (device check) | todo |
-| 1.5 | Store assets: feature graphic, screenshots, itch.io cover | todo |
+| 1.4 | Edge-to-edge on Android 15/16 (device check) | analysed; device check pending (owner) |
+| 1.5 | Store assets: feature graphic, screenshots, itch.io cover | done (Discola) |
 
 Each step gets its own section below when it lands: what changed, the check
 that guards it, and the gotchas, written for the next game.
@@ -237,6 +237,97 @@ same PR, and so does the Play Data safety form.
   `lang="it"`, so the English audit skips it.
 - Copy `englishAudit`, the locale pin and the key-parity check, then extend
   the Italian-word list with each game's own terms that are *not* game terms.
+
+#### 1.4 Edge-to-edge
+
+**Analysis, no code change.** Targeting API 36 makes Android 15+ draw the app
+edge to edge. Capacitor 8 handles this through its built-in `SystemBars`
+plugin (`Bridge.java` registers it), whose default `insetsHandling` is
+`"css"`:
+- on WebView/Chromium ≥ 140 the web view honours the page's `viewport-fit`;
+- on older versions it pads the web view.
+
+Discola's viewport meta is `width=device-width, initial-scale=1`, **without**
+`viewport-fit=cover`, so the page is laid out inside the safe area and the top
+bar should not sit under the status bar. The page already uses
+`env(safe-area-inset-bottom)` for the start footer. It is 0 here, and would
+matter only if the page asked for `cover`.
+
+**Device check (owner, next smoke):** install on an Android 15 or 16 phone.
+The top bar clears the status bar, and the start footer and the end screen's
+actions clear the navigation bar, in portrait and in landscape.
+
+**For Tressette and Scopetta:** both viewport metas are
+`width=device-width, initial-scale=1`, without `viewport-fit=cover` (checked
+2026-09-25), so the same reasoning and the same device check apply. If either
+ever adds `cover`, its top bar and pinned footers need
+`env(safe-area-inset-*)` padding.
+
+#### 1.5 Store assets
+
+**What changed:** `tools/store_assets.mjs` renders everything from `public/`
+into `dist-store/` (gitignored), so the assets can be regenerated from any
+tagged commit:
+
+| File | Size | For |
+|---|---|---|
+| `play/{it,en}/01-start … 04-history.png` | 1080×2160 | Play phone screenshots; **Bresciane hidden**, as the Play build leaves it out |
+| `itch/{it,en}/…` | 1080×2160 | itch.io screenshots, all six decks |
+| `feature-graphic-{it,en}.png` | 1024×500 | Play feature graphic |
+| `itch-cover.png` | 630×500 | itch.io cover |
+| `icon-512.png` | 512×512 | Play hi-res icon (`public/icons`) |
+
+- **The deal is seeded** (mulberry32, installed before the page's script), so
+  the same commit renders the same screenshots. The table shot plays two real
+  tricks first.
+- **Every PNG is read back and its size checked,** and a script or console error
+  during capture fails the run.
+- **Checked by looking, not only by size.** Three defects showed only in the
+  images:
+  - the cards in the graphics were blurry, and bled the neighbouring cells'
+    edges;
+  - the cover's fan covered the wordmark;
+  - at 1080×1920 the start screen cropped the deck row under the pinned
+    footer.
+
+**Gotchas:**
+- **The card art is 60×125 per sprite cell.** Scale it by a whole number with
+  `image-rendering: pixelated`, as `tools/make_icons.py` does for the icon;
+  smoothing blurs it and bleeds the neighbouring cells in. Scale the corner
+  radius with the card, or the bitmaps' green corners show.
+- **Play's tallest screenshot shape is 2:1.** 360×720 at 3× gives 1080×2160.
+- **No price, rank or "free" in the graphics or the title** (Play's metadata
+  policy).
+
+**Listing text (draft, for the owner):**
+
+| | Italiano | English |
+|---|---|---|
+| Title (≤30) | Discola – Briscola a due | Discola – Two-player Briscola |
+| Short (≤80) | Briscola a due contro il computer. Offline, senza pubblicità, senza account. | Two-player Briscola against the computer. Offline, no ads, no account. |
+
+Full description, Italiano:
+> Discola è la briscola a due del 1997, riportata sul telefono. Giochi contro
+> quattro avversari con il loro carattere — Valerio, Graziano, Piero e Franco —
+> con i mazzi regionali: Trevisane, Piacentine, Napoletane, Romagnole e
+> Francesi. Funziona senza connessione, non ha pubblicità, non chiede account e
+> non raccoglie dati: lo storico delle partite resta sul dispositivo. In
+> italiano e in inglese.
+
+Full description, English:
+> Discola is the two-player Briscola of 1997, back on your phone. Play four
+> opponents with characters of their own — Valerio, Graziano, Piero and Franco
+> — with the regional Italian decks: Trevisane, Piacentine, Napoletane,
+> Romagnole and Francesi. It works offline, has no ads, asks for no account and
+> collects no data: your match history stays on the device. In Italian and
+> English.
+
+The itch.io page takes the same text, with Bresciane added to the decks.
+
+**For Tressette and Scopetta:** copy the script and change the shot list: each
+game's screens, its end-of-hand or counting screen, and a mid-game table. Also
+change the history seed's keys, the deck the graphics fan out, the wordmark and
+the lines, and the decks the Play set hides.
 
 ### Phase 2: itch.io
 
