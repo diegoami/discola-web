@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Match history and settings live in WebView localStorage, and the game
-         promises they stay on the device. Android Auto Backup and device
-         transfer can include app-private data, so turn them off here rather
-         than let the OS contradict the release notes. -->
+         and its privacy policy (public/privacy.html) promise they stay on the
+         device. `allowBackup="false"` turns cloud backup off; the two rule
+         files exclude the same data from device-to-device migration, which on
+         Android 12+ (this app targets 36) some manufacturers do not disable
+         from `allowBackup` alone. `data_extraction_rules.xml` is the Android 12
+         format, `backup_rules.xml` the older one. Ported from Tressette#24,
+         which found the gap; Discola had only `allowBackup` until STORES.md 1.2. -->
     <application
         android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
