@@ -72,6 +72,9 @@ const VIEWPORTS = [
 const SCREEN_VIEWPORTS = ['Android small', 'iPhone Pro Max', 'tablet portrait',
                           'phone landscape', 'laptop'];
 
+// English runs longer or shorter in places; the shapes where that bites first.
+const EN_VIEWPORTS = ['Android small', 'phone landscape', 'laptop'];
+
 // The tightest ones; worth re-running the table budget against inflated spacing.
 const TIGHT = ['phone landscape', 'laptop short', 'iPad', 'tablet portrait', 'Android small'];
 
@@ -370,6 +373,36 @@ const audit = () => {
   return out;
 };
 
+// Runs in the page, on the English pass only: the page says it is English, and
+// no Italian UI word survived on screen or in a label. Game terms that stay
+// Italian — the decks, the suits, Briscola, the opponents' names — are not in
+// the list; the language control's label is bilingual on purpose.
+const englishAudit = () => {
+  const out = [];
+  if (document.documentElement.lang !== 'en')
+    out.push(`<html lang="${document.documentElement.lang}"> on the English pass`);
+  const ITALIAN = /\b(partit[ae]|gioca|giocatore|avversario|mazzo|impostazioni|storico|vint[oe]|pers[oe]|ancora|cancella|nessun[ao]?|tavolo|panno|ritmo|suono|abbandona|informativa|tallone|ultima|della|delle|degli|questo|sono)\b/i;
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (w.nextNode()) {
+    const node = w.currentNode, el = node.parentElement;
+    if (!node.textContent.trim() || el.closest('script, style, [hidden], label[for="langSel"], [lang="it"]')) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || getComputedStyle(el).visibility === 'hidden') continue;
+    const m = node.textContent.match(ITALIAN);
+    if (m) {
+      out.push(`Italian left on the English page: "${m[0]}" in "${node.textContent.trim().slice(0, 60)}"`);
+      break;
+    }
+  }
+  for (const n of document.querySelectorAll('[aria-label], [title]')) {
+    if (n.closest('[hidden]')) continue;
+    const s = `${n.getAttribute('aria-label') ?? ''} ${n.getAttribute('title') ?? ''}`;
+    const m = s.match(ITALIAN);
+    if (m) { out.push(`Italian label left on the English page: "${s.trim()}"`); break; }
+  }
+  return out;
+};
+
 /* ---- pass 0: the document itself ------------------------------------------- */
 
 // A layout assertion cannot catch a missing viewport meta: Playwright's
@@ -380,7 +413,7 @@ const audit = () => {
 // only thing that would have caught it.
 async function checkDocument(browser) {
   console.log('\ndocument');
-  const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  const page = await browser.newPage({ locale: 'it-IT', viewport: { width: 393, height: 852 } });
   await page.goto(URL_);
   const bad = await page.evaluate(() => {
     const out = [];
@@ -399,11 +432,33 @@ async function checkDocument(browser) {
   // Google Play needs a privacy policy reachable from inside the app
   // (STORES.md 1.2): Informazioni must link the public URL in a new tab — the
   // relative file would take the app's own view away from a hand in progress.
-  const link = await page.evaluate(() => {
+  const readLink = () => {
     const a = document.querySelector('#privacyLink');
     return a ? { href: a.getAttribute('href'), target: a.target } : null;
+  };
+  const link = await page.evaluate(readLink);
+
+  // Both languages cover the same keys (STORES.md 1.3). The Italian of the
+  // markup is read back into IT at boot, so a key missing from EN, or a stray
+  // EN entry nothing uses, shows here as a difference between the two sets.
+  const lang = await page.evaluate(() => {
+    const out = [];
+    const onlyIt = Object.keys(IT).filter(k => !(k in EN));
+    const onlyEn = Object.keys(EN).filter(k => !(k in IT));
+    if (onlyIt.length) out.push(`no English for: ${onlyIt.join(', ')}`);
+    if (onlyEn.length) out.push(`English strings nothing uses: ${onlyEn.join(', ')}`);
+    for (const attr of ['i18n', 'i18nHtml', 'i18nLabel', 'i18nAria'])
+      for (const n of document.querySelectorAll(`[data-${attr.replace(/[A-Z]/g, c => '-' + c.toLowerCase())}]`))
+        if (!(n.dataset[attr] in EN)) out.push(`data-${attr} "${n.dataset[attr]}" has no English`);
+    return out;
   });
+  // The privacy link lives in a paragraph that is rebuilt from the table on a
+  // language switch, so it is read again in English.
+  await page.evaluate(() => applyLang('en'));
+  const linkEn = await page.evaluate(readLink);
   await page.close();
+  console.log(`  ${lang.length ? 'FAIL' : 'pass'}  both languages cover the same keys`);
+  lang.forEach(b => console.log(`        ${b}`));
   console.log(`  ${bad.length ? 'FAIL' : 'pass'}  head tags`);
   bad.forEach(b => console.log(`        ${b}`));
 
@@ -416,7 +471,9 @@ async function checkDocument(browser) {
       priv.push(`#privacyLink points at ${link.href}, not the public policy URL`);
     if (link.target !== '_blank') priv.push('#privacyLink does not open a new tab');
   }
-  const ppage = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  if (!linkEn || linkEn.href !== link?.href || linkEn.target !== '_blank')
+    priv.push(`in English, #privacyLink is ${JSON.stringify(linkEn)}, not the same public URL in a new tab`);
+  const ppage = await browser.newPage({ locale: 'it-IT', viewport: { width: 393, height: 852 } });
   const remote = [];
   ppage.on('request', r => { if (!r.url().startsWith('file:')) remote.push(r.url()); });
   const resp = await ppage.goto(pathToFileURL(path.join(path.dirname(FILE), 'privacy.html')).href)
@@ -441,7 +498,7 @@ async function checkDocument(browser) {
   await ppage.close();
   console.log(`  ${priv.length ? 'FAIL' : 'pass'}  privacy page`);
   priv.forEach(b => console.log(`        ${b}`));
-  return (bad.length ? 1 : 0) + (priv.length ? 1 : 0);
+  return (bad.length ? 1 : 0) + (lang.length ? 1 : 0) + (priv.length ? 1 : 0);
 }
 
 /* ---- fonts: the page must not need the internet ---------------------------- */
@@ -491,7 +548,7 @@ async function checkFonts(browser) {
   }
 
   // Everything but the page itself is cut off, which is what an APK sees.
-  const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  const page = await browser.newPage({ locale: 'it-IT', viewport: { width: 393, height: 852 } });
   const external = [];
   await page.route('**', (route) => {
     const url = route.request().url();
@@ -532,13 +589,16 @@ async function checkFonts(browser) {
 
 /* ---- pass 1: every screen -------------------------------------------------- */
 
-async function checkScreens(browser) {
-  console.log('\nscreens');
+// The game follows the device language (STORES.md 1.3), and headless Chromium
+// reports en-US: every page is opened with an explicit locale, or the Italian
+// passes would silently have become English ones.
+async function checkScreens(browser, locale = 'it-IT', viewports = SCREEN_VIEWPORTS) {
+  console.log(locale === 'it-IT' ? '\nscreens' : `\nscreens, ${locale}`);
   let failed = 0;
-  for (const vname of SCREEN_VIEWPORTS) {
+  for (const vname of viewports) {
     const [, width, height] = VIEWPORTS.find(v => v[0] === vname);
     for (const screen of SCREENS) {
-      const page = await browser.newPage({ viewport: { width, height } });
+      const page = await browser.newPage({ locale, viewport: { width, height } });
       const errs = [];
       page.on('pageerror', e => errs.push('script error: ' + e.message));
       // Every request the page makes is file:// now that the fonts are
@@ -557,6 +617,7 @@ async function checkScreens(browser) {
       const issues = [
         ...(await page.evaluate(audit)),
         ...(screen.check ? await page.evaluate(screen.check) : []),
+        ...(locale.startsWith('en') ? await page.evaluate(englishAudit) : []),
         ...errs,
       ];
       if (issues.length) failed++;
@@ -615,7 +676,7 @@ async function checkTable(browser, only, inflate) {
   let failed = 0;
   for (const [vname, width, height] of VIEWPORTS) {
     if (only && !only.includes(vname)) continue;
-    const page = await browser.newPage({ viewport: { width, height } });
+    const page = await browser.newPage({ locale: 'it-IT', viewport: { width, height } });
     const rows = [];
     // The table only exists once a hand is dealt, so each deck goes through the
     // real flow: pick it on the start screen, then press Gioca.
@@ -650,6 +711,7 @@ let failed = 0;
 failed += await checkDocument(browser);
 failed += await checkFonts(browser);
 failed += await checkScreens(browser);
+failed += await checkScreens(browser, 'en-US', EN_VIEWPORTS);
 failed += await checkTable(browser, null, false);
 failed += await checkTable(browser, TIGHT, true);
 await browser.close();

@@ -28,7 +28,7 @@ longevity and zero operational surface beat features.
 **In scope.** Two-player Briscola against the computer. The four original
 opponents. The five original card decks, plus an imported Bresciane deck (§10).
 Settings that existed in 1997 (deck, felt colour, animation speed, show-points,
-sound). Match history kept on the device. Five screens, two dialogs. Italian UI.
+sound). Match history kept on the device. Five screens, two dialogs. Italian UI, with English (§7, `STORES.md` 1.3).
 The web build is also packaged as an Android app (§12).
 
 **Out of scope, deliberately.**

@@ -891,30 +891,30 @@ button.card:disabled{ cursor: default; }
   <header class="topbar">
     <span class="wordmark">Discola</span>
     <nav class="tools">
-      <button class="tool" id="btnNew" type="button" title="Nuova partita" aria-label="Nuova partita">
+      <button class="tool" id="btnNew" type="button" data-i18n-label="new" title="Nuova partita" aria-label="Nuova partita">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.7 3.3"/><path d="M20 5.5V11h-5.5"/></svg>
       </button>
-      <button class="tool" id="btnHistory" data-nav="history" type="button" title="Storico partite" aria-label="Storico partite">
+      <button class="tool" id="btnHistory" data-nav="history" type="button" data-i18n-label="history" title="Storico partite" aria-label="Storico partite">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg>
       </button>
-      <button class="tool" id="btnSettings" data-nav="settings" type="button" title="Impostazioni" aria-label="Impostazioni">
+      <button class="tool" id="btnSettings" data-nav="settings" type="button" data-i18n-label="settings" title="Impostazioni" aria-label="Impostazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.1"/><circle cx="16" cy="12" r="2.1"/><circle cx="8" cy="17" r="2.1"/></svg>
       </button>
-      <button class="tool" id="btnAbout" data-nav="about" type="button" title="Informazioni" aria-label="Informazioni">
+      <button class="tool" id="btnAbout" data-nav="about" type="button" data-i18n-label="about" title="Informazioni" aria-label="Informazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.3"/><path d="M12 7.6v1"/></svg>
       </button>
     </nav>
   </header>
 
   <main class="table" id="table">
-    <p class="cheat-note" id="cheatNote" hidden>Carte scoperte</p>
+    <p class="cheat-note" id="cheatNote" data-i18n="cheat" hidden>Carte scoperte</p>
 
     <section class="seat seat--opp">
       <div class="plate" id="plateOpp">
         <span class="turn-dot"></span>
         <span>
           <span class="plate__who" id="oppName">Valerio</span>
-          <span class="plate__role">avversario</span>
+          <span class="plate__role" data-i18n="roleOpp">avversario</span>
         </span>
         <span class="plate__score" id="oppScore">0</span>
       </div>
@@ -932,10 +932,10 @@ button.card:disabled{ cursor: default; }
           <div class="card stock" id="stockCard" style="--col:10;--row:0"></div>
         </div>
         <div class="tallone-meta">
-          <span class="eyebrow">Tallone</span>
+          <span class="eyebrow" data-i18n="stock">Tallone</span>
           <span class="count" id="stockCount">34</span>
           <span class="eyebrow" id="briscolaName">briscola: denari</span>
-          <span class="last-hand" id="lastHand" hidden>Ultima mano</span>
+          <span class="last-hand" id="lastHand" data-i18n="lastTrick" hidden>Ultima mano</span>
         </div>
       </div>
     </section>
@@ -945,8 +945,8 @@ button.card:disabled{ cursor: default; }
       <div class="plate" id="plateYou">
         <span class="turn-dot"></span>
         <span>
-          <span class="plate__who">Tu</span>
-          <span class="plate__role">giocatore</span>
+          <span class="plate__who" data-i18n="you">Tu</span>
+          <span class="plate__role" data-i18n="roleYou">giocatore</span>
         </span>
         <span class="plate__score" id="youScore">0</span>
       </div>
@@ -966,7 +966,7 @@ button.card:disabled{ cursor: default; }
         <div class="result__tally">
           <div>
             <div class="result__n" id="resultYou">61</div>
-            <div class="eyebrow">tu</div>
+            <div class="eyebrow" data-i18n="youLower">tu</div>
           </div>
           <div class="result__sep">&mdash;</div>
           <div>
@@ -977,13 +977,13 @@ button.card:disabled{ cursor: default; }
         <p class="result__note" id="resultNote"></p>
 
         <div class="group result__setup">
-          <div class="group-head"><span class="eyebrow">Avversario</span></div>
+          <div class="group-head"><span class="eyebrow" data-i18n="opponent">Avversario</span></div>
           <div class="chips" id="resultOpponents"></div>
         </div>
 
         <div class="group result__setup">
           <div class="group-head">
-            <span class="eyebrow">Mazzo</span><span class="pick" id="resultDeckName">Trevisane</span>
+            <span class="eyebrow" data-i18n="deck">Mazzo</span><span class="pick" id="resultDeckName">Trevisane</span>
           </div>
           <div class="decks" id="resultDecks"></div>
         </div>
@@ -992,8 +992,8 @@ button.card:disabled{ cursor: default; }
       <!-- Two ways on. The opponent and the deck are on this screen, so the
            second action is the settings sheet for everything else. -->
       <div class="result__actions">
-        <button class="btn btn--primary" id="playAgain" type="button">Ancora</button>
-        <button class="btn" id="resultSettings" type="button">Impostazioni</button>
+        <button class="btn btn--primary" id="playAgain" type="button" data-i18n="again">Ancora</button>
+        <button class="btn" id="resultSettings" type="button" data-i18n="settings">Impostazioni</button>
       </div>
     </section>
   </main>
@@ -1007,13 +1007,13 @@ button.card:disabled{ cursor: default; }
        which is what the Gioca button already is. -->
   <header class="topbar topbar--start">
     <nav class="tools">
-      <button class="tool" data-nav="history" type="button" title="Storico partite" aria-label="Storico partite">
+      <button class="tool" data-nav="history" type="button" data-i18n-label="history" title="Storico partite" aria-label="Storico partite">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg>
       </button>
-      <button class="tool" data-nav="settings" type="button" title="Impostazioni" aria-label="Impostazioni">
+      <button class="tool" data-nav="settings" type="button" data-i18n-label="settings" title="Impostazioni" aria-label="Impostazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.1"/><circle cx="16" cy="12" r="2.1"/><circle cx="8" cy="17" r="2.1"/></svg>
       </button>
-      <button class="tool" data-nav="about" type="button" title="Informazioni" aria-label="Informazioni">
+      <button class="tool" data-nav="about" type="button" data-i18n-label="about" title="Informazioni" aria-label="Informazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.3"/><path d="M12 7.6v1"/></svg>
       </button>
     </nav>
@@ -1022,43 +1022,56 @@ button.card:disabled{ cursor: default; }
     <div class="sheet-inner">
       <div class="hero">
         <h1>Discola</h1>
-        <p>Briscola a due. Il primo a 61 punti su 120 vince la partita.</p>
-        <p class="hero-link"><a href="https://github.com/diegoami/discola-releases">Regole, download e crediti</a></p>
+        <p data-i18n="tagline">Briscola a due. Il primo a 61 punti su 120 vince la partita.</p>
+        <p class="hero-link"><a href="https://github.com/diegoami/discola-releases" data-i18n="rulesLink">Regole, download e crediti</a></p>
         <p class="last-result" id="lastResult" hidden></p>
       </div>
 
       <div class="group">
-        <div class="group-head"><span class="eyebrow">Avversario</span></div>
+        <div class="group-head"><span class="eyebrow" data-i18n="opponent">Avversario</span></div>
         <div class="chips" id="opponents"></div>
         <p class="dossier" id="dossier" aria-live="polite"></p>
       </div>
 
       <div class="group">
         <div class="group-head">
-          <span class="eyebrow">Mazzo</span><span class="pick" id="deckName">Trevisane</span>
+          <span class="eyebrow" data-i18n="deck">Mazzo</span><span class="pick" id="deckName">Trevisane</span>
         </div>
         <div class="decks" id="decks"></div>
       </div>
     </div>
   </div>
   <footer class="start-foot">
-    <button class="btn btn--primary btn--big" id="startPlay" type="button">Gioca</button>
+    <button class="btn btn--primary btn--big" id="startPlay" type="button" data-i18n="play">Gioca</button>
   </footer>
 </div>
 
 <!-- ============================ settings ============================ -->
 <div class="view" id="viewSettings" hidden>
   <header class="sheet-head">
-    <button class="tool" type="button" data-back aria-label="Indietro">
+    <button class="tool" type="button" data-back data-i18n-aria="back" aria-label="Indietro">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
-    <h2>Impostazioni</h2>
+    <h2 data-i18n="settings">Impostazioni</h2>
   </header>
   <div class="sheet-body">
     <div class="sheet-inner">
+      <!-- The language (STORES.md 1.3): Italian unless the device language is
+           not Italian, and switchable here. The label is both words and is
+           never translated, and each option names its language in that
+           language, so the control can be found from either. -->
       <div class="group">
-        <span class="eyebrow">Tavolo</span>
-        <label class="field" for="deckSel">Mazzo
+        <label class="field" for="langSel"><span>Lingua &middot; Language</span>
+          <select id="langSel">
+            <option value="it" lang="it">Italiano</option>
+            <option value="en" lang="en">English</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="group">
+        <span class="eyebrow" data-i18n="table">Tavolo</span>
+        <label class="field" for="deckSel"><span data-i18n="deck">Mazzo</span>
           <select id="deckSel">
             <option value="Trevisane">Trevisane</option>
             <option value="Piacentine">Piacentine</option>
@@ -1068,28 +1081,28 @@ button.card:disabled{ cursor: default; }
             <option value="Bresciane">Bresciane</option>
           </select>
         </label>
-        <label class="field" for="feltSel">Panno
+        <label class="field" for="feltSel"><span data-i18n="felt">Panno</span>
           <input type="color" id="feltSel" value="#1e5140">
         </label>
-        <label class="field" for="speedSel">Ritmo
+        <label class="field" for="speedSel"><span data-i18n="pace">Ritmo</span>
           <input type="range" id="speedSel" min="200" max="2000" step="100" value="1300">
         </label>
-        <label class="toggle" for="pointsSel">Mostra i punti
+        <label class="toggle" for="pointsSel"><span data-i18n="showPoints">Mostra i punti</span>
           <input type="checkbox" id="pointsSel" checked>
         </label>
-        <label class="toggle" for="soundSel">Suono
+        <label class="toggle" for="soundSel"><span data-i18n="sound">Suono</span>
           <input type="checkbox" id="soundSel" checked>
         </label>
       </div>
 
       <div class="group">
-        <span class="eyebrow">Partita</span>
-        <button class="btn" id="changeOpponent" type="button">Cambia avversario</button>
+        <span class="eyebrow" data-i18n="match">Partita</span>
+        <button class="btn" id="changeOpponent" type="button" data-i18n="changeOpp">Cambia avversario</button>
       </div>
 
       <details class="group">
-        <summary class="eyebrow" style="cursor:pointer;list-style:revert">Pesi della strategia</summary>
-        <p class="prose">I dodici pesi che guidano <code>CompGioca</code> per l&rsquo;avversario
+        <summary class="eyebrow" style="cursor:pointer;list-style:revert" data-i18n="weights">Pesi della strategia</summary>
+        <p class="prose" data-i18n-html="weightsNote">I dodici pesi che guidano <code>CompGioca</code> per l&rsquo;avversario
         scelto, presi da <code>Global.pas</code>.</p>
         <table class="weights" id="weightsTable"><tbody></tbody></table>
       </details>
@@ -1100,10 +1113,10 @@ button.card:disabled{ cursor: default; }
 <!-- ============================ history ============================ -->
 <div class="view" id="viewHistory" hidden>
   <header class="sheet-head">
-    <button class="tool" type="button" data-back aria-label="Indietro">
+    <button class="tool" type="button" data-back data-i18n-aria="back" aria-label="Indietro">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
-    <h2>Storico partite</h2>
+    <h2 data-i18n="history">Storico partite</h2>
   </header>
   <div class="sheet-body">
     <div class="sheet-inner" id="historyBody"></div>
@@ -1113,41 +1126,41 @@ button.card:disabled{ cursor: default; }
 <!-- ============================ about ============================ -->
 <div class="view" id="viewAbout" hidden>
   <header class="sheet-head">
-    <button class="tool" type="button" data-back aria-label="Indietro">
+    <button class="tool" type="button" data-back data-i18n-aria="back" aria-label="Indietro">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
     <h2>Discola</h2>
   </header>
   <div class="sheet-body">
     <div class="sheet-inner prose">
-      <p><strong>Discola</strong> è un gioco di briscola a due scritto in Delphi 3
+      <p data-i18n-html="about1"><strong>Discola</strong> è un gioco di briscola a due scritto in Delphi 3
       nel 1997 da Diego Amicabile. Questa è la versione web.</p>
 
-      <p>Le carte dei cinque mazzi originali — Trevisane, Piacentine, Napoletane,
+      <p data-i18n-html="about2">Le carte dei cinque mazzi originali — Trevisane, Piacentine, Napoletane,
       Romagnole e Francesi — sono le immagini del programma del 1997. A queste si
       aggiunge un mazzo Bresciane.</p>
 
-      <p>L&rsquo;icona del gioco è il fante di spade delle Trevisane: in Veneto lo
+      <p data-i18n-html="about3">L&rsquo;icona del gioco è il fante di spade delle Trevisane: in Veneto lo
       si chiama <em>la vecia</em>, e nessuno sa più bene perché — di vecchia non
       ha niente, e i baffi ce li ha eccome. Quando è stata scelta per l&rsquo;icona,
       chi ha ritagliato la carta ha fatto notare che era &laquo;un uomo coi
       baffi&raquo; e che la vecia doveva essere un&rsquo;altra carta. Sui baffi aveva
       ragione. Sul nome no: in Veneto è la vecia, e basta.</p>
 
-      <p>Anche l&rsquo;avversario è quello originale, con i quattro profili di
+      <p data-i18n-html="about4">Anche l&rsquo;avversario è quello originale, con i quattro profili di
       allora: Valerio, Graziano, Piero e Franco. Ognuno ha la sua serie di pesi e
       gioca di conseguenza — Graziano brucia le briscole presto, Franco se le
       tiene fino in fondo, e Piero cambia carattere a ogni sessione.</p>
 
-      <p>L&rsquo;installer originale non si apre più su un computer moderno: il suo
+      <p data-i18n-html="about5">L&rsquo;installer originale non si apre più su un computer moderno: il suo
       <code>SETUP.EXE</code> è un eseguibile NE a 16 bit, e Windows a 64 bit non ha
       più un sottosistema a 16 bit. Questa versione serve a quello.</p>
 
-      <p>Giochi una carta con un clic o con i tasti <strong>1</strong>,
+      <p data-i18n-html="about6">Giochi una carta con un clic o con i tasti <strong>1</strong>,
       <strong>2</strong>, <strong>3</strong>. Lo storico delle partite resta nel
       browser, su questo dispositivo.</p>
 
-      <p>C&rsquo;è anche un&rsquo;<a href="https://github.com/diegoami/discola-releases/releases/latest">app
+      <p data-i18n-html="about7">C&rsquo;è anche un&rsquo;<a href="https://github.com/diegoami/discola-releases/releases/latest">app
       per Android</a> e una <a href="https://github.com/diegoami/discola-releases/releases/latest">per
       Windows</a>: la stessa versione, da installare sul telefono o sul computer
       e giocare senza connessione.</p>
@@ -1156,13 +1169,13 @@ button.card:disabled{ cursor: default; }
            (STORES.md 1.2). The public URL in a new tab, never the relative
            privacy.html: that would navigate the app's own view away from the
            hand in progress, to a page with no Back handler. -->
-      <p><strong>Privacy.</strong> Discola non raccoglie dati: niente account,
+      <p data-i18n-html="about8"><strong>Privacy.</strong> Discola non raccoglie dati: niente account,
       pubblicità o statistiche, e il gioco non si collega a nessun server.
       <a id="privacyLink" href="https://discola.netlify.app/privacy.html"
          target="_blank" rel="noopener">Informativa completa</a>.</p>
       <p style="margin:0">
-        <a href="https://github.com/diegoami/discola-releases">Regole, download e crediti</a> &middot;
-        <a href="https://github.com/diegoami/discola-PAS">Sorgente Delphi del 1997</a>
+        <a href="https://github.com/diegoami/discola-releases" data-i18n="rulesLink">Regole, download e crediti</a> &middot;
+        <a href="https://github.com/diegoami/discola-PAS" data-i18n="pasLink">Sorgente Delphi del 1997</a>
       </p>
     </div>
   </div>
@@ -1170,12 +1183,12 @@ button.card:disabled{ cursor: default; }
 
 <div class="scrim" id="confirmScrim" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <h2 id="confirmTitle">Abbandonare la partita?</h2>
-    <p class="modal__note">La partita in corso va persa e non viene registrata
+    <h2 id="confirmTitle" data-i18n="confirmTitle">Abbandonare la partita?</h2>
+    <p class="modal__note" data-i18n="confirmNote">La partita in corso va persa e non viene registrata
     nello storico.</p>
     <div class="modal__actions">
-      <button class="btn btn--primary" id="confirmNo" type="button">Continua a giocare</button>
-      <button class="btn btn--quiet" id="confirmYes" type="button">Abbandona</button>
+      <button class="btn btn--primary" id="confirmNo" type="button" data-i18n="confirmNo">Continua a giocare</button>
+      <button class="btn btn--quiet" id="confirmYes" type="button" data-i18n="confirmYes">Abbandona</button>
     </div>
   </div>
 </div>
@@ -1208,12 +1221,103 @@ const { SUITS, BASSO, ALTO, WEIGHT_KEYS, makeProfiles, createGame } = DiscolaEng
 
 const PROFILES = makeProfiles();
 
-const DOSSIER = {
-  Valerio: "Lo standard della casa. Equilibrato: spende una briscola quando la presa la vale.",
-  Graziano: "Sciolto e veloce. È il più generoso con le briscole, e le brucia presto.",
-  Piero: "Si tira i pesi a caso a ogni sessione. Non giochi mai due volte contro lo stesso Piero.",
-  Franco: "Il più chiuso del tavolo. Tiene le briscole e lascia andare una presa pur di salvare l'asso."
+/* --- language (STORES.md 1.3) ----------------------------------------------
+   Italian is the game's language and stays in the markup; English is the EN
+   table. Markup carries data-i18n (text), data-i18n-html (markup from these
+   tables, never from input), data-i18n-label (title and aria-label) or
+   data-i18n-aria. The Italian for those is read back from the markup once, at
+   boot, into IT, so a sentence is written in one place per language. IT holds
+   only what the script builds. The card and suit names (Denari, Trevisane…)
+   stay Italian in both, as game terms. */
+const IT = {
+  dossier: {
+    Valerio: "Lo standard della casa. Equilibrato: spende una briscola quando la presa la vale.",
+    Graziano: "Sciolto e veloce. È il più generoso con le briscole, e le brucia presto.",
+    Piero: "Si tira i pesi a caso a ogni sessione. Non giochi mai due volte contro lo stesso Piero.",
+    Franco: "Il più chiuso del tavolo. Tiene le briscole e lascia andare una presa pur di salvare l'asso."
+  },
+  won: "Hai vinto", lost: "Hai perso", drawn: "Pareggio",
+  noteDraw: "Sessanta pari. Nessuno arriva a 61.",
+  noteClose: "Decisa all'ultima presa.",
+  noteLoose: name => `${name} ha lasciato andare troppe briscole.`,
+  noteTight: name => `${name} ha tenuto i carichi fino in fondo.`,
+  playCard: (n, suit) => `Gioca il ${n} di ${suit}`,
+  emptySlot: "Posto vuoto",
+  briscola: suit => `briscola: ${suit}`,
+  lastResult: (y, a, o) => `Ultima partita: hai ${y > a ? "vinto" : y < a ? "perso" : "pareggiato"} ${y}–${a} contro ${o}`,
+  historyEmpty: "Nessuna partita ancora. Lo storico resta in questo browser.",
+  tally: ["partite", "vinte", "perse", "pari"],
+  wonAgainst: "Vinte contro",
+  resultLetter: { w: "V", l: "S", d: "P" },
+  clearHistory: "Cancella lo storico",
+  deckLabel: name => `Mazzo ${name}`,
+  locale: "it-IT",
 };
+const EN = {
+  // the markup's keys
+  new: "New game", history: "Match history", settings: "Settings", about: "About",
+  back: "Back", cheat: "Cards face up", roleOpp: "opponent", you: "You",
+  roleYou: "player", stock: "Stock", lastTrick: "Last trick", youLower: "you",
+  opponent: "Opponent", deck: "Deck", again: "Play again",
+  tagline: "Two-player Briscola. First to 61 of the 120 points wins the game.",
+  rulesLink: "Rules, downloads and credits", play: "Play", table: "Table",
+  felt: "Cloth", pace: "Pace", showPoints: "Show points", sound: "Sound",
+  match: "Game", changeOpp: "Change opponent", weights: "Strategy weights",
+  weightsNote: "The twelve weights that drive <code>CompGioca</code> for the chosen opponent, taken from <code>Global.pas</code>.",
+  confirmTitle: "Abandon the game?",
+  confirmNote: "The game in progress is lost and is not recorded in the history.",
+  confirmNo: "Keep playing", confirmYes: "Abandon",
+  pasLink: "The 1997 Delphi source",
+  about1: "<strong>Discola</strong> is a two-player Briscola game written in Delphi 3 in 1997 by Diego Amicabile. This is the web version.",
+  about2: "The cards of the five original decks — Trevisane, Piacentine, Napoletane, Romagnole and Francesi — are the images from the 1997 program. A Bresciane deck has been added to them.",
+  about3: "The game's icon is the <em>fante di spade</em>, the jack of swords, from the Trevisane deck. In Veneto it is called <em>la vecia</em>, &ldquo;the old woman&rdquo;, and nobody quite remembers why: there is nothing old about him, and he certainly has a moustache. When it was chosen for the icon, whoever cropped the card pointed out that it was &ldquo;a man with a moustache&rdquo; and that the vecia had to be another card. About the moustache, they were right. About the name, no: in Veneto it is the vecia, and that is that.",
+  about4: "The opponent is the original one too, with the four profiles of the time: Valerio, Graziano, Piero and Franco. Each has his own set of weights and plays accordingly — Graziano burns his trumps early, Franco keeps them to the very end, and Piero changes character every session.",
+  about5: "The original installer no longer opens on a modern computer: its <code>SETUP.EXE</code> is a 16-bit NE executable, and 64-bit Windows no longer has a 16-bit subsystem. That is what this version is for.",
+  about6: "Play a card with a click or with the keys <strong>1</strong>, <strong>2</strong>, <strong>3</strong>. The match history stays in the browser, on this device.",
+  about7: "There is also an <a href=\"https://github.com/diegoami/discola-releases/releases/latest\">app for Android</a> and one <a href=\"https://github.com/diegoami/discola-releases/releases/latest\">for Windows</a>: the same version, to install on your phone or computer and play offline.",
+  about8: "<strong>Privacy.</strong> Discola collects no data: no account, no ads, no statistics, and the game connects to no server. <a id=\"privacyLink\" href=\"https://discola.netlify.app/privacy.html\" target=\"_blank\" rel=\"noopener\">Full privacy policy</a>.",
+  // what the script builds
+  dossier: {
+    Valerio: "The house standard. Balanced: he spends a trump when the trick is worth it.",
+    Graziano: "Loose and quick. The most generous with his trumps, and he burns them early.",
+    Piero: "Rolls his weights at random every session. You never play the same Piero twice.",
+    Franco: "The tightest at the table. He keeps his trumps, and lets a trick go to save his ace."
+  },
+  won: "You won", lost: "You lost", drawn: "Draw",
+  noteDraw: "Sixty all. Nobody reaches 61.",
+  noteClose: "Decided on the last trick.",
+  noteLoose: name => `${name} let too many trumps go.`,
+  noteTight: name => `${name} held on to the aces and threes to the end.`,
+  playCard: (n, suit) => `Play the ${n} of ${suit}`,
+  emptySlot: "Empty slot",
+  briscola: suit => `trumps: ${suit}`,
+  lastResult: (y, a, o) => `Last game: you ${y > a ? "won" : y < a ? "lost" : "drew"} ${y}–${a} against ${o}`,
+  historyEmpty: "No games yet. The history stays in this browser.",
+  tally: ["games", "won", "lost", "drawn"],
+  wonAgainst: "Won against",
+  resultLetter: { w: "W", l: "L", d: "D" },
+  clearHistory: "Clear the history",
+  deckLabel: name => `${name} deck`,
+  locale: "en-GB",
+};
+
+// The strings for the current language, and one of them by key.
+const strings = () => (state.lang === "en" ? EN : IT);
+function t(key, ...args){
+  const v = strings()[key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
+// The Italian of the markup's keys, read once before anything is translated.
+function snapshotItalian(){
+  for (const n of document.querySelectorAll("[data-i18n]")) IT[n.dataset.i18n] = n.textContent;
+  for (const n of document.querySelectorAll("[data-i18n-html]")) IT[n.dataset.i18nHtml] = n.innerHTML.trim();
+  for (const n of document.querySelectorAll("[data-i18n-label]")) IT[n.dataset.i18nLabel] = n.getAttribute("aria-label");
+  for (const n of document.querySelectorAll("[data-i18n-aria]")) IT[n.dataset.i18nAria] = n.getAttribute("aria-label");
+}
+
+// Italian unless the device says otherwise; a choice made in Impostazioni wins.
+const deviceLang = () => (/^it\b/i.test(navigator.language || "it") ? "it" : "en");
 
 
 /* --- game state ------------------------------------------------------------
@@ -1308,24 +1412,31 @@ function finish(){
   const you = state.scores[BASSO];
   const opp = state.scores[ALTO];
 
-  const title = you > opp ? "Hai vinto" : (you < opp ? "Hai perso" : "Pareggio");
-  let note;
-  if (you === opp) note = "Sessanta pari. Nessuno arriva a 61.";
-  else if (Math.abs(you - opp) <= 6) note = "Decisa all'ultima presa.";
-  else if (you > opp) note = `${state.opponent} ha lasciato andare troppe briscole.`;
-  else note = `${state.opponent} ha tenuto i carichi fino in fondo.`;
-
   recordMatch(you, opp);
 
-  el.resultTitle.textContent = title;
+  finished = { you, opp, opponent: state.opponent };
+  renderResultText();
   el.resultYou.textContent = you;
   el.resultOpp.textContent = opp;
   el.resultYou.dataset.won = String(you > opp);
   el.resultOpp.dataset.won = String(opp > you);
   el.resultOppName.textContent = state.opponent.toLowerCase();
-  el.resultNote.textContent = note;
   showResult(true);
   el.playAgain.focus();
+}
+
+// The verdict and the note, in the current language: kept apart from finish()
+// so a language switch while the end screen is up can redo them. They name the
+// opponent the match was played against, even if another is picked afterwards.
+let finished = null;
+function renderResultText(){
+  if (!finished) return;
+  const { you, opp, opponent } = finished;
+  el.resultTitle.textContent = t(you > opp ? "won" : you < opp ? "lost" : "drawn");
+  el.resultNote.textContent =
+    you === opp ? t("noteDraw")
+    : Math.abs(you - opp) <= 6 ? t("noteClose")
+    : you > opp ? t("noteLoose", opponent) : t("noteTight", opponent);
 }
 
 // The end screen covers the table, and aria-modal is an announcement rather
@@ -1381,7 +1492,7 @@ for (const id of ["table","oppHand","youHand","slotOpp","slotYou","pile","brisco
   "viewSettings","viewHistory","viewAbout","btnNew","btnHistory","btnSettings",
   "confirmScrim","confirmYes","confirmNo",
   "btnAbout","startPlay","changeOpponent","historyBody","lastResult","dossier",
-  "deckName"])
+  "deckName","langSel"])
   el[id] = document.getElementById(id);
 
 function faceOf(node, card){
@@ -1426,9 +1537,7 @@ function render(){
     const card = state.hands[BASSO][i];
     faceOf(node, card);
     node.disabled = !card || !yourTurn;
-    node.setAttribute("aria-label", card
-      ? `Gioca il ${card.n} di ${SUITS[card.s]}`
-      : "Posto vuoto");
+    node.setAttribute("aria-label", card ? t("playCard", card.n, SUITS[card.s]) : t("emptySlot"));
   });
 
   [...el.oppHand.children].forEach((node, i) => {
@@ -1451,7 +1560,7 @@ function render(){
   el.pile.dataset.briscola = remaining >= 1 ? "1" : "0";
   if (state.cards.length) faceOf(el.briscolaCard, state.cards[39]);
   el.stockCount.textContent = remaining;
-  el.briscolaName.textContent = `briscola: ${SUITS[state.briscola]}`;
+  el.briscolaName.textContent = t("briscola", SUITS[state.briscola]);
   el.lastHand.hidden = remaining !== 2;
 
   el.oppScore.textContent = state.scores[ALTO];
@@ -1572,14 +1681,12 @@ function clearHistory(){
   renderHistory();
 }
 
-const WHEN = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short" });
+const whenText = ms => new Intl.DateTimeFormat(t("locale"), { day: "numeric", month: "short" }).format(new Date(ms));
 
 function renderLastResult(){
   const [last] = loadHistory();
   if (!last){ el.lastResult.hidden = true; return; }
-  const verb = last.y > last.a ? "vinto" : (last.y < last.a ? "perso" : "pareggiato");
-  el.lastResult.textContent =
-    `Ultima partita: hai ${verb} ${last.y}–${last.a} contro ${last.o}`;
+  el.lastResult.textContent = t("lastResult", last.y, last.a, last.o);
   el.lastResult.hidden = false;
 }
 
@@ -1590,7 +1697,7 @@ function renderHistory(){
   if (!list.length){
     const p = document.createElement("p");
     p.className = "empty";
-    p.textContent = "Nessuna partita ancora. Lo storico resta in questo browser.";
+    p.textContent = t("historyEmpty");
     el.historyBody.append(p);
     return;
   }
@@ -1600,8 +1707,9 @@ function renderHistory(){
 
   const tally = document.createElement("div");
   tally.className = "tally";
-  for (const [n, label] of [[list.length,"partite"],[won,"vinte"],[lost,"perse"],
-                            [list.length - won - lost,"pari"]]){
+  const labels = t("tally");
+  for (const [n, label] of [[list.length, labels[0]], [won, labels[1]], [lost, labels[2]],
+                            [list.length - won - lost, labels[3]]]){
     const cell = document.createElement("div");
     const b = document.createElement("b");
     b.textContent = n;
@@ -1626,7 +1734,7 @@ function renderHistory(){
     group.className = "group";
     const head = document.createElement("span");
     head.className = "eyebrow";
-    head.textContent = "Vinte contro";
+    head.textContent = t("wonAgainst");
     group.append(head);
     for (const name of names){
       const line = document.createElement("div");
@@ -1650,7 +1758,7 @@ function renderHistory(){
 
     const res = document.createElement("span");
     res.className = "res " + (draw ? "res--d" : win ? "res--w" : "res--l");
-    res.textContent = draw ? "P" : win ? "V" : "S";
+    res.textContent = t("resultLetter")[draw ? "d" : win ? "w" : "l"];
 
     const who = document.createElement("span");
     who.textContent = m.o;
@@ -1661,7 +1769,7 @@ function renderHistory(){
 
     const when = document.createElement("span");
     when.className = "when";
-    when.textContent = WHEN.format(new Date(m.t));
+    when.textContent = whenText(m.t);
 
     li.append(res, who, score, when);
     ul.append(li);
@@ -1671,12 +1779,35 @@ function renderHistory(){
   const wipe = document.createElement("button");
   wipe.type = "button";
   wipe.className = "btn btn--quiet";
-  wipe.textContent = "Cancella lo storico";
+  wipe.textContent = t("clearHistory");
   wipe.addEventListener("click", clearHistory);
   el.historyBody.append(wipe);
 }
 
 /* --- settings and chrome --------------------------------------------------- */
+
+// Switch the whole page to a language: the tagged markup, then everything the
+// script built that is on screen. <html lang> follows, for screen readers and
+// hyphenation.
+function applyLang(lang){
+  state.lang = lang;
+  document.documentElement.lang = lang;
+  const S = strings();
+  for (const n of document.querySelectorAll("[data-i18n]")) n.textContent = S[n.dataset.i18n];
+  for (const n of document.querySelectorAll("[data-i18n-html]")) n.innerHTML = S[n.dataset.i18nHtml];
+  for (const n of document.querySelectorAll("[data-i18n-label]")){
+    n.title = S[n.dataset.i18nLabel];
+    n.setAttribute("aria-label", S[n.dataset.i18nLabel]);
+  }
+  for (const n of document.querySelectorAll("[data-i18n-aria]")) n.setAttribute("aria-label", S[n.dataset.i18nAria]);
+  for (const b of document.querySelectorAll(".deck-opt")) b.setAttribute("aria-label", t("deckLabel", b.dataset.deck));
+  el.langSel.value = lang;
+  el.dossier.textContent = t("dossier")[state.opponent] ?? "";
+  render();
+  renderLastResult();
+  if (screen === "history") renderHistory();
+  if (!el.result.hidden) renderResultText();
+}
 
 function applyDeck(name){
   state.deck = name;
@@ -1734,7 +1865,7 @@ function buildDecks(){
       b.className = "deck-opt";
       b.dataset.deck = name;
       b.title = name;
-      b.setAttribute("aria-label", `Mazzo ${name}`);
+      b.setAttribute("aria-label", t("deckLabel", name));
       b.style.setProperty("--sheet", deckSheet(name));
       b.style.setProperty("--ratio", DECK_RATIO[name]);
       b.innerHTML = `<span class="card" style="--col:0;--row:0"></span>`;
@@ -1746,7 +1877,7 @@ function buildDecks(){
 
 function selectOpponent(name){
   state.opponent = name;
-  el.dossier.textContent = DOSSIER[name];
+  el.dossier.textContent = t("dossier")[name];
   for (const b of [...el.opponents.children, ...el.resultOpponents.children])
     b.setAttribute("aria-pressed", String(b.dataset.name === name));
 
@@ -1773,7 +1904,9 @@ function save(){
   try{
     localStorage.setItem(KEY, JSON.stringify({
       opponent: state.opponent, deck: state.deck, felt: state.felt,
-      speed: state.speed, showPoints: state.showPoints, sound: state.sound
+      speed: state.speed, showPoints: state.showPoints, sound: state.sound,
+      // only once chosen: until then the language follows the device
+      lang: state.langPicked ? state.lang : undefined
     }));
   } catch (e){ /* private window or blocked storage: settings just won't stick */ }
 }
@@ -1855,11 +1988,22 @@ el.pointsSel.addEventListener("change", () => {
 el.soundSel.addEventListener("change", () => {
   state.sound = el.soundSel.checked; save();
 });
+el.langSel.addEventListener("change", () => {
+  state.langPicked = true;
+  applyLang(el.langSel.value);
+  save();
+});
 
 /* --- boot ------------------------------------------------------------------ */
 
 function start(carried){
   const saved = Object.assign({}, load(), carried && carried.settings);
+
+  // Before anything is translated or saved: the Italian comes from the markup,
+  // and selectOpponent() below saves, which must not drop a chosen language.
+  snapshotItalian();
+  state.langPicked = saved.lang === "it" || saved.lang === "en";
+  state.lang = state.langPicked ? saved.lang : deviceLang();
 
   buildHands();
   buildOpponents();
@@ -1878,6 +2022,7 @@ function start(carried){
   el.soundSel.checked = state.sound;
 
   selectOpponent(PROFILES[saved.opponent] ? saved.opponent : "Valerio");
+  applyLang(state.lang);
 
   // No hand is dealt yet — you pick an opponent and a deck first.
   show("start");
