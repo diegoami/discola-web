@@ -56,7 +56,7 @@ a redesign.
 
 | # | Step | Status |
 |---|---|---|
-| 1.1 | Android Back button goes back a screen | todo |
+| 1.1 | Android Back button goes back a screen | done (Discola) |
 | 1.2 | Privacy policy page, linked from Informazioni | todo |
 | 1.3 | English, switchable, Italian by default | todo |
 | 1.4 | Edge-to-edge on Android 15/16 (device check) | todo |
@@ -64,6 +64,53 @@ a redesign.
 
 Each step gets its own section below when it lands: what changed, the check
 that guards it, and the gotchas, written for the next game.
+
+#### 1.1 Android Back button
+
+**Problem.** Capacitor's core has no Back handling, so Android's default
+applies: Back *finishes the activity* from any screen, and Impostazioni, Storico
+and Informazioni all close the app. Pushing `history` entries does not help:
+nothing asks the WebView to go back.
+
+**What changed** (Discola):
+- **`mobile/`:** `npm install @capacitor/app@^8.1.1`, then `npx cap sync android`.
+  The sync rewrites `capacitor.build.gradle` and `capacitor.settings.gradle`;
+  commit both.
+- **`public/index.html`:** `androidBack()` next to the Escape handling, and
+  `window.Capacitor?.Plugins?.App?.addListener("backButton", androidBack)`.
+  Capacitor exports native plugins to the page as `window.Capacitor.Plugins.<Id>`
+  (`JSExport.getPluginJS`), so no bundler and no `@capacitor/core` import are
+  needed. Where the plugin is absent (web, itch.io, desktop) the line does
+  nothing.
+- **The behaviour mirrors Escape:** Back dismisses the confirmation and backs out
+  of a sheet. On the table, the end screen and the start screen it calls
+  `minimizeApp()` rather than exiting, so a hand in progress survives.
+
+**The check** (`tools/check_ui.mjs`, `android back`):
+- A `native: true` scenario installs a stand-in `window.Capacitor.Plugins.App`
+  before the page loads. It captures the handler and counts `minimizeApp`.
+- It presses Back through settings → table → minimise → confirm → end screen →
+  settings → end screen → start, and compares the screens left showing.
+- **Without the handler it fails** ("the page registered no backButton handler")
+  at all five sizes.
+
+**Verified:** `assembleDebug` builds with the plugin (its classes are in the dex).
+Pressing a real Back on a device is the owner's smoke item.
+
+**Gotchas:**
+- `gradlew` needs `ANDROID_HOME` (and `JAVA_HOME`, JDK 21) set. The packager sets
+  them itself; a bare `gradlew` run does not.
+- A scenario whose later clicks depend on Back having worked must stop at the
+  first failed press, or it times out instead of reporting.
+- `npm audit` in `mobile/` reports 3 moderate findings. They were there before the
+  plugin, and come from the dev-only `@capacitor/cli` (via `xcode` and `uuid`,
+  which is iOS tooling), so nothing shipped carries them.
+
+**For Tressette and Scopetta:** the same three moves. Map `androidBack()` onto
+each game's own `back()` and confirm dialog: Scopetta's `back()` returns to
+`cameFrom`, and Tressette has an end-of-hand screen where Back should minimise,
+as it does on Discola's end screen. Copy the `android back` scenario and change
+the expected trail to that game's screens.
 
 ### Phase 2: itch.io
 
