@@ -5,7 +5,15 @@ Scopetta follow after it**. Companion to [`ANDROID.md`](ANDROID.md) (the APK) an
 [`DESKTOP.md`](DESKTOP.md) (the Windows build). The proposal, the research and
 the owner's decisions are on #48.
 
-**Status.** Phase 1 in progress. Nothing is listed on either store yet.
+**Status (2026-09-25).** Phase 1 is merged for Discola (#49–#53). Nothing is
+listed on either store yet.
+- **Open before any store build (owner):** the device checks for 1.1 (Back) and
+  1.4 (edge-to-edge), and approval of the draft listing text in 1.5.
+- **The first release that can go to a store is the next milestone, v1.0.6.**
+  v1.0.5 (`e46c254`) predates Phase 1: it has no English, no privacy link and
+  no Back handling. v1.0.6 is reviewed on its candidate and tagged like any
+  other release (`CLAUDE.md`), and its build is what Phase 2 uploads.
+- **Next:** Phase 2 (itch.io). Tressette and Scopetta have not started Phase 1.
 
 ## Decisions
 

@@ -454,10 +454,9 @@ the page is opened from disk — and so the APK never advertises a link to itsel
 | 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.4 released | — | — |
 | 7 | ~~Netlify `/android` redirect + the About-screen link~~ — done | — | — |
 
-All seven steps are done. A Play Store listing is deliberately not in this
-table: sideloading needs none of it, and `ROADMAP.md` §Iteration 4 is right that the paperwork outweighs the
-code. §6's open question — publish or just install it yourself — decides whether
-that work ever happens.
+All seven steps are done. A Play Store listing is not in this table: the owner
+decided on 2026-09-25 to publish (#48), and the plan, the decisions and the
+progress live in [`STORES.md`](STORES.md).
 
 ## 8. Still open
 
