@@ -99,6 +99,18 @@ const endMatch = async p => {
   });
 };
 
+// The Android build's App plugin, as Capacitor exports it to the page
+// (window.Capacitor.Plugins.App), installed before the page loads. It keeps
+// the page's backButton handler so a scenario can press Back, and counts
+// minimizeApp calls instead of minimising anything.
+const fakeCapacitor = () => {
+  window.__minimized = 0;
+  window.Capacitor = { Plugins: { App: {
+    addListener: (event, fn) => { if (event === 'backButton') window.__back = fn; },
+    minimizeApp: () => { window.__minimized++; },
+  } } };
+};
+
 const SCREENS = [
   { name: 'start', open: async () => {},
     // The primary action has to be reachable without hunting for it. Readable
@@ -169,6 +181,43 @@ const SCREENS = [
       if (open.length) out.push(`${open.length} covered node(s) are not inert, e.g. ${open[0].className}`);
       if (document.activeElement?.id !== 'playAgain') out.push('Ancora does not have the focus');
       return out;
+    } },
+  // Android's Back button (STORES.md 1.1). Without a handler the activity
+  // closes the app from any screen; with one, Back backs out of a sheet or the
+  // confirm, and on the table, the end screen and the start screen it minimises
+  // instead, so a hand in progress survives. Each press is recorded as the
+  // screen it leaves showing, which is what a player would see.
+  { name: 'android back',  native: true, open: async p => {
+      const press = async () => p.evaluate(() => {
+        if (typeof window.__back !== 'function') return false;  // check reports it
+        window.__back();
+        const view = [...document.querySelectorAll('.view')].find(v => !v.hidden);
+        (window.__trail ??= []).push(`${view?.id ?? 'none'}` +
+          `${document.querySelector('#confirmScrim').hidden ? '' : '+confirm'}` +
+          `${document.querySelector('#result')?.hidden === false ? '+result' : ''}` +
+          `/min${window.__minimized}`);
+        return true;
+      });
+      await p.click('#startPlay');
+      await p.click('#btnSettings');
+      if (!await press()) return;                        // settings -> table
+      await press();                                     // table -> minimised
+      await p.click('#btnNew');       await press();    // confirm -> dismissed
+      await p.evaluate(() => { state.scores = [68, 52];
+        state.hands = [[null, null, null], [null, null, null]]; finish(); });
+      await press();                                     // end screen -> minimised
+      await p.click('#resultSettings'); await press();  // settings -> end screen
+      await p.click('#playAgain');
+      await p.click('#btnNew');       await p.click('#confirmYes');
+      await press();                                     // start -> minimised
+    },
+    check: () => {
+      const want = ['viewTable/min0', 'viewTable/min1', 'viewTable/min1',
+                    'viewTable+result/min2', 'viewTable+result/min2', 'viewStart/min3'];
+      const got = window.__trail ?? [];
+      if (typeof window.__back !== 'function') return ['the page registered no backButton handler'];
+      return got.join() === want.join() ? []
+        : [`Back went ${got.join(' → ') || 'nowhere'}, want ${want.join(' → ')}`];
     } },
   // Impostazioni from the end screen, then Back: the finished table and its
   // end screen, not the start screen and not a bare table.
@@ -454,6 +503,7 @@ async function checkScreens(browser) {
       // self-hosted, so a console network error is a defect, not local noise.
       page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 
+      if (screen.native) await page.addInitScript(fakeCapacitor);
       await page.goto(URL_);
       await page.evaluate(() => localStorage.removeItem('discola.history'));
       if (screen.seed) await screen.seed(page);

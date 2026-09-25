@@ -1783,6 +1783,20 @@ function load(){
 const CHEAT = "6winouj64ie";
 let buffer = "";
 
+// Android's Back button (STORES.md 1.1). Capacitor leaves it to the activity,
+// which closes the app from any screen, so the App plugin reports it here
+// instead: it does what Escape does — dismiss the confirm, back out of a
+// sheet — and on the table, the end screen or the start screen it minimises
+// rather than exits, so a hand in progress is still there when the app comes
+// back. The plugin exists only in the Android build; the web page, itch.io and
+// the desktop wrapper have no such button and skip this.
+function androidBack(){
+  if (!el.confirmScrim.hidden){ el.confirmScrim.hidden = true; return; }
+  if (screen !== "table" && screen !== "start"){ back(); return; }
+  window.Capacitor.Plugins.App.minimizeApp();
+}
+window.Capacitor?.Plugins?.App?.addListener("backButton", androidBack);
+
 document.addEventListener("keydown", ev => {
   if (ev.target.matches("input, select, textarea")) return;
 
