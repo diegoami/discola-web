@@ -29,7 +29,8 @@
 import { chromium } from 'playwright-core';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 
 // fileURLToPath, not URL.pathname: on Windows the latter yields "/C:/..." and
 // path.resolve then prefixes the cwd drive letter, doubling it.
@@ -544,22 +545,41 @@ async function checkDocument(browser) {
   priv.forEach(b => console.log(`        ${b}`));
 
   // The Android app's bridge is injected into the page by Capacitor's
-  // JSInjector, which looks for the literal text `<head>` or `</head>` in the
-  // file it serves, and without either logs "Unable to inject Capacitor,
-  // Plugins won't work" and serves the page as it is (#62). HTML lets the head's
-  // tags be left out, and this page left out both: the APK had no
-  // window.Capacitor, so Back (#50, #56) and Esci did nothing on a device, while
-  // the `android back` row passed, because fakeCapacitor builds the plugin
-  // itself. The parsed document always has a head element, so this is read from
-  // the source, not from the DOM.
+  // JSInjector (JSInjector.getInjectedStream): just after the first `<head>`
+  // it finds as text, else just before the first `</head>`, else nowhere, with
+  // "Unable to inject Capacitor, Plugins won't work" (#62). The page once left
+  // both tags out, so the APK had no window.Capacitor and Back (#50, #56) and
+  // Esci did nothing on a device, while `android back` passed, because
+  // fakeCapacitor builds the plugin itself. Its first fix then spelled the tag
+  // out in a comment above the real one, so the bridge landed inside the
+  // comment and still never ran. Asking whether the text occurs cannot see
+  // that, so this does what JSInjector does, with a marker script in place of
+  // the bridge, and requires the marker to run, before the page's own scripts.
   const source = readFileSync(FILE, 'utf8');
-  const bridge = source.includes('<head>') || source.includes('</head>');
-  console.log(`  ${bridge ? 'pass' : 'FAIL'}  the Android bridge can be injected`);
-  if (!bridge)
-    console.log('        no literal <head> or </head> in the page — Capacitor injects nothing, '
-      + 'and window.Capacitor, Back and Esci are missing from the APK');
+  const MARK = '<script>window.__bridge = true;</script>';
+  const at = source.includes('<head>') ? source.indexOf('<head>') + '<head>'.length
+    : source.includes('</head>') ? source.indexOf('</head>') : -1;
+  const bridgeBad = [];
+  if (at < 0) bridgeBad.push('no <head> or </head> in the page source: Capacitor injects nothing');
+  else {
+    const firstScript = source.indexOf('<script');
+    if (firstScript >= 0 && firstScript < at)
+      bridgeBad.push(`the bridge would land after the page's first script (offset ${at} vs ${firstScript})`);
+    const injected = path.join(os.tmpdir(), `discola-bridge-${process.pid}.html`);
+    writeFileSync(injected, source.slice(0, at) + '\n' + MARK + '\n' + source.slice(at));
+    const bpage = await browser.newPage();
+    await bpage.goto(pathToFileURL(injected).href);
+    const ran = await bpage.evaluate(() => window.__bridge);
+    await bpage.close();
+    rmSync(injected, { force: true });
+    if (ran === undefined)
+      bridgeBad.push(`the bridge would be inserted at line ${source.slice(0, at).split('\n').length}, `
+        + 'where it never runs (inside a comment, or another element that swallows it)');
+  }
+  console.log(`  ${bridgeBad.length ? 'FAIL' : 'pass'}  the Android bridge can be injected`);
+  bridgeBad.forEach(b => console.log(`        ${b} — window.Capacitor, Back and Esci would be missing from the APK`));
 
-  return (bad.length ? 1 : 0) + (lang.length ? 1 : 0) + (priv.length ? 1 : 0) + (bridge ? 0 : 1);
+  return (bad.length ? 1 : 0) + (lang.length ? 1 : 0) + (priv.length ? 1 : 0) + (bridgeBad.length ? 1 : 0);
 }
 
 /* ---- fonts: the page must not need the internet ---------------------------- */
