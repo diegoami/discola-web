@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { formatSource, parseSource, tagCommit, treeProblems } from './source_tag.mjs';
+import { branchHead, formatSource, parseSource, tagCommit, tagRef, treeProblems } from './source_tag.mjs';
 
 const C = 'e888af0ab9dcfb28a4e1123f336cceb90ae3d80a';
 const T = 'cb297cd4667fe4190aea0e56acc1fa111517222d';
@@ -114,4 +114,27 @@ test('an LF rewrite of a CRLF checkout under autocrlf is not a change (#35)', ()
 
 test('outside a repository it throws rather than reporting a clean tree', () => {
   assert.throws(() => treeProblems(mkdtempSync(path.join(os.tmpdir(), 'discola-norepo-'))));
+});
+
+// --- tagRef and branchHead: what the publisher reads from `git ls-remote origin` ---
+
+test('an annotated tag is told apart from a lightweight one', () => {
+  assert.deepEqual(tagRef(LS, 'v1.0.4'), { commit: C, annotated: true });
+  assert.deepEqual(tagRef(`${C}\trefs/tags/v2.0.0\n`, 'v2.0.0'), { commit: C, annotated: false });
+  assert.equal(tagRef(LS, 'v1.0.5'), null);
+});
+
+// origin's main as ls-remote lists it, beside branches a prefix or suffix match
+// would wrongly take for it (#41: the publisher must read the live value).
+const HEADS = [
+  `1111111111111111111111111111111111111111\tHEAD`,
+  `2222222222222222222222222222222222222222\trefs/heads/main-old`,
+  `${C}\trefs/heads/main`,
+  `3333333333333333333333333333333333333333\trefs/heads/feature/main`,
+].join('\r\n');
+
+test("branchHead reads the branch's exact ref, not a near miss", () => {
+  assert.equal(branchHead(HEADS, 'main'), C);
+  assert.equal(branchHead(HEADS, 'develop'), null);
+  assert.equal(branchHead('', 'main'), null);
 });

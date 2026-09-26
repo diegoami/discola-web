@@ -22,26 +22,26 @@ Chosen by the owner on 2026-09-22; recorded on issue #18.
 | Shell | **Tauri 2** | wraps `public/` unchanged |
 | Platforms | **Windows only** | first release; Linux AppImage and macOS are later options |
 | Goal | **Personal use + GitHub Releases** | matching Android, not app stores |
-| Binary hosting | **`diegoami/discola-releases`** | the existing public repo (`ANDROID.md:122-131`) |
-| Code signing | **Unsigned first** | document the SmartScreen warning; departs from `ROADMAP.md:190` ("a signed desktop build") |
+| Binary hosting | **`diegoami/discola-releases`** | the existing public repo (`ANDROID.md:138-147`) |
+| Code signing | **Unsigned first** | document the SmartScreen warning; departs from `ROADMAP.md:196` ("a signed desktop build") |
 
 ## Comparison
 
-Route A ("wrap what exists", `ROADMAP.md:70-92`) is already the route taken for
-Android, which is built and shipping (`ANDROID.md:194-204`, `SPEC.md:425-428`).
+Route A ("wrap what exists", `ROADMAP.md:76-98`) is already the route taken for
+Android, which is built and shipping (`ANDROID.md:212-223`, `SPEC.md:432-435`).
 The desktop question is which shell wraps `public/`, or whether to adopt the full
 Geoclick stack instead.
 
 | Dimension | Tauri 2 (Route A) | Electron (general) | Route B — full Geoclick stack |
 |---|---|---|---|
-| How it packages | native binary; the OS WebView renders the page | Node + bundled Chromium; an installer with a large runtime | Tauri for desktop, inside the Geoclick repo shape (`ROADMAP.md:96-97`) |
+| How it packages | native binary; the OS WebView renders the page | Node + bundled Chromium; an installer with a large runtime | Tauri for desktop, inside the Geoclick repo shape (`ROADMAP.md:102-103`) |
 | Distribution | GitHub release asset, like the APK | same | same, plus a rewritten web build |
-| Toolchain cost | Tauri CLI + a Rust toolchain (`ROADMAP.md:86-88`); Rust 1.98.1 and MSVC build tools are already present on this machine | Node only; no Rust | SvelteKit 2, Vite 8, TypeScript 6, npm workspaces, Vitest, Playwright, ESLint (`ROADMAP.md:28-31`) |
-| Static assets / origin | asset protocol; the identifier sets the origin, and changing it can wipe `localStorage` (`ROADMAP.md:140-143`) | `file://` or a custom protocol; similar origin caveat (general) | inherits Tauri's behaviour |
+| Toolchain cost | Tauri CLI + a Rust toolchain (`ROADMAP.md:92-94`); Rust 1.98.1 and MSVC build tools are already present on this machine | Node only; no Rust | SvelteKit 2, Vite 8, TypeScript 6, npm workspaces, Vitest, Playwright, ESLint (`ROADMAP.md:34-37`) |
+| Static assets / origin | asset protocol; the identifier sets the origin, and changing it can wipe `localStorage` (`ROADMAP.md:146-149`) | `file://` or a custom protocol; similar origin caveat (general) | inherits Tauri's behaviour |
 | Code signing | Windows signing; owner chose unsigned first | Windows signing; same | inherits Tauri |
 | Maintenance / security | relies on the OS WebView2 runtime, updated by Windows | Chromium is bundled, so Electron security updates ship with the app (general) | inherits Tauri, plus framework updates |
-| Reuse of `public/` | unchanged | unchanged | **rewritten**: 1,459 lines of markup, CSS and DOM (`ROADMAP.md:104-106`) |
-| Web build impact | none; stays toolchain-free (`SPEC.md:39`, `ROADMAP.md:83-84`) | none | the single-file web build is given up (`ROADMAP.md:103-104`) |
+| Reuse of `public/` | unchanged | unchanged | **rewritten**: 1,459 lines of markup, CSS and DOM (`ROADMAP.md:110-112`) |
+| Web build impact | none; stays toolchain-free (`SPEC.md:39`, `ROADMAP.md:89-90`) | none | the single-file web build is given up (`ROADMAP.md:109-110`) |
 
 **Why Tauri 2.** It wraps `public/` unchanged, keeps the web build a no-toolchain
 directory (`SPEC.md:39`), and the Rust toolchain it needs is already installed
@@ -49,12 +49,12 @@ here. Electron is the fallback if a Node-only toolchain becomes a hard
 requirement; it trades a smaller toolchain for a larger runtime and a bigger
 security-update surface. Route B is not warranted for a 40-card game whose UI
 would be rewritten for no user-visible change, and its regression risk is real
-(`ROADMAP.md:104-106`).
+(`ROADMAP.md:110-112`).
 
 ## Spike — run 2026-09-22
 
-Iteration 0 (`ROADMAP.md:128-143`) is a kill-early check. Android is out of scope
-because its Capacitor packaging evidence already exists (`ANDROID.md:194-204`);
+Iteration 0 (`ROADMAP.md:134-149`) is a kill-early check. Android is out of scope
+because its Capacitor packaging evidence already exists (`ANDROID.md:212-223`);
 only the **Tauri half** was run.
 
 **Method.** A throwaway Tauri 2 project (`net.discoa.spike`, `frontendDist`
@@ -80,7 +80,7 @@ Two observations for the wrapper work, neither blocking:
   currently include (its nearest are 1180 × 820 and 1440 × 900). Add it alongside
   the wrapper.
 - The Tauri origin is `http://tauri.localhost` on Windows, so `localStorage` is
-  keyed to that origin and the **identifier must not change** (`ROADMAP.md:142-143`).
+  keyed to that origin and the **identifier must not change** (`ROADMAP.md:148-149`).
 
 ## UI check against the packaged app
 
@@ -148,9 +148,11 @@ The tag is what ties a published binary to its source, since
   `public/`, which the build bundles. Line-ending differences alone don't
   count. Before building, it records `HEAD`'s commit and tree in
   `dist-release/vX.Y.Z.source`.
-- **`publish_release.mjs`** refuses, dry run included, unless `vX.Y.Z` is on
-  `origin`, on `origin/main`, at the very commit that was packaged. The release
-  notes name that commit.
+- **`publish_release.mjs`** refuses, dry run included, unless `vX.Y.Z` is an
+  **annotated** tag on `origin`, at the very commit that was packaged, and on
+  `origin`'s `main`. Both are read live with `git ls-remote origin`, never from
+  a local `origin/main` that may be stale (#41). The release notes name that
+  commit.
 
 v1.0.1–v1.0.4 were tagged after the fact. v1.0.0 was built from uncommitted
 source and has no tag (#32).

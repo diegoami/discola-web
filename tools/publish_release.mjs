@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { compareVersions } from './versions.mjs';
 import { CHECKSUM_FILE, verifyChecksums } from './checksums.mjs';
 import { buildNotes } from './release_notes.mjs';
-import { parseSource, tagCommit } from './source_tag.mjs';
+import { branchHead, parseSource, tagRef } from './source_tag.mjs';
 
 const RELEASES_REPO = 'diegoami/discola-releases';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -66,23 +66,33 @@ let source;
 try { source = parseSource(readFileSync(sourceFile, 'utf8')); }
 catch (e) { fail(`dist-release/${tag}.source: ${e.message}`); }
 const git = (args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' });
-// Unfiltered: with a ref pattern, ls-remote omits the peeled ^{} line.
-const remote = git(['ls-remote', '--tags', 'origin']);
+// Unfiltered: with a ref pattern, ls-remote omits the peeled ^{} line. One call
+// reads origin's tags and its main as they are now, not as last fetched (#41).
+const remote = git(['ls-remote', 'origin']);
 if (remote.status !== 0) fail(`git ls-remote origin failed:\n${remote.stderr}`);
-const tagged = tagCommit(remote.stdout, tag);
+const ref = tagRef(remote.stdout, tag);
+const tagged = ref?.commit;
 if (!tagged)
   fail(`${tag} is not tagged on origin. After the milestone review's AGREE, tag the ` +
        `packaged commit, then publish:\n` +
        `  git tag -a ${tag} ${source.commit} -m "Discola ${version}"\n  git push origin ${tag}`);
+if (!ref.annotated)
+  fail(`origin's ${tag} is a lightweight tag; a milestone is an annotated tag (CLAUDE.md). Replace it:\n` +
+       `  git tag -d ${tag} && git push origin :refs/tags/${tag}\n` +
+       `  git tag -a ${tag} ${tagged} -m "Discola ${version}" && git push origin ${tag}`);
 if (tagged !== source.commit)
   fail(`origin's ${tag} is not the commit that was packaged.\n` +
        `  packaged ${source.commit}\n  tagged   ${tagged}\n` +
        'Package again from the tagged commit, or, if the tag is wrong, fix it on origin.');
-// On main: an ancestor of origin/main (the candidate may have been passed since).
-const onMain = git(['merge-base', '--is-ancestor', tagged, 'origin/main']);
-if (onMain.status === 1) fail(`${tag} (${tagged}) is not on origin/main. A milestone tag goes on main.`);
+// On main: an ancestor of origin's main as it is now (the candidate may have
+// been passed since). Not the local origin/main, which is only the last fetch
+// and can be behind (a valid tag refused) or ahead (an invalid one passed, #41).
+const main = branchHead(remote.stdout, 'main');
+if (!main) fail('origin has no main branch.');
+const onMain = git(['merge-base', '--is-ancestor', tagged, main]);
+if (onMain.status === 1) fail(`${tag} (${tagged}) is not on origin's main (${main}). A milestone tag goes on main.`);
 if (onMain.status !== 0)
-  fail(`could not check ${tag} against origin/main — git fetch origin, then retry:\n${onMain.stderr}`);
+  fail(`origin's main (${main}) is not in this clone — git fetch origin, then retry:\n${onMain.stderr}`);
 
 // --- release notes, in Italian to match the game ---
 // The subtitle is the one release-specific line: what changed, set on the
