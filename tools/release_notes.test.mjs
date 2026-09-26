@@ -52,3 +52,10 @@ test('the notes name the tagged commit when given, and refuse a short one', () =
   assert.doesNotMatch(buildNotes('1.0.5', ['android']), /Compilato/);
   assert.throws(() => buildNotes('1.0.5', ['android'], { commit: 'e888af0' }), /full object id/);
 });
+
+test('a changes list renders as the "Novità" block, after the title and before the platforms', () => {
+  const notes = buildNotes('1.0.6', ['android'], { subtitle: 'anche in inglese', changes: ['Uno.', 'Due.'] });
+  assert.ok(notes.startsWith('Discola 1.0.6 — anche in inglese.\n\n**Novità in questa versione**\n- Uno.\n- Due.\n\n**Android:**'), notes);
+  assert.doesNotMatch(buildNotes('1.0.6', ['android']), /Novità/);
+  assert.throws(() => buildNotes('1.0.6', ['android'], { changes: ['Uno.', ' '] }), /non-empty/);
+});
