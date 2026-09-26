@@ -90,17 +90,42 @@ nothing asks the WebView to go back.
   (`JSExport.getPluginJS`), so no bundler and no `@capacitor/core` import are
   needed. Where the plugin is absent (web, itch.io, desktop) the line does
   nothing.
-- **The behaviour mirrors Escape:** Back dismisses the confirmation and backs out
-  of a sheet. On the table, the end screen and the start screen it calls
-  `minimizeApp()` rather than exiting, so a hand in progress survives.
+- **Back is standard Android: it always goes one level up** (owner decision,
+  #55, replacing #50's minimise):
 
-**The check** (`tools/check_ui.mjs`, `android back`):
-- A `native: true` scenario installs a stand-in `window.Capacitor.Plugins.App`
-  before the page loads. It captures the handler and counts `minimizeApp`.
-- It presses Back through settings → table → minimise → confirm → end screen →
-  settings → end screen → start, and compares the screens left showing.
-- **Without the handler it fails** ("the page registered no backButton handler")
-  at all five sizes.
+  | Where | Back |
+  |---|---|
+  | the confirm dialog | closes it, as Escape does |
+  | Impostazioni, Storico, Informazioni | the previous screen |
+  | the table, hand in progress | "Abbandonare la partita?"; Abbandona goes to the start screen |
+  | the end screen | the start screen |
+  | the start screen | **exits the app**, after asking if a hand is still in progress |
+
+- **An Exit button** (#55): a door icon in the start screen's top bar, "Esci" /
+  "Exit", `hidden` unless `window.Capacitor.Plugins.App` exists. So it is
+  **Android only**: a web page cannot close its tab, and the desktop window has
+  its own close button. It calls `exitApp()`.
+- **A hand can still be in progress on the start screen:** "Cambia avversario"
+  opens it without ending the hand. So Exit and Back there ask first. The
+  confirm dialog takes what "yes" does (`askConfirm(then)`): abandon for the
+  start screen, or exit. Its copy is true of both.
+
+**The check** (`tools/check_ui.mjs`):
+- **`android back`** (`native: true`) installs a stand-in
+  `window.Capacitor.Plugins.App` before the page loads. It captures the Back
+  handler and counts `exitApp` calls, then walks the table above: settings →
+  table, hand → confirm → dismissed → confirm → Abbandona → start, end screen →
+  start, start → exit. Each press is recorded as the screen left showing, plus
+  the exit count.
+- **`android exit`:**
+  - the button shows with the plugin;
+  - it exits at once with no hand in progress;
+  - after "Cambia avversario" it asks first, Back cancels, and confirming exits.
+- **The ordinary `start` pass:** `#btnExit` stays hidden without the plugin.
+- **Proven to fail:**
+  - without the handler: "the page registered no backButton handler";
+  - with the old minimise behaviour, with Exit shown on the web, and with Exit
+    skipping the question mid-hand: each reported, at all eight screen passes.
 
 **Verified:** `assembleDebug` builds with the plugin (its classes are in the dex).
 Pressing a real Back on a device is the owner's smoke item.
@@ -108,17 +133,24 @@ Pressing a real Back on a device is the owner's smoke item.
 **Gotchas:**
 - `gradlew` needs `ANDROID_HOME` (and `JAVA_HOME`, JDK 21) set. The packager sets
   them itself; a bare `gradlew` run does not.
-- A scenario whose later clicks depend on Back having worked must stop at the
-  first failed press, or it times out instead of reporting.
+- **A click that depends on the behaviour under test must not wait.** When the
+  behaviour is broken the element never appears, and the run times out instead
+  of reporting. Such clicks go through `tap()` (click only if visible), and a
+  scenario returns as soon as the screen it needs is not there. This bit twice.
 - `npm audit` in `mobile/` reports 3 moderate findings. They were there before the
   plugin, and come from the dev-only `@capacitor/cli` (via `xcode` and `uuid`,
   which is iOS tooling), so nothing shipped carries them.
 
-**For Tressette and Scopetta:** the same three moves. Map `androidBack()` onto
-each game's own `back()` and confirm dialog: Scopetta's `back()` returns to
-`cameFrom`, and Tressette has an end-of-hand screen where Back should minimise,
-as it does on Discola's end screen. Copy the `android back` scenario and change
-the expected trail to that game's screens.
+**For Tressette and Scopetta:**
+- The same moves, including the Exit button.
+- Map the Back table onto each game's own `back()`, confirm dialog and end
+  screen. Scopetta's `back()` returns to `cameFrom`; Tressette's end-of-hand
+  screen goes to the start screen, as Discola's end screen does.
+- Check whether the game has a path to the start screen that keeps the hand
+  alive, as Discola's "Cambia avversario" does; if so, Exit and Back there must
+  ask first.
+- Copy `android back`, `android exit`, `tap()` and the `start` pass's hidden-Exit
+  assertion, and change the expected trails to that game's screens.
 
 #### 1.2 Privacy policy
 

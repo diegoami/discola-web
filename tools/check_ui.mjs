@@ -105,14 +105,32 @@ const endMatch = async p => {
 // The Android build's App plugin, as Capacitor exports it to the page
 // (window.Capacitor.Plugins.App), installed before the page loads. It keeps
 // the page's backButton handler so a scenario can press Back, and counts
-// minimizeApp calls instead of minimising anything.
+// exitApp calls instead of exiting anything.
 const fakeCapacitor = () => {
-  window.__minimized = 0;
+  window.__exited = 0;
   window.Capacitor = { Plugins: { App: {
     addListener: (event, fn) => { if (event === 'backButton') window.__back = fn; },
-    minimizeApp: () => { window.__minimized++; },
+    exitApp: () => { window.__exited++; },
   } } };
 };
+
+// What a player sees after a Back press or an Exit, recorded in the page:
+// the screen showing, whether the confirm or the end screen is over it, and
+// how many times the app was asked to exit.
+const trail = () => {
+  const view = [...document.querySelectorAll('.view')].find(v => !v.hidden);
+  (window.__trail ??= []).push(`${view?.id ?? 'none'}` +
+    `${document.querySelector('#confirmScrim').hidden ? '' : '+confirm'}` +
+    `${document.querySelector('#result')?.hidden === false ? '+result' : ''}` +
+    `/exit${window.__exited}`);
+  return true;
+};
+// A click that depends on the behaviour under test: when that behaviour is
+// broken the element never appears, and waiting for it would time out the
+// run instead of letting the trail comparison report what went wrong.
+const tap = async (p, sel) => { if (await p.isVisible(sel)) await p.click(sel); };
+const endHand = () => { state.scores = [68, 52];
+  state.hands = [[null, null, null], [null, null, null]]; finish(); };
 
 const SCREENS = [
   { name: 'start', open: async () => {},
@@ -120,10 +138,13 @@ const SCREENS = [
     // type pushed it past the fold once; a pinned footer is the fix, and this
     // is what stops it drifting back.
     check: () => {
+      const out = [];
       const r = document.querySelector('#startPlay').getBoundingClientRect();
-      return (r.bottom > window.innerHeight + 1 || r.top < -1)
-        ? [`Gioca is off screen (bottom ${Math.round(r.bottom)} vs viewport ${window.innerHeight})`]
-        : [];
+      if (r.bottom > window.innerHeight + 1 || r.top < -1)
+        out.push(`Gioca is off screen (bottom ${Math.round(r.bottom)} vs viewport ${window.innerHeight})`);
+      // A page cannot close its own tab: outside the Android build, no Exit (#55).
+      if (!document.querySelector('#btnExit').hidden) out.push('#btnExit shows without the Android App plugin');
+      return out;
     } },
   { name: 'table',         open: async p => { await p.click('#startPlay'); } },
   { name: 'settings',      open: async p => { await p.click('#startPlay'); await p.click('#btnSettings'); } },
@@ -185,42 +206,65 @@ const SCREENS = [
       if (document.activeElement?.id !== 'playAgain') out.push('Ancora does not have the focus');
       return out;
     } },
-  // Android's Back button (STORES.md 1.1). Without a handler the activity
-  // closes the app from any screen; with one, Back backs out of a sheet or the
-  // confirm, and on the table, the end screen and the start screen it minimises
-  // instead, so a hand in progress survives. Each press is recorded as the
-  // screen it leaves showing, which is what a player would see.
+  // Android's Back button (STORES.md 1.1, #55). Without a handler the activity
+  // closes the app from any screen. With one, Back always goes one level up:
+  // out of a sheet, the confirm before abandoning a hand in progress, a
+  // finished table to the start screen, and from the start screen out of the
+  // app. Each press is recorded as what it leaves showing.
   { name: 'android back',  native: true, open: async p => {
-      const press = async () => p.evaluate(() => {
+      const press = async () => p.evaluate(trail => {
         if (typeof window.__back !== 'function') return false;  // check reports it
         window.__back();
-        const view = [...document.querySelectorAll('.view')].find(v => !v.hidden);
-        (window.__trail ??= []).push(`${view?.id ?? 'none'}` +
-          `${document.querySelector('#confirmScrim').hidden ? '' : '+confirm'}` +
-          `${document.querySelector('#result')?.hidden === false ? '+result' : ''}` +
-          `/min${window.__minimized}`);
-        return true;
-      });
+        return (0, eval)(`(${trail})`)();
+      }, trail.toString());
       await p.click('#startPlay');
       await p.click('#btnSettings');
       if (!await press()) return;                        // settings -> table
-      await press();                                     // table -> minimised
-      await p.click('#btnNew');       await press();    // confirm -> dismissed
-      await p.evaluate(() => { state.scores = [68, 52];
-        state.hands = [[null, null, null], [null, null, null]]; finish(); });
-      await press();                                     // end screen -> minimised
-      await p.click('#resultSettings'); await press();  // settings -> end screen
-      await p.click('#playAgain');
-      await p.click('#btnNew');       await p.click('#confirmYes');
-      await press();                                     // start -> minimised
+      await press();                                     // hand in progress -> confirm
+      await press();                                     // confirm -> dismissed
+      await press();                                     // confirm again
+      await tap(p, '#confirmYes');                       // Abbandona -> start
+      await p.evaluate(trail => (0, eval)(`(${trail})`)(), trail.toString());
+      if (!await p.isVisible('#startPlay')) return;      // Back went wrong: the trail says how
+      await p.click('#startPlay');
+      await p.evaluate(`(${endHand})()`);
+      await press();                                     // end screen -> start
+      await press();                                     // start, no hand -> exit
     },
     check: () => {
-      const want = ['viewTable/min0', 'viewTable/min1', 'viewTable/min1',
-                    'viewTable+result/min2', 'viewTable+result/min2', 'viewStart/min3'];
+      const want = ['viewTable/exit0', 'viewTable+confirm/exit0', 'viewTable/exit0',
+                    'viewTable+confirm/exit0', 'viewStart/exit0', 'viewStart/exit0', 'viewStart/exit1'];
       const got = window.__trail ?? [];
       if (typeof window.__back !== 'function') return ['the page registered no backButton handler'];
       return got.join() === want.join() ? []
         : [`Back went ${got.join(' → ') || 'nowhere'}, want ${want.join(' → ')}`];
+    } },
+  // The Exit button (#55): on the start screen, only in the Android build.
+  // With no hand in progress it leaves at once; after "Cambia avversario" a
+  // hand can still be in progress, and then it asks first, and Back cancels.
+  { name: 'android exit',  native: true, open: async p => {
+      const mark = async () => p.evaluate(trail => (0, eval)(`(${trail})`)(), trail.toString());
+      await p.evaluate(() => { window.__exitShown = !document.querySelector('#btnExit').hidden; });
+      await tap(p, '#btnExit');                            // no hand -> exit
+      await mark();
+      await p.click('#startPlay');
+      await p.click('#btnSettings');
+      await p.click('#changeOpponent');                    // start, hand still in progress
+      await tap(p, '#btnExit');                            // -> confirm
+      await mark();
+      await p.evaluate(() => window.__back());             // Back cancels it
+      await mark();
+      await tap(p, '#btnExit');
+      await tap(p, '#confirmYes');                         // -> exit
+      await mark();
+    },
+    check: () => {
+      const out = [];
+      if (!window.__exitShown) out.push('#btnExit is hidden although the App plugin is present');
+      const want = ['viewStart/exit1', 'viewStart+confirm/exit1', 'viewStart/exit1', 'viewStart/exit2'];
+      const got = window.__trail ?? [];
+      if (got.join() !== want.join()) out.push(`Exit went ${got.join(' → ') || 'nowhere'}, want ${want.join(' → ')}`);
+      return out;
     } },
   // Impostazioni from the end screen, then Back: the finished table and its
   // end screen, not the start screen and not a bare table.

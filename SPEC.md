@@ -272,7 +272,10 @@ table ──hand empty──► result ──┬─ Ancora ───────
   deck pickers, which scroll, above two pinned actions, Ancora and Impostazioni.
   The covered table and its icon bar are inert while it is up. No Escape.
 
-Escape backs out of a sheet or dismisses the confirm. Keys `1`, `2`, `3` play a
+Escape backs out of a sheet or dismisses the confirm. On Android, Back always
+goes one level up, and on the start screen it leaves the app (after asking, if a
+hand is still in progress). The start screen also has an Exit button there, and
+only there (`STORES.md` 1.1, #55). Keys `1`, `2`, `3` play a
 card. Typing `6winouj64ie` turns the opponent's hand face up — the original's
 easter egg, kept.
 

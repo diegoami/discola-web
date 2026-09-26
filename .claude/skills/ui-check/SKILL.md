@@ -77,7 +77,7 @@ shipped:
 | inflated spacing | `--chrome` was hand-estimated three times and was wrong three times |
 | swatch inside its tile | a deck stretched to the tallest deck's height took its width from its aspect ratio and spilled over its neighbours, at every viewport (#44) |
 | end screen covers the table | the end of the match was a popup over the page; it is a screen over the table, with its actions in view and the covered table inert (#42) |
-| android back | Capacitor's core closes the app on Back from any screen; the stand-in plugin proves Back backs out of sheets and minimises elsewhere (`STORES.md` 1.1) |
+| android back, android exit | Capacitor's core closes the app on Back from any screen. The stand-in plugin proves Back goes one level up (the confirm mid-hand, the end screen to start, start exits), that Exit asks first when a hand is still in progress, and that Exit is hidden on the web (`STORES.md` 1.1, #55) |
 | privacy page | Play needs a reachable policy; the link must open the public URL in a new tab, and the page must carry no script and fetch nothing (`STORES.md` 1.2) |
 | same keys in both languages, no Italian on the English page | a string added in one language only, or left untagged, shows up as Italian in the English UI (`STORES.md` 1.3) |
 
