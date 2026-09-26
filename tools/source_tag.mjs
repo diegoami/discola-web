@@ -66,6 +66,16 @@ export function parseSource(text){
  * v1.0.1 is not satisfied by v1.0.10 or by some/prefix/v1.0.1.
  */
 export function tagCommit(lsRemote, tag){
+  return tagRef(lsRemote, tag)?.commit ?? null;
+}
+
+/**
+ * The tag as `{ commit, annotated }`, or null when it is absent. Only an
+ * annotated tag lists a peeled `^{}` line, which is how the two are told apart:
+ * a milestone is an annotated tag (CLAUDE.md), so the publisher refuses the
+ * other kind.
+ */
+export function tagRef(lsRemote, tag){
   let direct = null, peeled = null;
   for (const line of lsRemote.split(/\r?\n/)) {
     const m = /^([0-9a-f]+)\t(\S+)$/.exec(line);
@@ -73,5 +83,19 @@ export function tagCommit(lsRemote, tag){
     if (m[2] === `refs/tags/${tag}^{}`) peeled = m[1];
     else if (m[2] === `refs/tags/${tag}`) direct = m[1];
   }
-  return peeled ?? direct;
+  if (!direct && !peeled) return null;
+  return { commit: peeled ?? direct, annotated: peeled !== null };
+}
+
+/**
+ * The commit a branch points at in `git ls-remote` output, or null. This is the
+ * live value on the remote; a local `origin/<branch>` is only the last fetch
+ * (#41). The ref must match exactly, so main is not satisfied by main-old.
+ */
+export function branchHead(lsRemote, branch){
+  for (const line of lsRemote.split(/\r?\n/)) {
+    const m = /^([0-9a-f]+)\t(\S+)$/.exec(line);
+    if (m && m[2] === `refs/heads/${branch}`) return m[1];
+  }
+  return null;
 }

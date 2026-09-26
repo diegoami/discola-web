@@ -19,7 +19,7 @@ the route decision it argues for is what was taken.
 | 3 — Desktop via Tauri | Done: `desktop/`, Windows only, first shipped in 1.0.4 (#22, #26) |
 | 4 — Android via Capacitor | Done: `mobile/`, a signed APK, sideloaded. A Play listing (and itch.io) is planned in [`STORES.md`](STORES.md) (#48) |
 | 5 — Geoclick stack | Not started (optional) |
-| 6 — Releases | Done: `diegoami/discola-releases`, one release per version carrying the APK, the Windows exe and `SHA256SUMS.txt` |
+| 6 — Releases | Done: `diegoami/discola-releases`, one release per version carrying the APK and `SHA256SUMS.txt`, plus the Windows exe since 1.0.4 |
 
 ---
 

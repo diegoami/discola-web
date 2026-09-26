@@ -1,7 +1,7 @@
 /**
  * Compose the GitHub release notes for a Discola release.
  *
- * Italian, to match the game (`ANDROID.md:371-373`). The per-platform
+ * Italian, to match the game (`ANDROID.md:397-399`). The per-platform
  * paragraphs are the parts that must not drift from what is actually staged:
  * the Windows paragraph carries the SmartScreen instructions that unsigned-first
  * leaves to the release page (`DESKTOP.md:24`), and the Android paragraph the
