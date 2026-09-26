@@ -1016,6 +1016,12 @@ button.card:disabled{ cursor: default; }
       <button class="tool" data-nav="about" type="button" data-i18n-label="about" title="Informazioni" aria-label="Informazioni">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5.3"/><path d="M12 7.6v1"/></svg>
       </button>
+      <!-- Leave the app (#55). Android only: hidden until the page finds the
+           App plugin, because a web page cannot close its own tab and the
+           desktop window has its own close button. -->
+      <button class="tool" id="btnExit" type="button" data-i18n-label="exit" title="Esci" aria-label="Esci" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></svg>
+      </button>
     </nav>
   </header>
   <div class="sheet-body">
@@ -1256,6 +1262,7 @@ const IT = {
 const EN = {
   // the markup's keys
   new: "New game", history: "Match history", settings: "Settings", about: "About",
+  exit: "Exit",
   back: "Back", cheat: "Cards face up", roleOpp: "opponent", you: "You",
   roleYou: "player", stock: "Stock", lastTrick: "Last trick", youLower: "you",
   opponent: "Opponent", deck: "Deck", again: "Play again",
@@ -1492,7 +1499,7 @@ for (const id of ["table","oppHand","youHand","slotOpp","slotYou","pile","brisco
   "viewSettings","viewHistory","viewAbout","btnNew","btnHistory","btnSettings",
   "confirmScrim","confirmYes","confirmNo",
   "btnAbout","startPlay","changeOpponent","historyBody","lastResult","dossier",
-  "deckName","langSel"])
+  "deckName","langSel","btnExit"])
   el[id] = document.getElementById(id);
 
 function faceOf(node, card){
@@ -1630,6 +1637,15 @@ function abandon(){
 // left to lose.
 function askRestart(){
   if (!state.dealt || state.over){ abandon(); return; }
+  askConfirm(abandon);
+}
+
+// The confirm guards two ways out of a hand in progress (#55): abandoning it
+// for the start screen, and leaving the app. Its copy is true of both — the
+// hand is lost and not recorded — so only what "yes" does changes.
+let confirmThen = abandon;
+function askConfirm(then){
+  confirmThen = then;
   el.confirmScrim.hidden = false;
   el.confirmNo.focus();   // the safe choice is the default
 }
@@ -1924,19 +1940,35 @@ function load(){
 const CHEAT = "6winouj64ie";
 let buffer = "";
 
-// Android's Back button (STORES.md 1.1). Capacitor leaves it to the activity,
-// which closes the app from any screen, so the App plugin reports it here
-// instead: it does what Escape does — dismiss the confirm, back out of a
-// sheet — and on the table, the end screen or the start screen it minimises
-// rather than exits, so a hand in progress is still there when the app comes
-// back. The plugin exists only in the Android build; the web page, itch.io and
-// the desktop wrapper have no such button and skip this.
+// The Android build's App plugin, or undefined everywhere else: the web page,
+// itch.io and the desktop wrapper have no Back button and no way to exit.
+const nativeApp = () => window.Capacitor?.Plugins?.App;
+
+// Leave the app (#55), from the Exit button or from Back on the start screen.
+// "Cambia avversario" opens the start screen without ending the hand, so a
+// hand can still be in progress here, and then it asks first.
+function exitApp(){
+  el.confirmScrim.hidden = true;
+  nativeApp().exitApp();
+}
+function leave(){
+  if (state.dealt && !state.over) askConfirm(exitApp); else exitApp();
+}
+
+// Android's Back button (STORES.md 1.1, #55). Capacitor leaves it to the
+// activity, which closes the app from any screen, so the App plugin reports it
+// here instead, and it always goes one level up: it dismisses the confirm,
+// backs out of a sheet, asks before abandoning a hand in progress, takes a
+// finished table to the start screen, and from the start screen leaves.
 function androidBack(){
   if (!el.confirmScrim.hidden){ el.confirmScrim.hidden = true; return; }
   if (screen !== "table" && screen !== "start"){ back(); return; }
-  window.Capacitor.Plugins.App.minimizeApp();
+  if (screen === "start"){ leave(); return; }
+  if (state.over) abandon(); else askRestart();
 }
-window.Capacitor?.Plugins?.App?.addListener("backButton", androidBack);
+nativeApp()?.addListener("backButton", androidBack);
+el.btnExit.hidden = !nativeApp();
+el.btnExit.addEventListener("click", leave);
 
 document.addEventListener("keydown", ev => {
   if (ev.target.matches("input, select, textarea")) return;
@@ -1961,7 +1993,7 @@ for (const b of document.querySelectorAll("[data-back]"))
 
 el.btnNew.addEventListener("click", askRestart);
 el.confirmNo.addEventListener("click", () => { el.confirmScrim.hidden = true; });
-el.confirmYes.addEventListener("click", abandon);
+el.confirmYes.addEventListener("click", () => confirmThen());
 // history / settings / about, from either topbar (the table's and the start
 // screen's) — back() returns to whichever screen you were on.
 for (const b of document.querySelectorAll("[data-nav]"))
