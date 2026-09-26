@@ -542,7 +542,24 @@ async function checkDocument(browser) {
   await ppage.close();
   console.log(`  ${priv.length ? 'FAIL' : 'pass'}  privacy page`);
   priv.forEach(b => console.log(`        ${b}`));
-  return (bad.length ? 1 : 0) + (lang.length ? 1 : 0) + (priv.length ? 1 : 0);
+
+  // The Android app's bridge is injected into the page by Capacitor's
+  // JSInjector, which looks for the literal text `<head>` or `</head>` in the
+  // file it serves, and without either logs "Unable to inject Capacitor,
+  // Plugins won't work" and serves the page as it is (#62). HTML lets the head's
+  // tags be left out, and this page left out both: the APK had no
+  // window.Capacitor, so Back (#50, #56) and Esci did nothing on a device, while
+  // the `android back` row passed, because fakeCapacitor builds the plugin
+  // itself. The parsed document always has a head element, so this is read from
+  // the source, not from the DOM.
+  const source = readFileSync(FILE, 'utf8');
+  const bridge = source.includes('<head>') || source.includes('</head>');
+  console.log(`  ${bridge ? 'pass' : 'FAIL'}  the Android bridge can be injected`);
+  if (!bridge)
+    console.log('        no literal <head> or </head> in the page — Capacitor injects nothing, '
+      + 'and window.Capacitor, Back and Esci are missing from the APK');
+
+  return (bad.length ? 1 : 0) + (lang.length ? 1 : 0) + (priv.length ? 1 : 0) + (bridge ? 0 : 1);
 }
 
 /* ---- fonts: the page must not need the internet ---------------------------- */

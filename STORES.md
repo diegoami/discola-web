@@ -130,6 +130,25 @@ nothing asks the WebView to go back.
 **Verified:** `assembleDebug` builds with the plugin (its classes are in the dex).
 Pressing a real Back on a device is the owner's smoke item.
 
+**The page must say `</head>` out loud (#62).** The plugin being in the dex is
+not enough: the page only gets `window.Capacitor` if Capacitor can inject it.
+`JSInjector.getInjectedStream` puts the bridge after a literal `<head>` or
+before a literal `</head>` in the served HTML. With neither, it logs "Unable to
+inject Capacitor, Plugins won't work" and serves the page bare. This page had
+left both out, as HTML allows, so every APK up to the `v1.0.6-smoke` build ran
+with no bridge, and Back and Esci did nothing on a device. The `android back`
+row passed throughout, because `fakeCapacitor` builds the object itself.
+- **The fix:** an explicit `</head>` then `<body>` right after the stylesheet, so
+  the bridge lands after the charset and viewport and before every script.
+- **The check:** the document pass reads the page *source* for the tag ("the
+  Android bridge can be injected"), since the DOM always has a head element. It
+  failed on `542e316` and was the only failure there.
+- **Verified:** replaying the injector's decision on the `v1.0.6-smoke` APK's
+  page gives "NOT injected"; on a debug APK built from the fix, the bridge goes
+  in before `</head>`, ahead of the page's first script, and
+  `capacitor.plugins.json` registers `AppPlugin`. Found in Tressette first
+  (diegoami/Tressette#74).
+
 **Gotchas:**
 - `gradlew` needs `ANDROID_HOME` (and `JAVA_HOME`, JDK 21) set. The packager sets
   them itself; a bare `gradlew` run does not.
@@ -151,6 +170,8 @@ Pressing a real Back on a device is the owner's smoke item.
   ask first.
 - Copy `android back`, `android exit`, `tap()` and the `start` pass's hidden-Exit
   assertion, and change the expected trails to that game's screens.
+- Check that the page carries a literal `</head>` (or `<head>`), and copy the
+  document pass's bridge rule: without the tag, none of this reaches the device.
 
 #### 1.2 Privacy policy
 

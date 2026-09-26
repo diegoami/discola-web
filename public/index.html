@@ -885,6 +885,14 @@ button.card:disabled{ cursor: default; }
   }
 }
 </style>
+<!-- The head is closed out loud, though HTML would close it here anyway (#62).
+     The Android app's bridge — window.Capacitor, and with it the App plugin
+     Back and Esci use — is injected by Capacitor's JSInjector before the
+     literal </head> it finds in this file, and without one it injects nothing
+     at all. Here it lands after the charset, the viewport and the styles, and
+     before every script on the page. -->
+</head>
+<body>
 
 <!-- ============================ the table ============================ -->
 <div class="view" id="viewTable" hidden>
