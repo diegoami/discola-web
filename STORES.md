@@ -130,6 +130,32 @@ nothing asks the WebView to go back.
 **Verified:** `assembleDebug` builds with the plugin (its classes are in the dex).
 Pressing a real Back on a device is the owner's smoke item.
 
+**The page must say `</head>` out loud (#62).** The plugin being in the dex is
+not enough: the page only gets `window.Capacitor` if Capacitor can inject it.
+`JSInjector.getInjectedStream` puts the bridge after a literal `<head>` or
+before a literal `</head>` in the served HTML. With neither, it logs "Unable to
+inject Capacitor, Plugins won't work" and serves the page bare. This page had
+left both out, as HTML allows, so every APK up to the `v1.0.6-smoke` build ran
+with no bridge, and Back and Esci did nothing on a device. The `android back`
+row passed throughout, because `fakeCapacitor` builds the object itself.
+- **The fix:** an explicit `</head>` then `<body>` right after the stylesheet, so
+  the bridge lands after the charset and viewport and before every script.
+- **The trap in the fix itself:** JSInjector inserts before the **first**
+  `</head>` in the file's *text*. The first version of this fix explained itself
+  in a comment that spelled the tag out, just above the real one. The bridge
+  landed inside the comment and still never ran, while "the tag is present"
+  checks and "injected before `</head>`" replays both said yes. **No comment or
+  string above the real tag may spell out `<head>` or `</head>`.**
+- **The check** (document pass, "the Android bridge can be injected") does what
+  JSInjector does. It puts a marker script where JSInjector would put the bridge,
+  loads the result, and requires the marker to *run*. It also requires that spot
+  to precede the page's first `<script>`. It fails on `542e316` (no tag) and on
+  #63's first commit `d73881d` (the tag in a comment), as the only failure each
+  time (143 pass, 1 FAIL), and passes with the fix (144 pass).
+- **Verified:** on the `v1.0.6-smoke` APK's page, replaying JSInjector gives "NOT
+  injected". `capacitor.plugins.json` registers `AppPlugin`. Found in Tressette
+  first (diegoami/Tressette#74).
+
 **Gotchas:**
 - `gradlew` needs `ANDROID_HOME` (and `JAVA_HOME`, JDK 21) set. The packager sets
   them itself; a bare `gradlew` run does not.
@@ -151,6 +177,12 @@ Pressing a real Back on a device is the owner's smoke item.
   ask first.
 - Copy `android back`, `android exit`, `tap()` and the `start` pass's hidden-Exit
   assertion, and change the expected trails to that game's screens.
+- Check that the page carries a literal `</head>` (or `<head>`), that no comment
+  above it spells the tag out, and copy the document pass's bridge rule, which
+  runs the injected marker. Without that, none of this reaches the device.
+  **As of 2026-09-27:** Tressette's fix, Tressette#75 (unmerged), carries the
+  same comment trap: its `public/index.html` has a comment spelling `</head>` at
+  line 1149, above the real tag at 1152. Scopetta has no head tags at all.
 
 #### 1.2 Privacy policy
 
