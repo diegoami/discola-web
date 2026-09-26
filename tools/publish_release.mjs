@@ -95,12 +95,20 @@ if (onMain.status !== 0)
   fail(`origin's main (${main}) is not in this clone — git fetch origin, then retry:\n${onMain.stderr}`);
 
 // --- release notes, in Italian to match the game ---
-// The subtitle is the one release-specific line: what changed, set on the
-// milestone's candidate, or left out. 1.0.4's ("la prima versione per Windows")
-// was dropped with the 1.0.5 bump.
+// The subtitle and the changes are the release-specific part: what changed,
+// set with each version bump, so the milestone's candidate carries the notes
+// that ship and its reviewer reads them. 1.0.5 had neither (no game change).
 let notes;
 try {
   notes = buildNotes(version, platforms, {
+    subtitle: 'anche in inglese',
+    changes: [
+      'Il gioco è anche in inglese: segue la lingua del dispositivo, e si cambia in Impostazioni.',
+      'A fine partita, una schermata sul tavolo invece di una finestra, con avversario e mazzo da scegliere per la partita successiva.',
+      'Android: il tasto Indietro torna alla schermata precedente, e dalla schermata iniziale c\'è il pulsante Esci.',
+      'Le carte del selettore dei mazzi non escono più dal loro riquadro.',
+      'Un\'informativa sulla privacy, in Informazioni. Su Android storico e impostazioni restano fuori anche dal trasferimento tra telefoni.',
+    ],
     commit: tagged,
   });
 } catch (e) { fail(e.message); }

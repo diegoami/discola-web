@@ -27,9 +27,11 @@ const SECTIONS = {
 // Windows first: 1.0.4 is its debut, and it is the unfamiliar download.
 const ORDER = ['windows', 'android'];
 
-export function buildNotes(version, platforms, { subtitle, commit } = {}){
+export function buildNotes(version, platforms, { subtitle, commit, changes = [] } = {}){
   if (commit !== undefined && !/^[0-9a-f]{40}([0-9a-f]{24})?$/.test(commit))
     throw new Error(`the source commit is not a full object id: ${commit}`);
+  if (changes.some((c) => typeof c !== 'string' || !c.trim()))
+    throw new Error('every entry in changes must be a non-empty line');
   if (!platforms.length) throw new Error('a release needs at least one platform');
   const unique = [...new Set(platforms)];
   for (const p of unique)
@@ -43,7 +45,13 @@ export function buildNotes(version, platforms, { subtitle, commit } = {}){
       'niente lascia il telefono o il computer.'
     : 'Lo storico delle partite resta sul dispositivo: niente lascia il dispositivo.';
 
-  return `${title}\n\n${sections}\n\n${history}\n\n` +
+  // What changed, as the list releases 1.0.1-1.0.3 carried: set per release on
+  // the milestone's candidate, so the reviewer reads the notes that ship.
+  const news = changes.length
+    ? `**Novità in questa versione**\n${changes.map((c) => `- ${c}`).join('\n')}\n\n`
+    : '';
+
+  return `${title}\n\n${news}${sections}\n\n${history}\n\n` +
     `**Gioca nel browser:** https://discola.netlify.app/\n\n` +
     `Checksum SHA-256 in \`SHA256SUMS.txt\`.\n` +
     // The milestone tag's commit, so a binary names its source; the source
