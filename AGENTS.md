@@ -1,72 +1,136 @@
-> Guidance for OpenCode. Claude Code uses CLAUDE.md.
->
-> **Any tool or model:** if you were given a review-handoff prompt, you are the
-> independent reviewer of the implementer's work. Follow that prompt and
-> `CLAUDE.md`; the OpenCode roles below do not apply to you.
+# Discola
 
-# Discola — OpenCode guidance
+A two-player Briscola game, ported to the web from the Delphi 3 original of
+1997. `public/index.html` (the view) plus `public/engine.js` (the rules and the
+opponent, loaded as a classic script so `file://` still works): five screens, two
+dialogs, six card decks drawn from sprite sheets of the original bitmaps (five
+PNG, one JPEG).
 
-The tool-agnostic principles, the verification gates and the project rules live
-in [`CLAUDE.md`](CLAUDE.md). **Read it before implementing.** This file adds the
-OpenCode-specific review process.
+This is the one instructions file, for every tool. `CLAUDE.md` only imports it.
 
-## Review process: an implementer and a reviewer
+## How work flows
 
-### Roles and identities
+- **Propose first, when it is more than a fix.** Open an issue with the
+  problem, the findings with `file:line` references, the design and the open
+  questions, and get the owner's agreement before implementing. A small fix or
+  a documentation change goes straight to a PR.
+- **Branch from a fresh `origin/main`** (`git fetch origin` first), open a PR
+  that references the issue, and verify it against the agreed design with the
+  gates green (*Verification*). The owner merges.
+- **Use a worktree of your own when another session may share the checkout**:
+  `git worktree add --no-track -b <branch> ../discola-web-work/<branch> origin/main`.
+  A worktree starts without dependencies, so install them there as CI does
+  (`npm ci`, then `npx playwright-core install chromium`), and never link
+  `node_modules` from the main checkout. On Windows, nested paths need
+  `git config --global core.longpaths true`. The owner sets that, not a session.
+  Remove the worktree you made after the merge, and no other.
+- **A second-model review of a PR happens when the owner asks for it.** The
+  reviewer is a different model from the implementer. It reviews the PR's head
+  SHA, fetched and checked out detached in a worktree of its own, and edits
+  nothing. It posts one comment, AGREE or BLOCK, with reproduced findings,
+  signed with its role and model. A BLOCK goes to the owner. The implementer
+  does not override it.
 
-The roles are fixed; the models are not. The owner assigns a model to each role
-in OpenCode and can change it without editing this file. The one requirement:
-the reviewer is a different model from the implementer, so the two do not share
-a blind spot (`CLAUDE.md`, *Principles*).
+## Releases
 
-- **Implementer.** Writes the design, the code and the tests; replies on GitHub
-  signed "— Implementer (<model>)", naming the model it runs as.
-- **Reviewer**, invoked as a subagent in a fresh context, running the model the
-  owner assigned to the role. It verifies against the real code rather than
-  trusting the description, and posts its verdict on GitHub signed
-  "— Reviewer (<model>)".
-- The reviewer posts through the owner's GitHub account (no separate bot
-  identity), so the signature line is the only marker of authorship.
-- A **BLOCK** is not overridden by the implementer — it goes to the owner.
+A release is an annotated tag `vX.Y.Z` on `main`, on the exact commit the
+published binaries are built from. Binaries go to `diegoami/discola-releases`,
+the tag stays here, and `tools/publish_release.mjs` refuses anything else.
+Nothing but a release is a milestone.
 
-### Two stages
+1. **Open `Milestone vX.Y.Z`**: the candidate SHA on `main`, the previous tag,
+   the PRs merged since, and the gate results on the candidate.
+2. **Get an independent review before the tag.** A model that implemented none
+   of the release reviews `<previous tag>..<candidate>` in a fresh session.
+   Its prompt comes from the `review-handoff` skill (`.claude/skills/`). It
+   opens one issue per reproduced finding and posts one verdict comment. On
+   BLOCK, fix the MUST-FIX findings in ordinary PRs, move the candidate, and
+   give the re-review prompt. After three rounds without AGREE, the owner
+   decides. The owner may also tag without a review, and the issue records it.
+3. **After AGREE**, package from exactly the reviewed SHA, smoke the packaged
+   build, tag that SHA and publish (`DESKTOP.md` §Releasing). Work merged after
+   the candidate waits for the next release.
 
-- **Design.** Before any implementation, write the proposal as a GitHub issue:
-  problem, findings with `file:line` references, the design, and open questions.
-  Have the reviewer review that issue and comment. Iterate — reply, the
-  reviewer re-reviews — until the reviewer posts an explicit **AGREE**. Do not
-  implement before that.
-- **Implementation.** Implement the agreed design on a new branch in a worktree
-  of your own, `<project>-work/<branch>`, never in the main checkout (`CLAUDE.md`,
-  *Who works where*), and open a PR that references the issue. Have the reviewer
-  review the PR against the agreed design, in a worktree of its own under
-  `<project>-review/`, detached at the PR's head commit: it fetches first
-  (`git fetch origin --tags <SHA>`, then `git fetch origin pull/<N>/head`; never
-  `git pull`), stops only if `git cat-file -t <SHA>` still does not print
-  "commit" after the fetch, checks that
-  `git rev-parse HEAD` there equals the head commit before it reviews, and
-  installs the dependencies there (`npm ci`) before any check runs. Fix and
-  iterate until the reviewer posts an explicit **AGREE**. The owner merges.
+When a review is in, reproduce each finding before acting on it. Then fix it in
+a PR (`Fixes #n`) or rebut it on the issue with evidence.
 
-### Bootstrap
+## Principles
 
-The change that introduces or edits this file or `CLAUDE.md` goes straight to a
-PR that the reviewer reviews to AGREE, exactly as for a code change. The
-process reviews its own amendment.
+- Keep reviewer requirements separate from **owner decisions**, and put owner
+  decisions to the human with a recommended default.
+- Reproduce every finding before acting, and your own claims before publishing
+  them. When a check fails, suspect your harness first.
+- For each passing check, say what it would have caught had the code been wrong
+  — never let implementer and reviewer share a blind spot.
+- A passing test is not a working feature: assert what a person would notice.
+- A threshold from one measurement is a coin toss.
+- Flag out-of-scope defects rather than fixing them silently.
+- Change the smallest thing: targeted reads and focused edits, and show diffs,
+  not whole files.
 
-This governs amendments made in an OpenCode session. When Claude makes one,
-`CLAUDE.md`'s process applies instead: Claude verifies the PR, the owner merges,
-and the reviewer's AGREE is not required (owner decision, #34). A process
-change is not a milestone.
+## Verification
 
-## Split by tool
+- Gates: `npm run check` (UI check), `npm test` (unit tests), `npm run verify`
+  (the full suite: check then tests). CI runs both on every PR and every push
+  to `main`.
+- Run the full suite **3 times** before pushing anything that touches the primary
+  logic (`public/engine.js`, `public/index.html`), and read the pass COUNT, not
+  the absence of a FAIL.
+- **After any UI change, run `node tools/check_ui.mjs`.** It is not optional,
+  and not only when something looks wrong. Every UI defect this project shipped
+  was invisible in the diff and threw no error: cards overlapping the hand, the
+  player's own hand pushed below the fold, the table drifting apart until it
+  stopped reading as one surface, body copy at 12.5px, and every screen
+  rendering at once behind a click-eating overlay. Reading the diff caught none
+  of them. The check catches all of them. The `ui-check` skill explains what it
+  covers and how to read a failure.
+- **After any engine change, run `npm test`.** The tests are deterministic
+  (seeded RNG) and cover what the UI check cannot see: card ranking and
+  briscola, the 120-point total, the trick winner drawing first, both leader
+  paths, and a full hand. They live in `tools/engine.test.mjs`.
 
-- `AGENTS.md` (this file) holds the OpenCode per-PR review process.
-- `CLAUDE.md` holds the tool-agnostic principles, the verification gates and the
-  project rules, with no reviewer-spawning mechanism. Its "Milestones and the
-  independent review (every implementer)" section is the release process for
-  OpenCode too: when a release is called, OpenCode opens the milestone issue,
-  hands off the review prompt, packages, runs the smoke and tags, as that
-  section says.
+## What to read
 
-Keep one source of truth per idea: process here, principles and rules there.
+Normally inspect: `public/index.html`, `public/engine.js`, `tools/*`, the root
+`*.md`, `.github/workflows/*`, `.claude/skills/*`. Normally ignore
+`node_modules/`, `public/decks/`, `public/fonts/`, `public/icons/`, `assets/`,
+`dist-release/`, Gradle wrapper files and any binary. Read `package-lock.json`
+only when dependencies are the task, and open files under `mobile/android/` one
+at a time. Ignoring a path does not mean it should be deleted or gitignored.
+
+Never read or paste `mobile/android/keystore.properties` or `*.jks`.
+
+## The card size is a budget
+
+`--cw` is `(viewport height - --chrome) / --rows / --ratio`, clamped. `--chrome`
+is **derived** from the spacing tokens next to it — never hard-code it. It was
+hand-estimated three times and wrong three times, silently, because a card too
+tall for its row does not error, it just lands on the hand below. `--rows` is 3
+in landscape and 4 in portrait, where the trick and the tallone stack.
+
+## The engine is a transcription, not a rewrite
+
+The rules come from `UMazzo.pas` and the opponent from
+`TGiocatore.CompGioca` in `UGiocatore.pas`, with the twelve tuned weights per
+profile from `Global.pas`. They live in `public/engine.js`: keep it that way —
+if the opponent's play needs changing, change the weights, not the scoring
+formula. `index.html` is the view and holds no game logic.
+
+One 1997 behaviour is preserved deliberately and marked in the source — Piero's
+weights are rolled once per session, because `SetProfiles` ran from
+`FormCreate`. It is not a bug.
+
+## Conventions
+
+- Player-facing text is Italian, with an English translation (`STORES.md` 1.3).
+  New text goes in both: Italian in the markup with a `data-i18n*` key, and
+  English in the `EN` table, or the `IT` and `EN` tables for strings the script
+  builds. The UI check fails on a key in only one language and on Italian left
+  on an English screen. Card, suit and deck names stay Italian in both.
+  Comments and commit messages are English.
+- No build step and no runtime dependencies. `playwright-core` is for the check
+  only and is gitignored.
+- The card art is the original 1997 bitmaps. Do not redraw it. `tools/pack_cards.py`
+  repacks it from the BMPs in `diegoami/briscola-JS`.
+- Write every GitHub issue or comment body to a file as UTF-8 without a
+  byte-order mark, and pass it with `--body-file`.

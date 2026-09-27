@@ -57,7 +57,7 @@ const seen = gh(['release', 'view', tag, '-R', RELEASES_REPO]);
 if (seen.status === 0) fail(`${tag} already exists on ${RELEASES_REPO}. Bump the version first.`);
 
 // --- the source must be tagged: vX.Y.Z on origin/main, at the packaged commit ---
-// A release is a milestone (CLAUDE.md): the reviewed candidate on main is
+// A release is a milestone (AGENTS.md): the reviewed candidate on main is
 // packaged, smoke-tested, then tagged, so the tag and the build name one commit.
 const sourceFile = path.join(distRoot, `${tag}.source`);
 if (!existsSync(sourceFile))
@@ -77,7 +77,7 @@ if (!tagged)
        `packaged commit, then publish:\n` +
        `  git tag -a ${tag} ${source.commit} -m "Discola ${version}"\n  git push origin ${tag}`);
 if (!ref.annotated)
-  fail(`origin's ${tag} is a lightweight tag; a milestone is an annotated tag (CLAUDE.md). Replace it:\n` +
+  fail(`origin's ${tag} is a lightweight tag; a milestone is an annotated tag (AGENTS.md). Replace it:\n` +
        `  git tag -d ${tag} && git push origin :refs/tags/${tag}\n` +
        `  git tag -a ${tag} ${tagged} -m "Discola ${version}" && git push origin ${tag}`);
 if (tagged !== source.commit)

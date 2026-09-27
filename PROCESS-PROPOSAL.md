@@ -49,7 +49,7 @@ It can be deleted when Claude Code is no longer used.
 ## Design
 
 1. **One file.** `AGENTS.md` holds everything: the project, the gates, the
-   rules, and a short process. `CLAUDE.md` is `@AGENTS.md` plus one line
+   rules, and a short process. `CLAUDE.md` is `@AGENTS.md` plus a comment
    saying why.
 2. **Keep project knowledge as it is.** The Principles, Verification (the three
    runs included), UI check, engine tests, card-size budget, *engine is a
@@ -57,7 +57,7 @@ It can be deleted when Claude Code is no longer used.
    only change is merging the two "after any … change" sections into
    Verification. Most of these rules exist because of a real defect, which
    the UI check skill records, so none of them is cut.
-3. **Process in about 30 lines**, in two parts:
+3. **Process in about 45 lines**, in two parts:
    - **Everyday work.** A non-trivial change starts as a proposal issue. Small
      fixes go straight to a PR. Branch from a fresh `origin/main`, open a PR
      with the gates green, and the owner merges. Use a worktree of your own
@@ -68,20 +68,21 @@ It can be deleted when Claude Code is no longer used.
      issue, an independent review before the tag, then package, smoke, tag.
      The release tools enforce the tag rules (`tools/publish_release.mjs`,
      `tools/source_tag.mjs`), so the prose only needs to name the steps.
-4. **Cut the review-handoff skill to about 110 lines.** The milestone issue
+4. **Cut the review-handoff skill to about 120 lines.** The milestone issue
    fields, the verdict format, the per-finding issues and the processing
    steps stay the same. The fetch and worktree steps become one paragraph
    that the template refers to.
-5. **Remove** *Who works where* (except the one bullet above), *Read this much*,
-   *Change the smallest thing* and *Keep command output short* (each boils
-   down to a principle line), *Sessions and handoff*, *Bootstrap*, *Split by
-   tool*, and the *Roles and identities* signatures.
+5. **Remove** *Who works where* (except the one bullet above), *Keep command
+   output short* and *Sessions and handoff* (generic tool advice), *Bootstrap*,
+   *Split by tool*, and *Roles and identities* (except the signature, now one
+   clause). *Read this much* shrinks to one paragraph, with the keystore rule
+   kept, and *Change the smallest thing* becomes a principle line.
 6. **Update references.** `DESKTOP.md`, `ANDROID.md`, `STORES.md`,
    `tools/publish_release.mjs`, `tools/source_tag.mjs` and `.gitignore` cite
    `CLAUDE.md` for the milestone rule. They now cite `AGENTS.md`.
 
-Result, in the draft on this branch: about 150 lines of `AGENTS.md`, 3 of
-`CLAUDE.md`, and a review-handoff skill of about 110. That is 536 lines down to
+Result, in the draft on this branch: 136 lines of `AGENTS.md`, 2 of
+`CLAUDE.md`, and a review-handoff skill of 122. That is 536 lines down to
 about 260, with no project rule lost.
 
 ## Owner decisions (recommended default first)
@@ -98,7 +99,7 @@ about 260, with no project rule lost.
    implementer already starts from `origin/main` after a fetch, and every
    reviewer from an exact SHA.
 4. **Keep `CLAUDE.md` as an import or delete it now.** *Default: keep the
-   3-line import* until you stop using Claude Code, then delete it.
+   2-line import* until you stop using Claude Code, then delete it.
 5. **Where the skills live.** *Default: leave them in `.claude/skills/`*, which
    OpenCode reads. Alternative: move them to `.agents/skills/`, the neutral
    path, in the PR that deletes `CLAUDE.md`.
@@ -117,5 +118,6 @@ about 260, with no project rule lost.
   `AGENTS.md`. Every project rule (gates, the three runs, the card budget,
   the engine transcription, Piero's weights, i18n, no build step, the
   original art, the keystore) is still there.
-- No code changed. The only edits under `tools/` are comments and two error
-  strings, so the gates cannot be affected. They still run in CI on the PR.
+- No code changed. The only edits under `tools/` are three comments and one
+  error string that now cite `AGENTS.md` (`node --check` passes on both files),
+  so the gates cannot be affected. They still run in CI on the PR.

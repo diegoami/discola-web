@@ -121,7 +121,7 @@ numbered on the shared version line (1.0.4 is the first). The process is local
 by design, for the reasons in [`ANDROID.md`](ANDROID.md) §5 — the machine doing
 a release holds the Android signing key and the Rust toolchain.
 
-A release is a milestone (`CLAUDE.md`). The version bump merges to `main` like
+A release is a milestone (`AGENTS.md`). The version bump merges to `main` like
 any other PR. The candidate is a commit on `main`, and it is reviewed on its
 milestone issue before anything is tagged. After AGREE:
 
