@@ -73,8 +73,23 @@ the code.
 
 MILESTONE: <vX.Y.Z> (a release; the tag is created only after your AGREE)
 THREAD: <milestone issue URL>
-CANDIDATE: main at <full sha>. Check out that SHA before you start, and stop
-and say so if you cannot.
+CANDIDATE: main at <full sha>. Before anything else, wherever you were
+started:
+1. Fetch: git fetch origin --tags (reviewing a pull request instead, also
+   git fetch origin pull/<N>/head). Not git pull: the checkout you start in
+   may be on another branch or hold local changes, and it is not yours.
+2. A commit you cannot see is not missing until you have fetched. Only if
+   git cat-file -t <full sha> still does not print "commit" after the
+   fetch, stop and say so.
+3. Review in a fresh, detached worktree of your own at that SHA, never in the
+   checkout you started in:
+     git worktree add --detach MAIN/../PROJECT-work/review-<first 12 of sha>-STAMP <full sha>
+   MAIN is the parent directory of git rev-parse --path-format=absolute
+   --git-common-dir, PROJECT is MAIN's name, and STAMP is the UTC time as
+   YYYYMMDDTHHMMSSZ, so the path is unique to this run. Remove no worktree
+   you did not make.
+4. In that worktree, git rev-parse HEAD must equal <full sha> before you
+   review. Every command from here on runs there.
 RANGE: git diff <previous tag>..<full sha>
 
 WHAT CHANGED: <two or three sentences across the range>
@@ -120,6 +135,7 @@ Rules:
    (gh issue comment <n> --body-file <file>):
    VERDICT: AGREE | BLOCK        (BLOCK if any MUST-FIX issue was opened)
    Reviewed: <sha>
+   Worktree: your worktree's path, relative to MAIN (../PROJECT-work/review-...)
    Issues opened: #n (MUST-FIX), #m (SHOULD), ... or "none"
    Owner decisions: questions only the owner can settle, or "none"
    Nits: one line each, or "none" (nits do not get issues)
@@ -127,7 +143,12 @@ Rules:
    — Reviewer (<tool>, <model>)
 ```
 
-For a re-review, the RANGE stays `<previous tag>..<new candidate>`, and the
+MAIN, PROJECT and STAMP stay as written: the reviewer works them out on its
+own machine.
+
+For a re-review, the CANDIDATE is the new `main` commit and the RANGE stays
+`<previous tag>..<new candidate>`. The reviewer fetches again and makes a new
+worktree at the new SHA, since no earlier checkout or worktree has it. The
 prompt also names the earlier verdict and the fix PRs, so the reviewer checks
 the fixes and whatever else landed with them.
 
