@@ -41,9 +41,11 @@ PR. The reviewer is a model that is not Claude, in whatever tool the owner picks
    on `main` (full SHA), the previous milestone tag, the PRs merged since then,
    and the gate results on the candidate.
 3. **Hand off.** Claude gives the owner one prompt from the `review-handoff`
-   skill. The reviewer checks out the candidate SHA and reviews
-   `git diff <previous tag>..<candidate SHA>`. It opens one issue per reproduced
-   finding and posts one verdict comment on the milestone issue.
+   skill. The reviewer fetches first, then reviews
+   `git diff <previous tag>..<candidate SHA>` in a fresh, detached worktree of
+   its own at the candidate SHA, never in the checkout it started in. It opens
+   one issue per reproduced finding and posts one verdict comment on the
+   milestone issue, naming the SHA and the worktree.
 4. **The tag waits.** On BLOCK, the findings are fixed in ordinary PRs. The
    candidate moves to the new `main` commit, and Claude gives a re-review
    prompt without being asked. If a third round still doesn't end in AGREE,
