@@ -31,9 +31,16 @@ OpenCode-specific review process.
   problem, findings with `file:line` references, the design, and open questions.
   Have Luna review that issue and comment. Iterate — reply, Luna re-reviews —
   until Luna posts an explicit **AGREE**. Do not implement before that.
-- **Implementation.** Implement the agreed design on a branch and open a PR that
-  references the issue. Have Luna review the PR against the agreed design; fix
-  and iterate until Luna posts an explicit **AGREE**. The owner merges.
+- **Implementation.** Implement the agreed design on a new branch in a worktree
+  of your own, `<project>-work/<branch>`, never in the main checkout (`CLAUDE.md`,
+  *Who works where*), and open a PR that references the issue. Have Luna review
+  the PR against the agreed design, in a worktree of its own under
+  `<project>-review/`, detached at the PR's head commit: it fetches first
+  (`git fetch origin pull/<N>/head`), stops only if `git cat-file -t <SHA>`
+  still does not print "commit" after the fetch, checks that
+  `git rev-parse HEAD` there equals the head commit before it reviews, and
+  installs the dependencies there (`npm ci`) before any check runs. Fix and
+  iterate until Luna posts an explicit **AGREE**. The owner merges.
 
 ### Bootstrap
 
