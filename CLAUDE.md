@@ -67,44 +67,49 @@ them there, as CI does: `npm ci`, then `npx playwright-core install chromium`
   folders; the fetch and commit checks still apply.
 - **A session removes only worktrees it made.**
 
-### Milestones and the independent review (when Claude implements)
+### Milestones and the independent review (every implementer)
 
-OpenCode implementing: skip this section, your review process is in
-`AGENTS.md`. Any tool given a review-handoff prompt: the prompt is your job,
-and this section is only context.
+This is the release process for whichever tool implements, Claude Code or
+OpenCode: "the implementer" below is that session. In OpenCode it comes on top
+of the per-PR review in `AGENTS.md`, not instead of it. Any tool given a
+review-handoff prompt: the prompt is your job, and this section is only context.
 
 **A milestone is a release**: an annotated tag `vX.Y.Z` on `main`, on the exact
 commit the published release is built from. Nothing else is a milestone: not a
 proposal, a PR, a run of PRs, or a change to a given file or to the process.
 Binaries go to `diegoami/discola-releases`, but the tag goes on this
 repository's `main`, and the release notes name the tagged commit. Each PR is
-still verified by Claude against its agreed design, and the owner still merges
-it, as above.
+still verified by the implementer against its agreed design, and the owner still
+merges it, as above.
 
 The independent review happens **per milestone, before the tag**, never per
-PR. The reviewer is a model that is not Claude, in whatever tool the owner picks
-(Codex, DeepSeek, or another), in a fresh session every time.
+PR. The reviewer is a model that implemented none of the release, in whatever
+tool the owner picks, in a fresh session every time.
 
-1. **Call it.** The owner calls a milestone, or Claude proposes one when a
-   release is due or a coherent set of work has landed.
+1. **Call it.** The owner calls a milestone, or the implementer proposes one
+   when a release is due or a coherent set of work has landed.
 2. **Open the milestone issue.** It lists the proposed tag, the candidate commit
    on `main` (full SHA), the previous milestone tag, the PRs merged since then,
    and the gate results on the candidate.
-3. **Hand off.** Claude gives the owner one prompt from the `review-handoff`
-   skill. The reviewer fetches first, then reviews
-   `git diff <previous tag>..<candidate SHA>` in a fresh, detached worktree of
-   its own at the candidate SHA (`<project>-review/`, *Who works where*), never
-   in the checkout it started in. It opens
-   one issue per reproduced finding and posts one verdict comment on the
-   milestone issue, naming the SHA and the worktree.
+3. **Hand off.** The implementer gives the owner one prompt from the
+   `review-handoff` skill (`.claude/skills/review-handoff/SKILL.md`; a tool
+   without Claude Code's skills reads it as a document). The reviewer fetches
+   first, then reviews `git diff <previous tag>..<candidate SHA>` in a fresh,
+   detached worktree of its own at the candidate SHA (`<project>-review/`, *Who
+   works where*), never in the checkout it started in. It opens one issue per
+   reproduced finding and posts one verdict comment on the milestone issue,
+   naming the SHA and the worktree.
 4. **The tag waits.** On BLOCK, the findings are fixed in ordinary PRs. The
-   candidate moves to the new `main` commit, and Claude gives a re-review
-   prompt without being asked. If a third round still doesn't end in AGREE,
-   the milestone goes to the owner.
-5. **AGREE.** Claude packages the release from the reviewed SHA and runs the
-   manual smoke of the packaged build (`DESKTOP.md`). Then it tags exactly that
-   SHA, never a later commit, and the owner publishes. Work merged after the
-   candidate belongs to the next milestone.
+   candidate moves to the new `main` commit, and the implementer gives a
+   re-review prompt without being asked. If a third round still doesn't end in
+   AGREE, the milestone goes to the owner.
+5. **AGREE.** The implementer packages the release from the reviewed SHA and
+   runs the manual smoke of the packaged build (`DESKTOP.md`). Until packaging
+   moves into a worktree (a planned follow-up), this is the one step that runs
+   in the main checkout, as `DESKTOP.md` §Releasing says, because the signing
+   key lives there. Then it tags exactly that SHA, never a later commit, and the
+   owner publishes. Work merged after the candidate belongs to the next
+   milestone.
 6. **Tag without a review.** The owner may do this, and the milestone issue
    records it.
 

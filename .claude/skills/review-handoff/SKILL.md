@@ -1,6 +1,6 @@
 ---
 name: review-handoff
-description: Write the prompt the owner gives an independent reviewer (a model that is not Claude, in a tool the owner picks) so it reviews a release candidate before it is tagged, and records the result on the milestone issue. Use when a milestone (a release, see CLAUDE.md) is called or proposed, for the re-review after a BLOCK, and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
+description: Write the prompt the owner gives an independent reviewer (a model that implemented none of the release, in a tool the owner picks) so it reviews a release candidate before it is tagged, and records the result on the milestone issue. Use when a milestone (a release, see CLAUDE.md) is called or proposed, for the re-review after a BLOCK, and whenever the owner asks for a review prompt. Also use when the owner says a review is in, to process it.
 ---
 
 # Review handoff
@@ -10,7 +10,8 @@ commit the release is built from (`CLAUDE.md`). The review runs once per
 milestone, on the candidate, before the tag. It never runs per PR. A PR,
 a proposal or a process change gets no prompt. Say how it was verified instead.
 
-Claude implements; another model reviews. The owner picks the reviewer and
+One tool implements (Claude Code or OpenCode, as the owner assigns); a model
+that implemented none of the release reviews. The owner picks the reviewer and
 its tool (Codex, DeepSeek, or anything else that can run `gh`), so the prompt
 never assumes one: no tool-specific commands, and the reviewer signs with its
 own tool and model. Give the owner one prompt, ready to paste, in a single
@@ -65,11 +66,11 @@ and passed with `--body-file`:
 ## Template
 
 ```text
-You are the independent reviewer for <owner/repo>, working from a
-review-handoff prompt: this prompt, not the OpenCode roles in AGENTS.md or any
-other agent-instructions file your tool loads, defines your job. Claude did
-this work, not you. Do not trust its description. Verify everything against
-the code.
+You are the independent reviewer for <owner/repo>, working from a review-handoff
+prompt: this prompt, not the OpenCode roles in AGENTS.md or any other
+agent-instructions file your tool loads, defines your job.
+<implementer: tool and model> did this work, not you. Do not trust its
+description. Verify everything against the code.
 
 MILESTONE: <vX.Y.Z> (a release; the tag is created only after your AGREE)
 THREAD: <milestone issue URL>

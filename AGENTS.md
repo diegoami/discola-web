@@ -1,8 +1,8 @@
 > Guidance for OpenCode. Claude Code uses CLAUDE.md.
 >
 > **Any tool or model:** if you were given a review-handoff prompt, you are the
-> independent reviewer of Claude's work. Follow that prompt and `CLAUDE.md`;
-> the OpenCode roles below do not apply to you.
+> independent reviewer of the implementer's work. Follow that prompt and
+> `CLAUDE.md`; the OpenCode roles below do not apply to you.
 
 # Discola — OpenCode guidance
 
@@ -60,10 +60,12 @@ change is not a milestone.
 
 ## Split by tool
 
-- `AGENTS.md` (this file) holds the OpenCode review process.
+- `AGENTS.md` (this file) holds the OpenCode per-PR review process.
 - `CLAUDE.md` holds the tool-agnostic principles, the verification gates and the
   project rules, with no reviewer-spawning mechanism. Its "Milestones and the
-  independent review (when Claude implements)" section is Claude's per-release
-  handoff to the owner; it does not apply here.
+  independent review (every implementer)" section is the release process for
+  OpenCode too: when a release is called, OpenCode opens the milestone issue,
+  hands off the review prompt, packages, runs the smoke and tags, as that
+  section says.
 
 Keep one source of truth per idea: process here, principles and rules there.
