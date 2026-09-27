@@ -5,7 +5,7 @@
  * beside the staged directory so the SHA256SUMS.txt set stays exactly the
  * assets). The publisher refuses to publish unless `vX.Y.Z` exists on origin,
  * on main, at that very commit: a release is packaged from the reviewed
- * candidate on main and tagged there (CLAUDE.md, milestones). The tree is
+ * candidate on main and tagged there (AGENTS.md, Releases). The tree is
  * recorded for the reader; the check is on the commit.
  *
  * Record format, LF endings:
@@ -72,7 +72,7 @@ export function tagCommit(lsRemote, tag){
 /**
  * The tag as `{ commit, annotated }`, or null when it is absent. Only an
  * annotated tag lists a peeled `^{}` line, which is how the two are told apart:
- * a milestone is an annotated tag (CLAUDE.md), so the publisher refuses the
+ * a milestone is an annotated tag (AGENTS.md), so the publisher refuses the
  * other kind.
  */
 export function tagRef(lsRemote, tag){
