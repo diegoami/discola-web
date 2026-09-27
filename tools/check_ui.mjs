@@ -231,10 +231,18 @@ const SCREENS = [
       await p.evaluate(`(${endHand})()`);
       await press();                                     // end screen -> start
       await press();                                     // start, no hand -> exit
+      // "Cambia avversario" reaches the start screen with the hand still alive
+      // (#60): there Back has to ask before leaving, and Back again cancels.
+      await p.click('#startPlay');
+      await p.click('#btnSettings');
+      await p.click('#changeOpponent');
+      await press();                                     // start, hand alive -> confirm
+      await press();                                     // confirm -> dismissed
     },
     check: () => {
       const want = ['viewTable/exit0', 'viewTable+confirm/exit0', 'viewTable/exit0',
-                    'viewTable+confirm/exit0', 'viewStart/exit0', 'viewStart/exit0', 'viewStart/exit1'];
+                    'viewTable+confirm/exit0', 'viewStart/exit0', 'viewStart/exit0', 'viewStart/exit1',
+                    'viewStart+confirm/exit1', 'viewStart/exit1'];
       const got = window.__trail ?? [];
       if (typeof window.__back !== 'function') return ['the page registered no backButton handler'];
       return got.join() === want.join() ? []
@@ -278,6 +286,37 @@ const SCREENS = [
       const table = document.querySelector('#viewTable'), panel = document.querySelector('#result');
       return table.hidden || panel.hidden
         ? ['Back from Impostazioni did not return to the end screen'] : [];
+    } },
+  // Switching the language from the end screen's Impostazioni redoes the
+  // verdict and the note it goes back to (#61), both ways. Each stop records
+  // what the screen says next to what the language in force says it should.
+  { name: 'result language', open: async p => {
+      const snap = () => p.evaluate(() => (window.__said ??= []).push({
+        lang: state.lang, shown: !el.result.hidden,
+        title: el.resultTitle.textContent, note: el.resultNote.textContent,
+        want: [t('won'), t('noteLoose', finished.opponent)] }));
+      await endMatch(p);                                   // 68-52: won, by 16
+      await snap();
+      const [first, other] = await p.evaluate(() => [state.lang, state.lang === 'it' ? 'en' : 'it']);
+      for (const lang of [other, first]) {
+        await p.click('#resultSettings');
+        await p.selectOption('#langSel', lang);
+        await p.click('#viewSettings [data-back]');
+        await snap();
+      }
+    },
+    check: () => {
+      const said = window.__said ?? [];
+      if (said.length !== 3) return [`recorded ${said.length} stops, want 3`];
+      const out = [];
+      if (said[0].lang === said[1].lang || said[2].lang !== said[0].lang)
+        out.push(`the language went ${said.map(s => s.lang).join(' → ')}`);
+      for (const s of said) {
+        if (!s.shown) out.push(`${s.lang}: the end screen is not showing`);
+        if (s.title !== s.want[0] || s.note !== s.want[1])
+          out.push(`${s.lang}: the end screen says "${s.title}" / "${s.note}", want "${s.want.join('" / "')}"`);
+      }
+      return out;
     } },
   // A pick made on the end screen is the one the next hand uses, and the start
   // screen's copy of the picker agrees; Ancora takes the screen and the inert
