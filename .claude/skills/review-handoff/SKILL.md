@@ -75,15 +75,19 @@ MILESTONE: <vX.Y.Z> (a release; the tag is created only after your AGREE)
 THREAD: <milestone issue URL>
 CANDIDATE: main at <full sha>. Before anything else, wherever you were
 started:
-1. Fetch: git fetch origin --tags (reviewing a pull request instead, also
-   git fetch origin pull/<N>/head). Not git pull: the checkout you start in
+1. Fetch first:
+     git fetch origin --tags <full sha>
+   Naming the SHA brings an untagged candidate even into a clone whose
+   refspec leaves out main, such as a single-branch or shallow clone a
+   sandbox or a cloud session makes. Reviewing a pull request instead, also
+   git fetch origin pull/<N>/head. Not git pull: the checkout you start in
    may be on another branch or hold local changes, and it is not yours.
 2. A commit you cannot see is not missing until you have fetched. Only if
    git cat-file -t <full sha> still does not print "commit" after the
    fetch, stop and say so.
-3. Review in a fresh, detached worktree of your own at that SHA, never in the
-   checkout you started in:
-     git worktree add --detach MAIN/../PROJECT-work/review-<first 12 of sha>-STAMP <full sha>
+3. Review in a fresh, detached worktree of your own at exactly that SHA,
+   never in the checkout you started in:
+     git worktree add --detach MAIN/../PROJECT-review/review-<first 12 of sha>-STAMP <full sha>
    MAIN is the parent directory of git rev-parse --path-format=absolute
    --git-common-dir, PROJECT is MAIN's name, and STAMP is the UTC time as
    YYYYMMDDTHHMMSSZ, so the path is unique to this run. Remove no worktree
@@ -135,7 +139,7 @@ Rules:
    (gh issue comment <n> --body-file <file>):
    VERDICT: AGREE | BLOCK        (BLOCK if any MUST-FIX issue was opened)
    Reviewed: <sha>
-   Worktree: your worktree's path, relative to MAIN (../PROJECT-work/review-...)
+   Worktree: your worktree's path, relative to MAIN (../PROJECT-review/review-...)
    Issues opened: #n (MUST-FIX), #m (SHOULD), ... or "none"
    Owner decisions: questions only the owner can settle, or "none"
    Nits: one line each, or "none" (nits do not get issues)
