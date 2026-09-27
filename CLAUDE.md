@@ -24,6 +24,15 @@ the parent directory of `git rev-parse --path-format=absolute --git-common-dir`;
 `<project>` is its name, and `<default>` is the branch
 `git symbolic-ref --short refs/remotes/origin/HEAD` names.
 
+**Prerequisite on Windows:** `git config --global core.longpaths true`, since
+nested worktree paths can pass the path limit on the Android sources. The
+owner sets it on the machine; a session does not.
+
+A worktree starts without dependencies. Before any check runs in one, install
+them there, as CI does: `npm ci`, then `npx playwright-core install chromium`
+(a no-op when the machine already has that revision). Never copy or link
+`node_modules` from the main checkout.
+
 - **`<project>/`, the main checkout, is the planner's or orchestrator's only.**
   No implementer or reviewer works there, and none checks out a branch or
   commit there (no `git checkout`, `git switch` or `gh pr checkout`).
@@ -40,7 +49,8 @@ the parent directory of `git rev-parse --path-format=absolute --git-common-dir`;
   That includes a new session the owner opens in `<project>/` and asks to
   implement a feature, as well as OpenCode, Codex, a headless session, or a
   worktree the main session makes. If the branch or the path exists, add a UTC
-  stamp to both. Name the worktree in every command, since a tool's shell may
+  stamp to both. Install the dependencies in it (above) before running a gate.
+  Name the worktree in every command, since a tool's shell may
   return to `<project>/` after each one. A session about to edit, commit or
   switch branches in `<project>/` stops and makes the worktree first. After the
   merge, it removes the worktree it made (`git worktree remove`) and deletes
@@ -49,7 +59,8 @@ the parent directory of `git rev-parse --path-format=absolute --git-common-dir`;
   at the exact commit under review, under
   `<project>-review/review-<SHA first 12>-<UTC stamp YYYYMMDDTHHMMSSZ>` beside
   the main checkout. The steps (fetch, check the commit, make the worktree,
-  check `HEAD`) are in the `review-handoff` skill's CANDIDATE block.
+  check `HEAD`, install the dependencies) are in the `review-handoff` skill's
+  CANDIDATE block.
 - **In a cloud session**, the session's own clone takes the place of these
   folders; the fetch and commit checks still apply.
 - **A session removes only worktrees it made.**

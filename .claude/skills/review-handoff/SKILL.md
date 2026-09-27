@@ -94,6 +94,13 @@ started:
    you did not make.
 4. In that worktree, git rev-parse HEAD must equal <full sha> before you
    review. Every command from here on runs there.
+5. Before any check runs in that worktree, install the dependencies there,
+   as CI does: npm ci, then npx playwright-core install chromium. Never copy
+   or link them from the main checkout.
+On Windows, git config --global core.longpaths true is a prerequisite, since
+nested worktree paths can pass the path limit. The owner sets it; do not set
+it yourself. If it is missing and step 3 fails with "Filename too long", stop
+and say so.
 RANGE: git diff <previous tag>..<full sha>
 
 WHAT CHANGED: <two or three sentences across the range>

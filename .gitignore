@@ -7,3 +7,6 @@ dist-release
 
 # Store assets rendered by tools/store_assets.mjs (STORES.md 1.5).
 dist-store
+
+# Worktrees of Claude Code forks (CLAUDE.md, Who works where).
+.claude/worktrees/
