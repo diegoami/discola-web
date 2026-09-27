@@ -42,6 +42,15 @@ These are the loading rules the design relies on:
   `@AGENTS.md` line.
 - OpenCode discovers skills in `.opencode/skills/`, `.agents/skills/` **and**
   `.claude/skills/`, so the two existing skills work in both tools unchanged.
+- A command (`.opencode/commands/*.md`) can run under a named agent
+  (`.opencode/agents/*.md`) with its own permissions. For its model, the
+  command's `model` wins, then the agent's, then `opencode run -m`, then the
+  session's (`SessionPrompt.command` in `packages/opencode/src/session/prompt.ts`).
+  `opencode run` without `--auto` auto-rejects any permission that would ask.
+
+Checked against `sst/opencode` at `b471c2b` (26 September 2026): the docs in
+`packages/web/src/content/docs/` (`rules.mdx`, `skills.mdx`, `commands.mdx`,
+`agents.mdx`, `permissions.mdx`, `cli.mdx`) and the source cited above.
 
 So `AGENTS.md` becomes the one source, and `CLAUDE.md` shrinks to an import.
 It can be deleted when Claude Code is no longer used.
@@ -60,18 +69,28 @@ It can be deleted when Claude Code is no longer used.
 3. **Process in about 45 lines**, in two parts:
    - **Everyday work.** A non-trivial change starts as a proposal issue. Small
      fixes go straight to a PR. Branch from a fresh `origin/main`, open a PR
-     with the gates green, and the owner merges. Use a worktree of your own
-     when another session may share the checkout, with the install and
-     Windows `longpaths` notes in one bullet. A second-model PR review happens
-     **when the owner asks for it**, not by default.
+     with the gates green, and the owner merges. After the merge, update the
+     local `main` and delete the branch. Worktrees are ad hoc, only for
+     parallel work, with the install and Windows `longpaths` notes in one
+     bullet. **No per-PR or per-design review.**
    - **Releases.** These don't change: an annotated tag on `main`, a milestone
      issue, an independent review before the tag, then package, smoke, tag.
+     The review is now started with one command on a model you name:
+     `opencode run -m <provider/model> --command review-release <issue>`.
      The release tools enforce the tag rules (`tools/publish_release.mjs`,
      `tools/source_tag.mjs`), so the prose only needs to name the steps.
-4. **Cut the review-handoff skill to about 120 lines.** The milestone issue
-   fields, the verdict format, the per-finding issues and the processing
-   steps stay the same. The fetch and worktree steps become one paragraph
-   that the template refers to.
+4. **Replace the pasted prompt with an OpenCode agent and command.**
+   `.opencode/agents/release-reviewer.md` holds the reviewer's job once:
+   set-up, rules, the per-finding issues and the verdict format, all as before.
+   It is a `primary` agent with `edit: deny` and `external_directory: allow`,
+   so it can make its worktree next to the checkout but cannot edit.
+   `.opencode/commands/review-release.md` runs it on a milestone issue
+   number. Neither sets a model, so the model you name is the one that
+   reviews. The milestone issue now carries what the prompt used to carry
+   (what changed, claims to verify, owner decisions), and the reviewer reads
+   it with `gh issue view`. The `review-handoff` skill shrinks to "fill in
+   the issue, give the command, process the result". Another tool can still
+   review: tell it to follow the agent file.
 5. **Remove** *Who works where* (except the one bullet above), *Keep command
    output short* and *Sessions and handoff* (generic tool advice), *Bootstrap*,
    *Split by tool*, and *Roles and identities* (except the signature, now one
@@ -81,33 +100,29 @@ It can be deleted when Claude Code is no longer used.
    `tools/publish_release.mjs`, `tools/source_tag.mjs` and `.gitignore` cite
    `CLAUDE.md` for the milestone rule. They now cite `AGENTS.md`.
 
-Result, in the draft on this branch: 136 lines of `AGENTS.md`, 2 of
-`CLAUDE.md`, and a review-handoff skill of 122. That is 536 lines down to
-about 260, with no project rule lost.
+Result, in the draft on this branch: 138 lines of `AGENTS.md`, 2 of
+`CLAUDE.md`, a review-handoff skill of 68, and 83 in `.opencode/`. That is
+536 lines down to about 290, with no project rule lost.
 
-## Owner decisions (recommended default first)
+## Owner decisions (settled)
 
-1. **Per-PR and per-design review in OpenCode.** *Default: only when you ask.*
-   A reviewer subagent on every design and every PR doubles each change's
-   cost, while the release review already runs before anything ships.
-   Alternative: keep it for PRs that touch `public/engine.js` or
-   `public/index.html`.
-2. **Mandatory worktrees.** *Default: only when another session may share the
-   checkout.* Alternative: keep them mandatory, which means about 40 lines
-   come back.
-3. **The "update the main checkout on start" rule.** *Default: drop it.* Every
-   implementer already starts from `origin/main` after a fetch, and every
-   reviewer from an exact SHA.
-4. **Keep `CLAUDE.md` as an import or delete it now.** *Default: keep the
-   2-line import* until you stop using Claude Code, then delete it.
-5. **Where the skills live.** *Default: leave them in `.claude/skills/`*, which
-   OpenCode reads. Alternative: move them to `.agents/skills/`, the neutral
-   path, in the PR that deletes `CLAUDE.md`.
-6. **Optional follow-up:** make the per-PR reviewer an OpenCode agent file
-   (`.opencode/agents/reviewer.md`, set to read-only). Its role and model
-   would then live in config instead of prose. This is not in the draft,
-   because the frontmatter could not be checked against the current OpenCode
-   docs from this session.
+1. **Review:** no per-PR or per-design review. Only releases are reviewed,
+   started from OpenCode on a model you name (design point 4).
+2. **Worktrees:** ad hoc, only for parallel work.
+3. **After a merge:** update the local `main` with `git pull --ff-only` and
+   delete the merged branch. This replaces "update the main checkout on
+   start": nothing depends on the local `main`, since every branch starts
+   from a fresh `origin/main`.
+4. **`CLAUDE.md`:** kept as a 2-line import until Claude Code is no longer
+   used, then deleted.
+5. **Skills:** kept in `.claude/skills/`, which OpenCode reads.
+
+## Still open
+
+- No review has actually been run with `/review-release` yet: this session
+  has no model credentials for OpenCode. The configuration does load (see
+  below). The first release under this process is the real test, or you can
+  try it first on an old milestone issue.
 
 ## How it was checked
 
@@ -118,6 +133,15 @@ about 260, with no project rule lost.
   `AGENTS.md`. Every project rule (gates, the three runs, the card budget,
   the engine transcription, Piero's weights, i18n, no build step, the
   original art, the keystore) is still there.
+- The model precedence and the auto-reject behaviour were read from
+  OpenCode's source, not inferred from its docs. That is why the agent and
+  the command leave `model` unset, and why the agent allows
+  `external_directory` explicitly instead of relying on `--auto`.
+- Loaded with OpenCode 1.18.32 (`npx opencode-ai`) in this repository:
+  `opencode agent list` shows `release-reviewer (primary)` with `edit: deny`
+  and `external_directory: allow`. `opencode debug config` shows the
+  `review-release` command bound to that agent, with no model. `opencode debug
+  skill` finds `ui-check` and `review-handoff` in `.claude/skills/`.
 - No code changed. The only edits under `tools/` are three comments and one
   error string that now cite `AGENTS.md` (`node --check` passes on both files),
   so the gates cannot be affected. They still run in CI on the PR.

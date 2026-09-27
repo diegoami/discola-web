@@ -17,19 +17,19 @@ This is the one instructions file, for every tool. `CLAUDE.md` only imports it.
 - **Branch from a fresh `origin/main`** (`git fetch origin` first), open a PR
   that references the issue, and verify it against the agreed design with the
   gates green (*Verification*). The owner merges.
-- **Use a worktree of your own when another session may share the checkout**:
-  `git worktree add --no-track -b <branch> ../discola-web-work/<branch> origin/main`.
-  A worktree starts without dependencies, so install them there as CI does
-  (`npm ci`, then `npx playwright-core install chromium`), and never link
-  `node_modules` from the main checkout. On Windows, nested paths need
-  `git config --global core.longpaths true`. The owner sets that, not a session.
-  Remove the worktree you made after the merge, and no other.
-- **A second-model review of a PR happens when the owner asks for it.** The
-  reviewer is a different model from the implementer. It reviews the PR's head
-  SHA, fetched and checked out detached in a worktree of its own, and edits
-  nothing. It posts one comment, AGREE or BLOCK, with reproduced findings,
-  signed with its role and model. A BLOCK goes to the owner. The implementer
-  does not override it.
+- **After the owner merges**: in the main checkout,
+  `git switch main && git pull --ff-only`, then `git branch -d <branch>`.
+  Delete the remote branch too, unless GitHub already did. Nothing depends
+  on the local `main` being current, since every branch starts from a fresh
+  `origin/main`.
+- **Worktrees are ad hoc**: use one only to work in parallel with another
+  session. Make it with
+  `git worktree add --no-track -b <branch> ../discola-web-work/<branch> origin/main`,
+  and install the dependencies in it as CI does (`npm ci`, then
+  `npx playwright-core install chromium`). Never link `node_modules`. On
+  Windows, nested paths need `git config --global core.longpaths true`, which
+  the owner sets. Remove the worktree after the merge.
+- **No per-PR review.** The independent review runs once per release, below.
 
 ## Releases
 
@@ -42,11 +42,13 @@ Nothing but a release is a milestone.
    the PRs merged since, and the gate results on the candidate.
 2. **Get an independent review before the tag.** A model that implemented none
    of the release reviews `<previous tag>..<candidate>` in a fresh session.
-   Its prompt comes from the `review-handoff` skill (`.claude/skills/`). It
-   opens one issue per reproduced finding and posts one verdict comment. On
-   BLOCK, fix the MUST-FIX findings in ordinary PRs, move the candidate, and
-   give the re-review prompt. After three rounds without AGREE, the owner
-   decides. The owner may also tag without a review, and the issue records it.
+   The `review-handoff` skill fills in the issue, and the owner starts the
+   review with `opencode run -m <provider/model> --command review-release <issue>`.
+   The reviewer follows `.opencode/agents/release-reviewer.md`: it opens one
+   issue per reproduced finding and posts one verdict comment. On BLOCK, fix
+   the MUST-FIX findings in ordinary PRs, move the candidate, and review
+   again. After three rounds without AGREE, the owner decides. The owner may
+   also tag without a review, and the issue records it.
 3. **After AGREE**, package from exactly the reviewed SHA, smoke the packaged
    build, tag that SHA and publish (`DESKTOP.md` §Releasing). Work merged after
    the candidate waits for the next release.
@@ -92,7 +94,7 @@ a PR (`Fixes #n`) or rebut it on the issue with evidence.
 ## What to read
 
 Normally inspect: `public/index.html`, `public/engine.js`, `tools/*`, the root
-`*.md`, `.github/workflows/*`, `.claude/skills/*`. Normally ignore
+`*.md`, `.github/workflows/*`, `.claude/skills/*`, `.opencode/*`. Normally ignore
 `node_modules/`, `public/decks/`, `public/fonts/`, `public/icons/`, `assets/`,
 `dist-release/`, Gradle wrapper files and any binary. Read `package-lock.json`
 only when dependencies are the task, and open files under `mobile/android/` one
