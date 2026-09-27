@@ -91,7 +91,7 @@ started:
    MAIN is the parent directory of git rev-parse --path-format=absolute
    --git-common-dir, PROJECT is MAIN's name, and STAMP is the UTC time as
    YYYYMMDDTHHMMSSZ, so the path is unique to this run. Remove no worktree
-   you did not make.
+   you did not make, and remove your own once your verdict is posted.
 4. In that worktree, git rev-parse HEAD must equal <full sha> before you
    review. Every command from here on runs there.
 5. Before any check runs in that worktree, install the dependencies there,

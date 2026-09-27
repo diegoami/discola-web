@@ -36,6 +36,15 @@ them there, as CI does: `npm ci`, then `npx playwright-core install chromium`
 - **`<project>/`, the main checkout, is the planner's or orchestrator's only.**
   No implementer or reviewer works there, and none checks out a branch or
   commit there (no `git checkout`, `git switch` or `gh pr checkout`).
+- **Every session opened in `<project>/` starts by updating it**, whatever it
+  is asked to do: `git fetch origin`, then `git pull --ff-only`, but only if it
+  is on `<default>` (`git branch --show-current`) and has no uncommitted changes
+  (`git status --porcelain` prints nothing). Otherwise it leaves `<project>/` as
+  it is and tells the owner why. It never resets, stashes or merges there.
+  There may be no standing orchestrator, since a session asked to implement
+  moves into a worktree, so the next session to start brings `<project>/` up to
+  date. Nothing relies on it meanwhile: implementers start from
+  `origin/<default>`, reviewers from an exact SHA.
 - **Every session that implements works in a worktree of its own**, one per
   change, never in `<project>/`. A Claude Code forked subagent uses the tool's
   own worktree isolation (`.claude/worktrees/`). Every other session first
@@ -65,7 +74,10 @@ them there, as CI does: `npm ci`, then `npx playwright-core install chromium`
   CANDIDATE block.
 - **In a cloud session**, the session's own clone takes the place of these
   folders; the fetch and commit checks still apply.
-- **A session removes only worktrees it made.**
+- **A session removes only worktrees it made**: the implementer its own after
+  the merge, if it is still running then; a reviewer its own once its verdict
+  is recorded. Leftovers are the owner's to clean up, with a tool that proves
+  each removal safe. Sessions don't guess which worktrees are unused.
 
 ### Milestones and the independent review (when Claude implements)
 
