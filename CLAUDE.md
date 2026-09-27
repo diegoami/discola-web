@@ -43,13 +43,15 @@ them there, as CI does: `npm ci`, then `npx playwright-core install chromium`
   and works only there:
 
   ```sh
-  git worktree add -b <branch> <main>/../<project>-work/<branch> origin/<default>
+  git worktree add --no-track -b <branch> <main>/../<project>-work/<branch> origin/<default>
   ```
 
   That includes a new session the owner opens in `<project>/` and asks to
   implement a feature, as well as OpenCode, Codex, a headless session, or a
   worktree the main session makes. If the branch or the path exists, add a UTC
-  stamp to both. Install the dependencies in it (above) before running a gate.
+  stamp to both. `--no-track` keeps the branch from tracking
+  `origin/<default>`, so its first push, `git push -u origin <branch>`, goes to
+  its own branch. Install the dependencies in it (above) before running a gate.
   Name the worktree in every command, since a tool's shell may
   return to `<project>/` after each one. A session about to edit, commit or
   switch branches in `<project>/` stops and makes the worktree first. After the
