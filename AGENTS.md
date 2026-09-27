@@ -41,8 +41,9 @@ a blind spot (`CLAUDE.md`, *Principles*).
   *Who works where*), and open a PR that references the issue. Have the reviewer
   review the PR against the agreed design, in a worktree of its own under
   `<project>-review/`, detached at the PR's head commit: it fetches first
-  (`git fetch origin pull/<N>/head`), stops only if `git cat-file -t <SHA>`
-  still does not print "commit" after the fetch, checks that
+  (`git fetch origin --tags <SHA>`, then `git fetch origin pull/<N>/head`; never
+  `git pull`), stops only if `git cat-file -t <SHA>` still does not print
+  "commit" after the fetch, checks that
   `git rev-parse HEAD` there equals the head commit before it reviews, and
   installs the dependencies there (`npm ci`) before any check runs. Fix and
   iterate until the reviewer posts an explicit **AGREE**. The owner merges.
