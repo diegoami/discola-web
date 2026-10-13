@@ -35,7 +35,7 @@ Three things had to change to get there, all of them small:
   `0.0.0.0` so the portrait layout can be opened on a phone on the same network.
 - **`package.json`** — so the three commands above exist and `playwright-core`
   is pinned. No runtime dependencies; `playwright-core` is dev-only and
-  `node_modules` stays gitignored, as `CLAUDE.md` requires.
+  `node_modules` stays gitignored, as `AGENTS.md` requires.
 
 `.gitignore`'s comment pointed at `tools/check_layout.mjs`, which was renamed to
 `check_ui.mjs`; corrected.
@@ -114,7 +114,7 @@ can run in a release script. It writes `assets/icon-{only,foreground,background}
 at 1024 for `@capacitor/assets` to expand into every Android density, and the
 web sizes into `public/icons/`. The scale is nearest-neighbour on purpose: the
 source is a 50x50 patch of 1997 bitmap, and interpolation is redrawing by
-another name, which `CLAUDE.md` rules out.
+another name, which `AGENTS.md` rules out.
 
 It also writes the desktop icons into `desktop/src-tauri/icons/`, including a
 multi-size `icon.ico`.
@@ -375,7 +375,7 @@ Gradle needs `JAVA_HOME` set to JDK 21 here
 (`%USERPROFILE%\.jdks\jbr-21.0.11`); Android Studio's bundled JBR is Java 25
 and Gradle 8.14.3 rejects it.
 
-**Tag the source.** A release is a milestone (`CLAUDE.md`), reviewed on its
+**Tag the source.** A release is a milestone (`AGENTS.md`), reviewed on its
 candidate commit on `main` before it is tagged. After AGREE:
 
 1. Package from exactly that commit. The packager refuses a working tree that

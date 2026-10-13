@@ -10,7 +10,7 @@ listed on either store yet.
 - **Open before any store build (owner):** the device checks for 1.1 (Back) and
   1.4 (edge-to-edge), and approval of the draft listing text in 1.5.
 - **The first release that can go to a store is the next milestone, v1.0.3.**
-  v1.0.5 (`e46c254`) predates Phase 1: it has no English, no privacy link and
+  v1.0.2 predates Phase 1: it has no English, no privacy link and
   no Back handling. v1.0.3 is reviewed on its candidate and tagged like any
   other release (`CLAUDE.md`), and its build is what Phase 2 uploads.
 - **Next:** Phase 2 (itch.io). Tressette and Scopetta have not started Phase 1.
@@ -53,7 +53,7 @@ Checked on 2026-09-25; re-check before each phase, because they move.
 
 ## The playbook
 
-Each step is an ordinary PR, verified per `CLAUDE.md`. None is a milestone. A
+Each step is an ordinary PR, verified per `AGENTS.md`. None is a milestone. A
 store release is a milestone like any other: reviewed on its candidate, tagged,
 built from the tag, and published by the owner. **For Tressette and Scopetta**,
 each step says what carries over. The three games share their page structure,
