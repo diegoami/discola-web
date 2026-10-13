@@ -9,10 +9,10 @@ the owner's decisions are on #48.
 listed on either store yet.
 - **Open before any store build (owner):** the device checks for 1.1 (Back) and
   1.4 (edge-to-edge), and approval of the draft listing text in 1.5.
-- **The first release that can go to a store is the next milestone, v1.0.6.**
-  v1.0.5 (`e46c254`) predates Phase 1: it has no English, no privacy link and
-  no Back handling. v1.0.6 is reviewed on its candidate and tagged like any
-  other release (`AGENTS.md`), and its build is what Phase 2 uploads.
+- **The first release that can go to a store is the next milestone, v1.0.3.**
+  v1.0.2 predates Phase 1: it has no English, no privacy link and
+  no Back handling. v1.0.3 is reviewed on its candidate and tagged like any
+  other release (`CLAUDE.md`), and its build is what Phase 2 uploads.
 - **Next:** Phase 2 (itch.io). Tressette and Scopetta have not started Phase 1.
 
 ## Decisions
@@ -135,7 +135,7 @@ not enough: the page only gets `window.Capacitor` if Capacitor can inject it.
 `JSInjector.getInjectedStream` puts the bridge after a literal `<head>` or
 before a literal `</head>` in the served HTML. With neither, it logs "Unable to
 inject Capacitor, Plugins won't work" and serves the page bare. This page had
-left both out, as HTML allows, so every APK up to the `v1.0.6-smoke` build ran
+left both out, as HTML allows, so every APK up to the `v1.0.3-smoke` build ran
 with no bridge, and Back and Esci did nothing on a device. The `android back`
 row passed throughout, because `fakeCapacitor` builds the object itself.
 - **The fix:** an explicit `</head>` then `<body>` right after the stylesheet, so
@@ -152,7 +152,7 @@ row passed throughout, because `fakeCapacitor` builds the object itself.
   to precede the page's first `<script>`. It fails on `542e316` (no tag) and on
   #63's first commit `d73881d` (the tag in a comment), as the only failure each
   time (143 pass, 1 FAIL), and passes with the fix (144 pass).
-- **Verified:** on the `v1.0.6-smoke` APK's page, replaying JSInjector gives "NOT
+- **Verified:** on the `v1.0.3-smoke` APK's page, replaying JSInjector gives "NOT
   injected". `capacitor.plugins.json` registers `AppPlugin`. Found in Tressette
   first (diegoami/Tressette#74).
 
