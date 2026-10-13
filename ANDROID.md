@@ -137,18 +137,17 @@ script and commit — or a committed icon was edited or corrupted.
 
 ### 2.3 The releases repo — done
 
-`diegoami/discola-web` is private, and release assets on a private repo are not
-publicly downloadable, so "publish as a release and link it from the website"
-could not work from this repo.
+`diegoami/discola-web` was private when the Android build was set up, and
+release assets on a private repo are not publicly downloadable, so "publish as
+a release and link it from the website" could not work from this repo.
 
-**`diegoami/discola-releases` now exists and is public** — the same split
-`ROADMAP.md` §Iteration 6 proposed, and the same one `geoclick-releases` already
-uses against a private `Geoclick2027`. Source stays private; binaries are
-public. `tools/publish_release.mjs` (§5) targets it.
+**`diegoami/discola-releases` exists and is public**: the same split
+`ROADMAP.md` §Iteration 6 proposed, and the same one `geoclick-releases` uses
+against a private `Geoclick2027`. `tools/publish_release.mjs` (§5) targets it.
 
-The alternative — making `discola-web` itself public — would also have worked,
-but it publishes `SPEC.md` and `ROADMAP.md`, and `netlify.toml`'s publish
-setting exists precisely because those were not meant to be public.
+`discola-web` has since been made public as well (#46). The split stays: the
+releases repo is what the site's `/android` link and the release notes point
+at, and each release there names the tagged commit it was built from here.
 
 ---
 
