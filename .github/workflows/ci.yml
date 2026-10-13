@@ -5,8 +5,6 @@ name: CI
 # Running it here means a green check is required before that happens, rather
 # than trusting someone to remember a two-minute local command.
 on:
-  push:
-    branches: [main]
   pull_request:
 
 jobs:
