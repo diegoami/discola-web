@@ -72,8 +72,8 @@ function buildZip(entries) {
     local.writeUInt16LE(20, 4);           // version needed to extract (2.0)
     local.writeUInt16LE(0x0800, 6);       // general purpose bit flag (UTF-8)
     local.writeUInt16LE(method, 8);       // compression method
-    local.writeUInt16LE(0, 10);           // last mod file time
-    local.writeUInt16LE(0, 12);           // last mod file date
+    local.writeUInt16LE(0, 10);           // last mod file time (midnight)
+    local.writeUInt16LE(0x0021, 12);      // last mod file date (1980-01-01)
     local.writeUInt32LE(crc, 14);         // crc-32
     local.writeUInt32LE(compressedSize, 18);
     local.writeUInt32LE(uncompressedSize, 22);
@@ -88,8 +88,8 @@ function buildZip(entries) {
     central.writeUInt16LE(20, 6);         // version needed to extract
     central.writeUInt16LE(0x0800, 8);     // general purpose bit flag
     central.writeUInt16LE(method, 10);    // compression method
-    central.writeUInt16LE(0, 12);         // last mod file time
-    central.writeUInt16LE(0, 14);         // last mod file date
+    central.writeUInt16LE(0, 12);         // last mod file time (midnight)
+    central.writeUInt16LE(0x0021, 14);     // last mod file date (1980-01-01)
     central.writeUInt32LE(crc, 16);
     central.writeUInt32LE(compressedSize, 20);
     central.writeUInt32LE(uncompressedSize, 24);
