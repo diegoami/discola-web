@@ -31,6 +31,16 @@
   status = 302
   force = true
 
+# itch.io build: the page's About view links /itch, the redirect goes to the
+# itch.io project page. /releases/latest would be wrong here — itch doesn't
+# version its pages the way GitHub does, so the project root is the stable URL.
+# See STORES.md §Phase 2.
+[[redirects]]
+  from = "/itch"
+  to = "https://diegoami.itch.io/discola"
+  status = 302
+  force = true
+
 # The deck sprite sheets are the original 1997 bitmaps and never change once a
 # deck is packed, so they can be cached hard. The page itself must not be, or
 # players keep an old build after a deploy.
