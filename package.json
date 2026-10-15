@@ -1,6 +1,6 @@
 {
   "name": "discola-web",
-  "version": "1.0.3",
+  "version": "1.0.7",
   "private": true,
   "description": "A two-player Briscola game, ported to the web from the Delphi 3 original of 1997",
   "license": "MIT",
