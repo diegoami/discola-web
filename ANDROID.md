@@ -450,7 +450,7 @@ the page is opened from disk — and so the APK never advertises a link to itsel
 | 3 | ~~Create `diegoami/discola-releases`~~ — done, public | — | — |
 | 4 | ~~Android SDK, `cap add android`, debug APK builds & runs offline~~ — done | — | — |
 | 5 | ~~Release key, `keystore.properties`, signed build~~ — done | — | — |
-| 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.2 released | — | — |
+| 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.6 released | — | — |
 | 7 | ~~Netlify `/android` redirect + the About-screen link~~ — done | — | — |
 
 All seven steps are done. A Play Store listing is not in this table: the owner
@@ -464,7 +464,7 @@ progress live in [`STORES.md`](STORES.md).
    nobody is going to rotate mid-trick.
 2. ~~**Version numbering.**~~ Settled: one version line across Android and
    desktop, cross-checked by `tools/package_release.mjs` before anything builds,
-   with `versionCode` required to be a positive integer (5 at 1.0.4). There is
+   with `versionCode` required to be a positive integer (8 at v1.0.7). There is
    still no `CHANGELOG.md`; what changed is in each GitHub release's notes.
 3. **Does the easter egg survive?** `6winouj64ie` needs a hardware keyboard.
    Harmless, but it is the one feature the Android build silently loses.

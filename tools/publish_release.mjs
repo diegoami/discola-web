@@ -97,17 +97,15 @@ if (onMain.status !== 0)
 // --- release notes, in Italian to match the game ---
 // The subtitle and the changes are the release-specific part: what changed,
 // set with each version bump, so the milestone's candidate carries the notes
-// that ship and its reviewer reads them. 1.0.5 had neither (no game change).
+// that ship and its reviewer reads them. v1.0.7 is mostly process and tooling:
+// the user-visible items are the itch.io link and the repo going public.
 let notes;
 try {
   notes = buildNotes(version, platforms, {
-    subtitle: 'anche in inglese',
+    subtitle: 'su itch.io',
     changes: [
-      'Il gioco è anche in inglese: segue la lingua del dispositivo, e si cambia in Impostazioni.',
-      'A fine partita, una schermata sul tavolo invece di una finestra, con avversario e mazzo da scegliere per la partita successiva.',
-      'Android: il tasto Indietro torna alla schermata precedente, e dalla schermata iniziale c\'è il pulsante Esci.',
-      'Le carte del selettore dei mazzi non escono più dal loro riquadro.',
-      'Un\'informativa sulla privacy, in Informazioni. Su Android storico e impostazioni restano fuori anche dal trasferimento tra telefoni.',
+      'Una versione per itch.io, giocabile nel browser; il link è in Informazioni.',
+      'La repository è ora pubblica.',
     ],
     commit: tagged,
   });
