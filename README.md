@@ -105,7 +105,7 @@ npm test
 ```
 
 Both `npm test` and `npm run check` run in CI (`.github/workflows/ci.yml`) on
-every pull request and every push to `main`.
+every pull request.
 
 ## The fonts
 

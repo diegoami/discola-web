@@ -26,6 +26,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSy
 import { deflateRawSync } from 'node:zlib';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseChecksums, writeChecksums } from './checksums.mjs';
 
 // --- zip encoder (defined up top so the const is initialised before main runs) ---
 // Format per APPNOTE.TXT: per-entry local file header + data, then central
@@ -186,16 +187,19 @@ writeFileSync(zipPath, zipBuf);
 const zipHash = createHash('sha256').update(zipBuf).digest('hex');
 console.log(`\n  wrote ${zipBuf.length} bytes to ${zipPath}`);
 
-// --- 5: append to SHA256SUMS.txt (idempotent for this zip's filename) ---
-// Read the existing file, drop any line that names this zip, then append the
-// fresh line. A rerun replaces the old line rather than leaving a stale entry
-// next to the new one; the APK line, if present, is preserved.
-let sums = '';
-if (existsSync(sumsPath)) sums = readFileSync(sumsPath, 'utf8');
-const lines = sums.split('\n').filter((l) => l && !l.endsWith(`  ${zipName}`));
-sums = lines.length ? lines.join('\n') + '\n' : '';
-sums += `${zipHash}  ${zipName}\n`;
-writeFileSync(sumsPath, sums);
+// --- 5: write SHA256SUMS.txt (canonical order, idempotent for this zip's filename) ---
+// Read the existing file as a Map, replace any entry for this zip, then
+// rewrite via the canonical helpers — the same path tools/package_release.mjs
+// takes. This keeps the file sorted by name so verifyChecksums is happy with
+// the APK, exe and zip in any order they're added. A rerun replaces the zip
+// line; the APK and exe lines, if present, are preserved.
+let sumsMap = new Map();
+if (existsSync(sumsPath)) {
+  try { sumsMap = parseChecksums(readFileSync(sumsPath, 'utf8')); }
+  catch { /* malformed — start fresh */ }
+}
+sumsMap.set(zipName, zipHash);
+writeChecksums(outDir, sumsMap);
 console.log(`  wrote SHA256SUMS.txt: ${zipHash}  ${zipName}`);
 
 console.log('\nDone.');
