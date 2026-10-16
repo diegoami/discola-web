@@ -450,7 +450,7 @@ the page is opened from disk — and so the APK never advertises a link to itsel
 | 3 | ~~Create `diegoami/discola-releases`~~ — done, public | — | — |
 | 4 | ~~Android SDK, `cap add android`, debug APK builds & runs offline~~ — done | — | — |
 | 5 | ~~Release key, `keystore.properties`, signed build~~ — done | — | — |
-| 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.6 released | — | — |
+| 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.4 and v1.0.6 released | — | — |
 | 7 | ~~Netlify `/android` redirect + the About-screen link~~ — done | — | — |
 
 All seven steps are done. A Play Store listing is not in this table: the owner

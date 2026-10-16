@@ -73,8 +73,7 @@ a PR (`Fixes #n`) or rebut it on the issue with evidence.
 ## Verification
 
 - Gates: `npm run check` (UI check), `npm test` (unit tests), `npm run verify`
-  (the full suite: check then tests). CI runs both on every PR and every push
-  to `main`.
+  (the full suite: check then tests). CI runs both on every pull request.
 - Run the full suite **3 times** before pushing anything that touches the primary
   logic (`public/engine.js`, `public/index.html`), and read the pass COUNT, not
   the absence of a FAIL.
