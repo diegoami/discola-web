@@ -180,27 +180,31 @@ if (!confirm) {
   process.exit(0);
 }
 
-// --- 4: write the zip ---
+// --- 4: preflight the existing SHA256SUMS.txt ---
+// Parse any existing manifest first so a malformed one fails before we
+// touch the output directory (#86). sumsMap is empty if the file doesn't
+// exist yet — that is the first-run case where package_release.mjs hasn't
+// staged APK and exe entries; the zip line is then the only entry.
+let sumsMap = new Map();
+if (existsSync(sumsPath)) {
+  try { sumsMap = parseChecksums(readFileSync(sumsPath, 'utf8')); }
+  catch (e) { fail(`SHA256SUMS.txt is malformed: ${e.message}`); }
+}
+
+// --- 5: write the zip ---
 mkdirSync(outDir, { recursive: true });
 const zipBuf = buildZip(entries);
 writeFileSync(zipPath, zipBuf);
 const zipHash = createHash('sha256').update(zipBuf).digest('hex');
 console.log(`\n  wrote ${zipBuf.length} bytes to ${zipPath}`);
 
-// --- 5: write SHA256SUMS.txt (canonical order, idempotent for this zip's filename) ---
-// Read the existing file as a Map, replace any entry for this zip, then
-// rewrite via the canonical helpers — the same path tools/package_release.mjs
-// takes. This keeps the file sorted by name so verifyChecksums is happy with
-// the APK, exe and zip in any order they're added. A rerun replaces the zip
-// line; the APK and exe lines, if present, are preserved. A malformed
-// existing manifest is a fail-closed error, not a silent reset — the prior
-// APK and exe lines are the publisher's record of staged assets and must
-// not be dropped (#84).
-let sumsMap = new Map();
-if (existsSync(sumsPath)) {
-  try { sumsMap = parseChecksums(readFileSync(sumsPath, 'utf8')); }
-  catch (e) { fail(`SHA256SUMS.txt is malformed: ${e.message}`); }
-}
+// --- 6: write SHA256SUMS.txt (canonical order, idempotent for this zip's filename) ---
+// Replace this zip's entry in sumsMap and rewrite via the canonical helpers
+// — the same path tools/package_release.mjs takes. This keeps the file
+// sorted by name so verifyChecksums is happy with the APK, exe and zip in
+// any order they're added. A rerun replaces the zip line; the APK and exe
+// lines, if present, are preserved. The preflight above (#86) keeps a
+// malformed manifest from leaving an unverified zip in the output dir.
 sumsMap.set(zipName, zipHash);
 writeChecksums(outDir, sumsMap);
 console.log(`  wrote SHA256SUMS.txt: ${zipHash}  ${zipName}`);
