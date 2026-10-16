@@ -192,11 +192,14 @@ console.log(`\n  wrote ${zipBuf.length} bytes to ${zipPath}`);
 // rewrite via the canonical helpers — the same path tools/package_release.mjs
 // takes. This keeps the file sorted by name so verifyChecksums is happy with
 // the APK, exe and zip in any order they're added. A rerun replaces the zip
-// line; the APK and exe lines, if present, are preserved.
+// line; the APK and exe lines, if present, are preserved. A malformed
+// existing manifest is a fail-closed error, not a silent reset — the prior
+// APK and exe lines are the publisher's record of staged assets and must
+// not be dropped (#84).
 let sumsMap = new Map();
 if (existsSync(sumsPath)) {
   try { sumsMap = parseChecksums(readFileSync(sumsPath, 'utf8')); }
-  catch { /* malformed — start fresh */ }
+  catch (e) { fail(`SHA256SUMS.txt is malformed: ${e.message}`); }
 }
 sumsMap.set(zipName, zipHash);
 writeChecksums(outDir, sumsMap);
