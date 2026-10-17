@@ -488,6 +488,18 @@ su https://discola.netlify.app/privacy.html.
 
 **What does not need to be in Details:** the per-language description fields, the dedicated Screenshots field, the tags, the price, the "played in browser" toggle, the embed size, and the full privacy-policy text — link to the policy at `discola.netlify.app/privacy.html` instead.
 
+#### Phase 2: click-to-fullscreen (v1.0.7.x patch)
+
+The itch.io HTML5 embed ships the page in a fixed-size iframe (the project's "Embed size", currently 1280×800). The fullscreen button on the embed is the only way out of that fixed size today, and players don't always find it. The v1.0.7.x patch makes the first click on the start button (`#startPlay` at `public/index.html:1061`) call `Element.requestFullscreen()` on `document.documentElement` so the iframe expands to fill the browser window. The fullscreen API is gated on a user gesture, so the call has to ride on a real click — the start button is the natural one because it matches the user's explicit "play" intent.
+
+**Design choices (recorded 2026-10-17):**
+
+- **Trigger**: only the start button (`#startPlay` at `public/index.html:1061`, handler at `public/index.html:2014`). Not any click on the start screen. A stray click on the language picker or opponent selector does not surprise the user by jumping to fullscreen.
+- **Once per session**: the listener is `{ once: true }`. After the first fullscreen, subsequent GIOCA clicks don't repeat the call (and couldn't, outside a user gesture).
+- **Failure mode**: silently no-op. The iframe sandbox may deny fullscreen on some embed configurations, iOS Safari before 15 rejects it, and the request can throw on a few browsers. The game still works in the iframe at its current size; the itch.io fullscreen button remains as a fallback.
+
+**Browser support**: modern Chromium, Firefox, Safari (15+), and Edge all expose `Element.requestFullscreen()`. Older Safari needs the `webkitRequestFullscreen` prefix; the patch uses the same vendor fallback chain as elsewhere in `public/index.html`. itch.io's HTML5 iframe sets `allow="fullscreen"` by default, so the permission is in place without an owner-side change.
+
 ### Phase 3: Google Play
 
 1. `package_release.mjs` also runs `bundleRelease`, and stages and checksums
