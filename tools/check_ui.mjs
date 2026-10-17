@@ -67,6 +67,7 @@ const VIEWPORTS = [
   ['SE landscape',      568,  320],
   ['wide and short',   1000,  450],   // between the two compact tiers (#116)
   ['short laptop',      900,  500],
+  ['laptop window',    1280,  640],   // a browser window on a 768px laptop (#116)
   ['phone desktop-mode',1045, 2265],
   ['laptop',           1440,  900],
   ['laptop short',     1366,  700],
@@ -76,10 +77,10 @@ const VIEWPORTS = [
 // Enough shapes to cover the ways a screen can go wrong, without visiting all
 // eight screens at all nineteen sizes.
 const SCREEN_VIEWPORTS = ['Android small', 'iPhone Pro Max', 'tablet portrait',
-                          'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'laptop', 'itch embed'];
+                          'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'laptop window', 'laptop', 'itch embed'];
 
 // English runs longer or shorter in places; the shapes where that bites first.
-const EN_VIEWPORTS = ['Android small', 'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'laptop', 'itch embed'];
+const EN_VIEWPORTS = ['Android small', 'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'laptop window', 'laptop', 'itch embed'];
 
 // The tightest ones; worth re-running the table budget against inflated spacing.
 const TIGHT = ['phone landscape', 'laptop short', 'iPad', 'tablet portrait', 'Android small'];
@@ -152,7 +153,7 @@ const SCREENS = [
       // whole start screen, decks included, fits without the sheet scrolling:
       // nobody should have to scroll to find a deck. Same query as the CSS.
       const sheet = document.querySelector('#viewStart .sheet-body');
-      if (matchMedia('(orientation: landscape) and (max-height: 600px) and (min-width: 560px)').matches
+      if (matchMedia('(orientation: landscape) and (max-height: 800px) and (min-width: 560px)').matches
           && sheet.scrollHeight > sheet.clientHeight + 1)
         out.push(`the start sheet scrolls at ${window.innerWidth}x${window.innerHeight} (${sheet.scrollHeight} in ${sheet.clientHeight})`);
       // A page cannot close its own tab: outside the Android build, no Exit (#55).
@@ -452,7 +453,7 @@ const audit = () => {
     // The short-landscape start screen (the itch.io embed) is two columns, with
     // the decks 3x2 on purpose (one row again under 340px tall); anywhere else the
     // picker must stay one row.
-    const compact = matchMedia('(orientation: landscape) and (max-height: 600px) and (min-width: 560px)').matches
+    const compact = matchMedia('(orientation: landscape) and (max-height: 800px) and (min-width: 560px)').matches
       && document.getElementById('viewStart') === deckOpts[0].closest('.view');
     const rows = compact && !matchMedia('(max-height: 340px)').matches ? Math.ceil(deckOpts.length / 3) : 1;
     if (tops.length !== rows)
