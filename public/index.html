@@ -1972,13 +1972,16 @@ function leave(){
 // fixed "Embed size" (1280×800), and many players never find the
 // fullscreen button on the embed; this rides on the user's "play"
 // intent. The orientation lock only works once the browser context is
-// fullscreen, so chain it to the fullscreen promise's success path
-// (#91). All errors are swallowed: the iframe sandbox, iOS Safari, the
-// requestFullscreen vendor-prefix family that doesn't return a promise,
-// and a denied fullscreen permission are all silent no-ops (#93). The
-// page has its own `screen` game-state variable, so reference the
-// browser's `window.screen` explicitly — the previous #94 was a
-// shadow. The `triedFullscreen` flag enforces once-per-session (#92).
+// fullscreen, so the promise-returning path chains it to the request
+// promise's success path, and the no-promise vendor-prefix path waits
+// for the fullscreenchange transition before attempting the lock
+// (#91). All errors are swallowed: the iframe sandbox, iOS Safari, a
+// denied fullscreen permission, a synchronous throw from the lock,
+// and a fullscreenchange that never fires are all silent no-ops
+// (#93, #95). The page has its own `screen` game-state variable, so
+// reference the browser's `window.screen` explicitly — the previous
+// #94 was a shadow. The `triedFullscreen` flag enforces
+// once-per-session (#92).
 let triedFullscreen = false;
 function tryFullscreen(){
   if (triedFullscreen) return;
@@ -1991,14 +1994,24 @@ function tryFullscreen(){
   if (!req) return;
   const orient = window.screen && window.screen.orientation;
   const lockPortrait = () => {
-    if (orient && orient.lock) orient.lock('portrait').catch(() => {});
+    // Synchronous throw from `orient.lock` is also a silent no-op (#95).
+    try {
+      if (orient && orient.lock) orient.lock('portrait').catch(() => {});
+    } catch (_) { /* sync throw */ }
   };
   let enter;
   try { enter = req.call(elRoot); } catch (_) { enter = null; }
   if (enter && typeof enter.then === 'function') {
     enter.then(lockPortrait, () => {});
   } else {
-    lockPortrait();
+    // No-promise path: wait for the fullscreen transition before locking,
+    // so the lock only fires when the browser is actually in fullscreen.
+    // The listener removes itself on the first fullscreenchange event.
+    const onFsChange = () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      if (document.fullscreenElement === elRoot) lockPortrait();
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
   }
 }
 
