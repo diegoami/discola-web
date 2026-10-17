@@ -418,6 +418,76 @@ the lines, and the decks the Play set hides.
    cross-linked from each page.
 4. Upload by hand, or with `butler` once there are regular updates.
 
+#### Phase 2: itch.io Details textbox
+
+The Details textbox is the free-form markdown area below the per-language description on `diegoami.itch.io/discola`. Single textbox, shared across language tabs, ~4000-char limit. The per-language title / short / full description fields (§1.5) already cover the game story; the Details box holds what doesn't fit there: controls, credits, source links, privacy.
+
+**English (recommended — broader reach):**
+
+```markdown
+## How to play
+
+Tap a card to play it. Each hand deals six cards, three to you and three
+to the opponent. The briscola (trump) is the card flipped under the stock;
+suit and rank matter. A non-trump card can only beat a card of the same
+suit; once a trump is on the table it wins unless someone overtrumps. The
+trick winner draws first on the next round; the loser plays second.
+Whoever reaches 61 points first wins the hand, scoring 120 for a clean
+sweep. The match is best-of-five.
+
+The four opponents have their own play styles — Valerio, Graziano, Piero,
+and Franco — and the twelve weights that govern them are the same ones in
+the 1997 Pascal source.
+
+## Source and credits
+
+The 1997 Delphi 3 source is at https://github.com/diegoami/discola-PAS.
+The web port is at https://github.com/diegoami/discola-web. The card art
+is the original 1997 bitmap set; the engine is a transcription of
+`UMazzo.pas` and `TGiocatore.CompGioca` from the same repo.
+
+## Privacy
+
+This game collects no data. No account, no analytics, no telemetry, no
+network calls at runtime (the fonts are self-hosted). Your match history
+stays on the device. The full privacy policy is at
+https://discola.netlify.app/privacy.html.
+```
+
+**Italian (alternative — matches the game's "Italian by default" stance):**
+
+```markdown
+## Come si gioca
+
+Tocca una carta per giocarla. Ogni mano distribuisce sei carte, tre a te e
+tre all'avversario. La briscola è la carta capovolta sotto il tallone;
+seme e valore contano. Una carta non di briscola batte solo una carta
+dello stesso seme; quando c'è una briscola in tavola vince lei, a meno
+che qualcuno non la superi. Chi vince la presa pesca per primo nel turno
+successivo; chi perde gioca per secondo. Chi arriva prima a 61 punti vince
+la mano, con 120 punti per la cappotta. La partita è al meglio di cinque.
+
+I quattro avversari — Valerio, Graziano, Piero e Franco — hanno stili di
+gioco propri, regolati dagli stessi dodici pesi del sorgente Pascal del
+1997.
+
+## Sorgente e crediti
+
+Il sorgente Delphi 3 del 1997 è su https://github.com/diegoami/discola-PAS.
+La porting sul web è su https://github.com/diegoami/discola-web. Le carte
+sono il set di bitmap originale del 1997; il motore è una trascrizione di
+`UMazzo.pas` e `TGiocatore.CompGioca` dallo stesso repository.
+
+## Privacy
+
+Il gioco non raccoglie dati. Nessun account, nessuna statistica, nessuna
+telemetria, nessuna chiamata di rete a runtime (i font sono self-hosted).
+Lo storico delle partite resta sul dispositivo. L'informativa completa è
+su https://discola.netlify.app/privacy.html.
+```
+
+**What does not need to be in Details:** the per-language description fields, the dedicated Screenshots field, the tags, the price, the "played in browser" toggle, the embed size, and the full privacy-policy text — link to the policy at `discola.netlify.app/privacy.html` instead.
+
 ### Phase 3: Google Play
 
 1. `package_release.mjs` also runs `bundleRelease`, and stages and checksums
