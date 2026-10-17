@@ -40,6 +40,18 @@ const tag = tags[tags.length - 1];
 const version = tag.slice(1);
 const dir = path.join(distRoot, tag);
 
+// --- and it must be the version being released, not a stale leftover (#115) ---
+// The newest directory by name is only the version being released when this
+// checkout's own versionName agrees; a clone that has not packaged yet would
+// otherwise upload an older release's zip.
+const gradlePath = path.join(ROOT, 'mobile/android/app/build.gradle');
+if (!existsSync(gradlePath)) fail('mobile/android/app/build.gradle is missing — cannot read versionName.');
+const current = /versionName\s+["']([^"']+)["']/.exec(readFileSync(gradlePath, 'utf8'))?.[1];
+if (!current) fail('could not read versionName from mobile/android/app/build.gradle');
+if (current !== version)
+  fail(`the newest dist-release/ directory is ${tag}, but this checkout is version ${current}. ` +
+       `Package ${current} first (tools/package_itch.mjs --confirm), or check out the tagged commit of ${tag}.`);
+
 // --- the zip must be there, and every staged file must verify ---
 const zipName = `Discola-${version}-itch-html5.zip`;
 let assets;
