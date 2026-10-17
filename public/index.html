@@ -870,7 +870,7 @@ button.card:disabled{ cursor: default; }
 
 /* Phone landscape is shorter still (360-412px tall): smaller swatches, the
    tagline and rules link folded away (the link stays in Informazioni), and tighter spacing. */
-@media (orientation: landscape) and (max-height: 460px) and (min-width: 560px){
+@media (orientation: landscape) and (max-height: 470px) and (min-width: 560px){
   #viewStart .sheet-body{ padding-block: .3rem; }
   #viewStart .sheet-inner{ row-gap: .5rem; }
   #viewStart .hero > p:not(.last-result){ display: none; }
@@ -880,7 +880,7 @@ button.card:disabled{ cursor: default; }
 }
 
 /* the very shortest (an iPhone SE on its side): the four names in one row, the six decks in one */
-@media (orientation: landscape) and (max-height: 340px) and (min-width: 560px){
+@media (orientation: landscape) and (max-height: 360px) and (min-width: 560px){
   #viewStart .chips{ grid-template-columns: repeat(4, 1fr); }
   #viewStart .chip{ font-size: 1rem; padding-inline: .2rem; }
   #viewStart .decks{ grid-template-columns: repeat(6, 1fr); }
