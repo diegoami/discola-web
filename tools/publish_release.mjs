@@ -97,15 +97,15 @@ if (onMain.status !== 0)
 // --- release notes, in Italian to match the game ---
 // The subtitle and the changes are the release-specific part: what changed,
 // set with each version bump, so the milestone's candidate carries the notes
-// that ship and its reviewer reads them. v1.0.7 is mostly process and tooling:
-// the user-visible items are the itch.io link and the repo going public.
+// that ship and its reviewer reads them. v1.0.8 is one user-facing change
+// on the itch.io page — the in-iframe fullscreen + portrait lock — plus the
+// docs and toolchain bumps that go with every release.
 let notes;
 try {
   notes = buildNotes(version, platforms, {
-    subtitle: 'su itch.io',
+    subtitle: 'a tutto schermo',
     changes: [
-      'Una versione per itch.io, giocabile nel browser; il link è in Informazioni.',
-      'La repository è ora pubblica.',
+      'Su itch.io, tocca Gioca per andare a tutto schermo; l\'orientamento resta verticale.',
     ],
     commit: tagged,
   });
