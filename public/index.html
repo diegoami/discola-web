@@ -1967,6 +1967,67 @@ function leave(){
   if (state.dealt && !state.over) askConfirm(exitApp); else exitApp();
 }
 
+// One fullscreen attempt per session, on the first click of the start
+// button (#89). itch.io's HTML5 embed ships the page at the project's
+// fixed "Embed size" (1280×800), and many players never find the
+// fullscreen button on the embed; this rides on the user's "play"
+// intent. The orientation lock only works once the browser context is
+// fullscreen, so the promise-returning path chains it to the request
+// promise's success path, and the no-promise vendor-prefix path waits
+// for the fullscreenchange transition before attempting the lock
+// (#91). Each prefixed API has its own transition event and active
+// element property, so the selected request method is paired with
+// the matching event and property. All errors are swallowed: the
+// iframe sandbox, iOS Safari, a denied fullscreen permission, a
+// synchronous throw from the lock, and a transition that never
+// fires are all silent no-ops (#93, #95). The page has its own
+// `screen` game-state variable, so reference the browser's
+// `window.screen` explicitly — the previous #94 was a shadow. The
+// `triedFullscreen` flag enforces once-per-session (#92).
+let triedFullscreen = false;
+// Each row pairs a Fullscreen API method with the transition event and
+// the document property that holds the fullscreen element while active.
+// The legacy entries are still here because itch.io's HTML5 iframe
+// sandbox allows the prefixed methods on some browsers; the listener
+// must observe the matching prefixed event to fire after entry (#91).
+const FULLSCREEN_APIS = [
+  ["requestFullscreen",       "fullscreenchange",       "fullscreenElement"],
+  ["webkitRequestFullscreen", "webkitfullscreenchange", "webkitFullscreenElement"],
+  ["mozRequestFullScreen",    "mozfullscreenchange",    "mozFullScreenElement"],
+  ["msRequestFullscreen",     "MSFullscreenChange",     "msFullscreenElement"],
+];
+function tryFullscreen(){
+  if (triedFullscreen) return;
+  triedFullscreen = true;
+  const elRoot = document.documentElement;
+  let req, changeEvent, fsElement;
+  for (const [m, ev, prop] of FULLSCREEN_APIS) {
+    if (typeof elRoot[m] === "function") { req = elRoot[m]; changeEvent = ev; fsElement = prop; break; }
+  }
+  if (!req) return;
+  const orient = window.screen && window.screen.orientation;
+  const lockPortrait = () => {
+    // Synchronous throw from `orient.lock` is also a silent no-op (#95).
+    try {
+      if (orient && orient.lock) orient.lock('portrait').catch(() => {});
+    } catch (_) { /* sync throw */ }
+  };
+  let enter;
+  try { enter = req.call(elRoot); } catch (_) { enter = null; }
+  if (enter && typeof enter.then === 'function') {
+    enter.then(lockPortrait, () => {});
+  } else {
+    // No-promise path: wait for the matching fullscreen transition
+    // before locking (#91). The listener removes itself on the first
+    // event of the paired kind.
+    const onFsChange = () => {
+      document.removeEventListener(changeEvent, onFsChange);
+      if (document[fsElement] === elRoot) lockPortrait();
+    };
+    document.addEventListener(changeEvent, onFsChange);
+  }
+}
+
 // Android's Back button (STORES.md 1.1, #55). Capacitor leaves it to the
 // activity, which closes the app from any screen, so the App plugin reports it
 // here instead, and it always goes one level up: it dismisses the confirm,
@@ -2011,7 +2072,7 @@ el.confirmYes.addEventListener("click", () => confirmThen());
 for (const b of document.querySelectorAll("[data-nav]"))
   b.addEventListener("click", () => show(b.dataset.nav));
 
-el.startPlay.addEventListener("click", () => { show("table"); newHand(); });
+el.startPlay.addEventListener("click", () => { tryFullscreen(); show("table"); newHand(); });
 el.changeOpponent.addEventListener("click", () => show("start"));
 
 el.playAgain.addEventListener("click", newHand);
