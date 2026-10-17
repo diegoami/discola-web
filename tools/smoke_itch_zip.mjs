@@ -56,6 +56,9 @@ check('zip hash matches SHA256SUMS.txt', recorded === sha256(zipBytes),
 // 2. Extract with a tool that did not write the archive: bsdtar reads zip on
 // Windows and macOS, and Linux has unzip.
 const SCRATCH = mkdtempSync(path.join(tmpdir(), 'discola-itch-smoke-'));
+// Removed on every way out, including fail() and an exception during setup, since
+// both reach process exit; the finally below only covers the browser section (#117).
+process.on('exit', () => rmSync(SCRATCH, { recursive: true, force: true }));
 const SITE = path.join(SCRATCH, 'site');
 // On Windows that is System32's tar.exe by full path: Git Bash puts GNU tar
 // first on PATH, which cannot read zip and treats "C:" as a remote host.
