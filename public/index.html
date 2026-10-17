@@ -1997,6 +1997,15 @@ const FULLSCREEN_APIS = [
   ["msRequestFullscreen",     "MSFullscreenChange",     "msFullscreenElement"],
 ];
 function tryFullscreen(){
+  // Only on the itch.io HTML5 embed (#98). The standalone web page,
+  // the Android Capacitor app, and the Tauri desktop build are all
+  // top-level windows; only the embed ships the page in an iframe.
+  // The fullscreen + portrait-lock behavior is documented for the
+  // embed only — silently no-op everywhere else.
+  let inIframe;
+  try { inIframe = window.self !== window.top; }
+  catch (_) { inIframe = true; /* cross-origin: treat as in-iframe */ }
+  if (!inIframe) return;
   if (triedFullscreen) return;
   triedFullscreen = true;
   const elRoot = document.documentElement;
