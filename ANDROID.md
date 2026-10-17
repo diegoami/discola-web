@@ -464,7 +464,7 @@ progress live in [`STORES.md`](STORES.md).
    nobody is going to rotate mid-trick.
 2. ~~**Version numbering.**~~ Settled: one version line across Android and
    desktop, cross-checked by `tools/package_release.mjs` before anything builds,
-   with `versionCode` required to be a positive integer (8 at v1.0.7). There is
+   with `versionCode` required to be a positive integer (9 at v1.0.8). There is
    still no `CHANGELOG.md`; what changed is in each GitHub release's notes.
 3. **Does the easter egg survive?** `6winouj64ie` needs a hardware keyboard.
    Harmless, but it is the one feature the Android build silently loses.
