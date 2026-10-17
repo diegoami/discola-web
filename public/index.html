@@ -1975,22 +1975,35 @@ function leave(){
 // fullscreen, so the promise-returning path chains it to the request
 // promise's success path, and the no-promise vendor-prefix path waits
 // for the fullscreenchange transition before attempting the lock
-// (#91). All errors are swallowed: the iframe sandbox, iOS Safari, a
-// denied fullscreen permission, a synchronous throw from the lock,
-// and a fullscreenchange that never fires are all silent no-ops
-// (#93, #95). The page has its own `screen` game-state variable, so
-// reference the browser's `window.screen` explicitly — the previous
-// #94 was a shadow. The `triedFullscreen` flag enforces
-// once-per-session (#92).
+// (#91). Each prefixed API has its own transition event and active
+// element property, so the selected request method is paired with
+// the matching event and property. All errors are swallowed: the
+// iframe sandbox, iOS Safari, a denied fullscreen permission, a
+// synchronous throw from the lock, and a transition that never
+// fires are all silent no-ops (#93, #95). The page has its own
+// `screen` game-state variable, so reference the browser's
+// `window.screen` explicitly — the previous #94 was a shadow. The
+// `triedFullscreen` flag enforces once-per-session (#92).
 let triedFullscreen = false;
+// Each row pairs a Fullscreen API method with the transition event and
+// the document property that holds the fullscreen element while active.
+// The legacy entries are still here because itch.io's HTML5 iframe
+// sandbox allows the prefixed methods on some browsers; the listener
+// must observe the matching prefixed event to fire after entry (#91).
+const FULLSCREEN_APIS = [
+  ["requestFullscreen",       "fullscreenchange",       "fullscreenElement"],
+  ["webkitRequestFullscreen", "webkitfullscreenchange", "webkitFullscreenElement"],
+  ["mozRequestFullScreen",    "mozfullscreenchange",    "mozFullScreenElement"],
+  ["msRequestFullscreen",     "MSFullscreenChange",     "msFullscreenElement"],
+];
 function tryFullscreen(){
   if (triedFullscreen) return;
   triedFullscreen = true;
   const elRoot = document.documentElement;
-  const req = elRoot.requestFullscreen
-          || elRoot.webkitRequestFullscreen
-          || elRoot.mozRequestFullScreen
-          || elRoot.msRequestFullscreen;
+  let req, changeEvent, fsElement;
+  for (const [m, ev, prop] of FULLSCREEN_APIS) {
+    if (typeof elRoot[m] === "function") { req = elRoot[m]; changeEvent = ev; fsElement = prop; break; }
+  }
   if (!req) return;
   const orient = window.screen && window.screen.orientation;
   const lockPortrait = () => {
@@ -2004,14 +2017,14 @@ function tryFullscreen(){
   if (enter && typeof enter.then === 'function') {
     enter.then(lockPortrait, () => {});
   } else {
-    // No-promise path: wait for the fullscreen transition before locking,
-    // so the lock only fires when the browser is actually in fullscreen.
-    // The listener removes itself on the first fullscreenchange event.
+    // No-promise path: wait for the matching fullscreen transition
+    // before locking (#91). The listener removes itself on the first
+    // event of the paired kind.
     const onFsChange = () => {
-      document.removeEventListener('fullscreenchange', onFsChange);
-      if (document.fullscreenElement === elRoot) lockPortrait();
+      document.removeEventListener(changeEvent, onFsChange);
+      if (document[fsElement] === elRoot) lockPortrait();
     };
-    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener(changeEvent, onFsChange);
   }
 }
 
