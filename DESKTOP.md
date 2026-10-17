@@ -128,6 +128,8 @@ milestone issue before anything is tagged. After AGREE:
 ```sh
 git fetch origin && git checkout <candidate-sha>   # detached, clean tree
 node tools/package_release.mjs    # builds both from the candidate, stages dist-release/vX.Y.Z/
+node tools/package_itch.mjs --confirm   # the itch.io HTML5 zip, into the same directory
+node tools/smoke_itch_zip.mjs     # opens that zip with tar/unzip, compares it with public/, loads the page
 # manual smoke of both packaged builds (see "UI check against the packaged app")
 git tag -a vX.Y.Z <candidate-sha> -m "Discola X.Y.Z"
 git push origin vX.Y.Z
