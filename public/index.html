@@ -1967,24 +1967,38 @@ function leave(){
   if (state.dealt && !state.over) askConfirm(exitApp); else exitApp();
 }
 
-// Take the iframe fullscreen on the first click of the start button (#89).
-// itch.io's HTML5 embed ships the page at the project's fixed "Embed size"
-// (1280×800), and many players never find the fullscreen button on the
-// embed. A first-click handler rides on the user's "play" intent. Then the
-// browser sees the iframe's landscape aspect ratio and would otherwise rotate
-// the device away from portrait; the orientation lock keeps the player in
-// the layout they were holding. Both calls are gated on a user gesture
-// and silently no-op on the surfaces that don't support them (iOS Safari,
-// desktop, denied sandbox, devices that are already landscape).
+// One fullscreen attempt per session, on the first click of the start
+// button (#89). itch.io's HTML5 embed ships the page at the project's
+// fixed "Embed size" (1280×800), and many players never find the
+// fullscreen button on the embed; this rides on the user's "play"
+// intent. The orientation lock only works once the browser context is
+// fullscreen, so chain it to the fullscreen promise's success path
+// (#91). All errors are swallowed: the iframe sandbox, iOS Safari, the
+// requestFullscreen vendor-prefix family that doesn't return a promise,
+// and a denied fullscreen permission are all silent no-ops (#93). The
+// page has its own `screen` game-state variable, so reference the
+// browser's `window.screen` explicitly — the previous #94 was a
+// shadow. The `triedFullscreen` flag enforces once-per-session (#92).
+let triedFullscreen = false;
 function tryFullscreen(){
+  if (triedFullscreen) return;
+  triedFullscreen = true;
   const elRoot = document.documentElement;
   const req = elRoot.requestFullscreen
           || elRoot.webkitRequestFullscreen
           || elRoot.mozRequestFullScreen
           || elRoot.msRequestFullscreen;
-  if (req) { try { req.call(elRoot); } catch (_) { /* sandbox / policy */ } }
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('portrait').catch(() => {});
+  if (!req) return;
+  const orient = window.screen && window.screen.orientation;
+  const lockPortrait = () => {
+    if (orient && orient.lock) orient.lock('portrait').catch(() => {});
+  };
+  let enter;
+  try { enter = req.call(elRoot); } catch (_) { enter = null; }
+  if (enter && typeof enter.then === 'function') {
+    enter.then(lockPortrait, () => {});
+  } else {
+    lockPortrait();
   }
 }
 
