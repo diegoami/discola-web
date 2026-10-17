@@ -861,21 +861,30 @@ button.card:disabled{ cursor: default; }
   #viewStart .group:last-child{ grid-column: 2; grid-row: 1 / span 2; }
   #viewStart .chips{ grid-template-columns: 1fr 1fr; }
   #viewStart .decks{ grid-template-columns: repeat(3, 1fr); }
-  #viewStart .deck-opt .card{ width: 62%; }
+  /* Sized by the window's height, not the tile's width: a swatch that follows the
+     width gets taller as the window gets wider and pushes the sheet into a scroll. */
+  #viewStart .deck-opt .card{ width: auto; height: clamp(48px, 22vh, 120px); }
   #viewStart .dossier{ min-height: 0; }
   .start-foot{ padding-block: .5rem; }
 }
 
 /* Phone landscape is shorter still (360-412px tall): smaller swatches, the
    tagline and rules link folded away (the link stays in Informazioni), and tighter spacing. */
-@media (orientation: landscape) and (max-height: 440px) and (min-width: 560px){
-  #viewStart .sheet-body{ padding-block: .4rem; }
+@media (orientation: landscape) and (max-height: 460px) and (min-width: 560px){
+  #viewStart .sheet-body{ padding-block: .3rem; }
   #viewStart .sheet-inner{ row-gap: .5rem; }
   #viewStart .hero > p:not(.last-result){ display: none; }
   #viewStart .hero h1{ font-size: 2rem; }
   #viewStart .group{ gap: .4rem; }
   #viewStart .chip{ padding-block: .25rem; }
-  #viewStart .deck-opt .card{ width: 30%; }
+}
+
+/* the very shortest (an iPhone SE on its side): the four names in one row, the six decks in one */
+@media (orientation: landscape) and (max-height: 340px) and (min-width: 560px){
+  #viewStart .chips{ grid-template-columns: repeat(4, 1fr); }
+  #viewStart .chip{ font-size: 1rem; padding-inline: .2rem; }
+  #viewStart .decks{ grid-template-columns: repeat(6, 1fr); }
+  #viewStart .deck-opt .card{ height: clamp(40px, 16vh, 120px); }   /* the widest deck still fits its tile */
 }
 
 /* ---- phone-shaped screens -------------------------------------------------
