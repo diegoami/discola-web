@@ -1967,6 +1967,27 @@ function leave(){
   if (state.dealt && !state.over) askConfirm(exitApp); else exitApp();
 }
 
+// Take the iframe fullscreen on the first click of the start button (#89).
+// itch.io's HTML5 embed ships the page at the project's fixed "Embed size"
+// (1280×800), and many players never find the fullscreen button on the
+// embed. A first-click handler rides on the user's "play" intent. Then the
+// browser sees the iframe's landscape aspect ratio and would otherwise rotate
+// the device away from portrait; the orientation lock keeps the player in
+// the layout they were holding. Both calls are gated on a user gesture
+// and silently no-op on the surfaces that don't support them (iOS Safari,
+// desktop, denied sandbox, devices that are already landscape).
+function tryFullscreen(){
+  const elRoot = document.documentElement;
+  const req = elRoot.requestFullscreen
+          || elRoot.webkitRequestFullscreen
+          || elRoot.mozRequestFullScreen
+          || elRoot.msRequestFullscreen;
+  if (req) { try { req.call(elRoot); } catch (_) { /* sandbox / policy */ } }
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {});
+  }
+}
+
 // Android's Back button (STORES.md 1.1, #55). Capacitor leaves it to the
 // activity, which closes the app from any screen, so the App plugin reports it
 // here instead, and it always goes one level up: it dismisses the confirm,
@@ -2011,7 +2032,7 @@ el.confirmYes.addEventListener("click", () => confirmThen());
 for (const b of document.querySelectorAll("[data-nav]"))
   b.addEventListener("click", () => show(b.dataset.nav));
 
-el.startPlay.addEventListener("click", () => { show("table"); newHand(); });
+el.startPlay.addEventListener("click", () => { tryFullscreen(); show("table"); newHand(); });
 el.changeOpponent.addEventListener("click", () => show("start"));
 
 el.playAgain.addEventListener("click", newHand);
