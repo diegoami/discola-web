@@ -866,6 +866,18 @@ button.card:disabled{ cursor: default; }
   .start-foot{ padding-block: .5rem; }
 }
 
+/* Phone landscape is shorter still (360-412px tall): smaller swatches, the
+   tagline and rules link folded away (the link stays in Informazioni), and tighter spacing. */
+@media (orientation: landscape) and (max-height: 440px) and (min-width: 560px){
+  #viewStart .sheet-body{ padding-block: .4rem; }
+  #viewStart .sheet-inner{ row-gap: .5rem; }
+  #viewStart .hero > p:not(.last-result){ display: none; }
+  #viewStart .hero h1{ font-size: 2rem; }
+  #viewStart .group{ gap: .4rem; }
+  #viewStart .chip{ padding-block: .25rem; }
+  #viewStart .deck-opt .card{ width: 30%; }
+}
+
 /* ---- phone-shaped screens -------------------------------------------------
 
    A portrait screen this tall is a phone in someone's hand, and a phone's

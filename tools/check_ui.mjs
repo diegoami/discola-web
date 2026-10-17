@@ -63,6 +63,7 @@ const VIEWPORTS = [
   ['desktop window',   1280,  800],   // the Tauri wrapper's default window
   ['itch embed',        640,  480],   // the default itch.io HTML5 frame
   ['phone landscape',   980,  385],
+  ['small landscape',   740,  360],
   ['phone desktop-mode',1045, 2265],
   ['laptop',           1440,  900],
   ['laptop short',     1366,  700],
@@ -72,10 +73,10 @@ const VIEWPORTS = [
 // Enough shapes to cover the ways a screen can go wrong, without visiting all
 // eight screens at all nineteen sizes.
 const SCREEN_VIEWPORTS = ['Android small', 'iPhone Pro Max', 'tablet portrait',
-                          'phone landscape', 'laptop', 'itch embed'];
+                          'phone landscape', 'small landscape', 'laptop', 'itch embed'];
 
 // English runs longer or shorter in places; the shapes where that bites first.
-const EN_VIEWPORTS = ['Android small', 'phone landscape', 'laptop', 'itch embed'];
+const EN_VIEWPORTS = ['Android small', 'phone landscape', 'small landscape', 'laptop', 'itch embed'];
 
 // The tightest ones; worth re-running the table budget against inflated spacing.
 const TIGHT = ['phone landscape', 'laptop short', 'iPad', 'tablet portrait', 'Android small'];
@@ -144,11 +145,13 @@ const SCREENS = [
       const r = document.querySelector('#startPlay').getBoundingClientRect();
       if (r.bottom > window.innerHeight + 1 || r.top < -1)
         out.push(`Gioca is off screen (bottom ${Math.round(r.bottom)} vs viewport ${window.innerHeight})`);
-      // At the itch.io embed size the whole start screen, decks included, fits
-      // without the sheet scrolling: nobody should have to scroll to find a deck.
+      // On a short landscape window (the itch.io embed, a phone on its side) the
+      // whole start screen, decks included, fits without the sheet scrolling:
+      // nobody should have to scroll to find a deck. Same query as the CSS.
       const sheet = document.querySelector('#viewStart .sheet-body');
-      if (window.innerWidth === 640 && window.innerHeight === 480 && sheet.scrollHeight > sheet.clientHeight + 1)
-        out.push(`the start sheet scrolls at 640x480 (${sheet.scrollHeight} in ${sheet.clientHeight})`);
+      if (matchMedia('(orientation: landscape) and (max-height: 600px) and (min-width: 560px)').matches
+          && sheet.scrollHeight > sheet.clientHeight + 1)
+        out.push(`the start sheet scrolls at ${window.innerWidth}x${window.innerHeight} (${sheet.scrollHeight} in ${sheet.clientHeight})`);
       // A page cannot close its own tab: outside the Android build, no Exit (#55).
       if (!document.querySelector('#btnExit').hidden) out.push('#btnExit shows without the Android App plugin');
       return out;
