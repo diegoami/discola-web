@@ -97,15 +97,17 @@ if (onMain.status !== 0)
 // --- release notes, in Italian to match the game ---
 // The subtitle and the changes are the release-specific part: what changed,
 // set with each version bump, so the milestone's candidate carries the notes
-// that ship and its reviewer reads them. v1.0.8 is one user-facing change
-// on the itch.io page — the in-iframe fullscreen + portrait lock — plus the
-// docs and toolchain bumps that go with every release.
+// that ship and its reviewer reads them. v1.0.8 is two user-facing changes:
+// the itch.io page's in-iframe fullscreen + portrait lock, and a start screen
+// that fits short landscape windows without scrolling — plus the docs and
+// toolchain bumps that go with every release.
 let notes;
 try {
   notes = buildNotes(version, platforms, {
     subtitle: 'a tutto schermo',
     changes: [
       'Su itch.io, tocca Gioca per andare a tutto schermo; l\'orientamento resta verticale.',
+      'La schermata iniziale entra nelle finestre orizzontali basse, come il riquadro 640×480 di itch.io, senza scorrere.',
     ],
     commit: tagged,
   });
