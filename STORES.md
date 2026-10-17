@@ -488,36 +488,22 @@ su https://discola.netlify.app/privacy.html.
 
 **What does not need to be in Details:** the per-language description fields, the dedicated Screenshots field, the tags, the price, the "played in browser" toggle, the embed size, and the full privacy-policy text — link to the policy at `discola.netlify.app/privacy.html` instead.
 
-#### Phase 2: click-to-fullscreen (v1.0.7.x patch)
+#### Phase 2: click-to-fullscreen (v1.0.7.x, gated on the iframe in v1.0.8)
 
-The itch.io HTML5 embed ships the page in a fixed-size iframe (the project's "Embed size", currently 1280×800). The fullscreen button on the embed is the only way out of that fixed size today, and players don't always find it. The v1.0.7.x patch makes the first click on the start button (`#startPlay` at `public/index.html:1061`) call `Element.requestFullscreen()` on `document.documentElement` so the iframe expands to fill the browser window. The fullscreen API is gated on a user gesture, so the call has to ride on a real click — the start button is the natural one because it matches the user's explicit "play" intent.
+The itch.io HTML5 embed ships the page in a fixed-size iframe, and the fullscreen button on the embed is the only way out of that size; players don't always find it. The first click on the start button (`#startPlay`) therefore asks for fullscreen on `document.documentElement`, so the iframe expands to the browser window. The Fullscreen API needs a user gesture, and the start button is the natural one: it is the player's explicit "play". The code is `tryFullscreen()` and the `#startPlay` click handler in `public/index.html`; look them up by name, as line numbers drift.
 
-**Design choices (recorded 2026-10-17):**
+**Behaviour:**
 
-- **Trigger**: only the start button (`#startPlay` at `public/index.html:1061`, handler at `public/index.html:2014`). Not any click on the start screen. A stray click on the language picker or opponent selector does not surprise the user by jumping to fullscreen.
-- **Once per session**: the listener is `{ once: true }`. After the first fullscreen, subsequent GIOCA clicks don't repeat the call (and couldn't, outside a user gesture).
-- **Orientation lock**: when the page enters fullscreen, the browser sees the iframe's "natural" aspect ratio (1280×800, landscape) and may rotate the device to match. The patch calls `screen.orientation.lock('portrait')` right after `requestFullscreen()` so the player stays in portrait. Silently no-ops on browsers that don't expose the API (iOS Safari, desktop). The page is already designed to work in both orientations, so a non-portrait target is a no-op.
-- **Failure mode**: silently no-op. The iframe sandbox may deny fullscreen on some embed configurations, iOS Safari before 15 rejects it, the orientation lock can throw on a few browsers, and the request can throw on a few browsers. The game still works in the iframe at its current size; the itch.io fullscreen button remains as a fallback.
+- **Only inside an iframe (#98).** `tryFullscreen()` returns at once unless `window.self !== window.top`. A cross-origin top window throws on that comparison in some browsers, and that case counts as framed. The standalone web page, the Android Capacitor app and the Tauri desktop build are top-level windows, so Start does nothing extra there.
+- **Trigger**: the start button only, not any click on the start screen, so a stray click on the language picker or the opponent chips never jumps to fullscreen.
+- **Once per session**: a `triedFullscreen` flag (#92), not a `{ once: true }` listener. A second Start after returning to the start screen does not ask again.
+- **Vendor chain**: `requestFullscreen`, then the `webkit`, `moz` and `ms` prefixed forms, each paired with its own change event and element property (#91).
+- **Portrait lock**: after fullscreen is entered, `window.screen.orientation.lock('portrait')` runs, so a 1280x800 landscape embed does not rotate a phone. Where `requestFullscreen()` returns a promise the lock waits for it; otherwise it waits for the matching fullscreen change event, so it never runs before the transition (#91). The page reads `window.screen` explicitly because the game's own `screen` variable shadows it (#94). It silently does nothing where the API is absent (iOS Safari, desktop).
+- **Failure mode**: every failure is swallowed: a denied permission (#93), a synchronous throw from `lock` (#95), a missing API, an iframe without `allow="fullscreen"`, a transition that never fires. The game keeps working at the embed's size and the itch.io fullscreen button remains.
 
-**Browser support**: modern Chromium, Firefox, Safari (15+), and Edge all expose `Element.requestFullscreen()`. Older Safari needs the `webkitRequestFullscreen` prefix; the patch uses the same vendor fallback chain as elsewhere in `public/index.html`. `screen.orientation.lock()` is Chromium-Android, where the rotation bug surfaces; it silently no-ops elsewhere. itch.io's HTML5 iframe sets `allow="fullscreen"` by default, so the permission is in place without an owner-side change.
+**Browser support**: modern Chromium, Firefox, Safari (15+) and Edge. The orientation lock is Chromium on Android. itch.io's HTML5 iframe sets `allow="fullscreen"`, so no owner-side change is needed.
 
-**Code shape** (recorded for the implementation PR):
-
-```js
-function tryFullscreen() {
-  const el = document.documentElement;
-  const req = el.requestFullscreen
-          || el.webkitRequestFullscreen
-          || el.mozRequestFullScreen
-          || el.msRequestFullscreen;
-  if (req) { try { req.call(el); } catch (e) { /* sandbox or policy */ } }
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('portrait').catch(() => {});
-  }
-}
-```
-
-Attached to the existing handler at `public/index.html:2014`, before `show("table")` and `newHand()`. Tracked in #89.
+**Tests**: none yet exercises the framed case; the UI check loads the page top-level only (#106).
 
 ### Phase 3: Google Play
 
