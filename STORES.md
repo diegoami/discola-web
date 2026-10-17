@@ -410,10 +410,16 @@ the lines, and the decks the Play set hides.
    exe and the APK come from `dist-release/vX.Y.Z/` as downloads.
 2. The owner creates the page:
    - "This file will be played in the browser", mobile friendly, a fullscreen
-     button, an embed size of 1280×800;
+     button, and an embed size chosen by the owner (the itch.io default is
+     640×480). The page must work at 640×480 whatever is set: the UI check
+     enforces it, and the start screen fits there without scrolling, as it does on every landscape window
+     at least 560px wide and up to 800px tall, and the UI check covers a range of them (#100).
+     The value actually set is recorded below;
    - the cover, screenshots and tags (`card-game`, `italian`, `singleplayer`,
      `offline`, `retro`, `browser`);
    - free.
+**Embed size set on the page:** not yet confirmed by the owner (#108).
+
 3. A "Carte italiane" itch.io collection holding the three games,
    cross-linked from each page.
 4. Upload with `node tools/publish_itch.mjs` (dry run) and `--confirm`, which wraps
