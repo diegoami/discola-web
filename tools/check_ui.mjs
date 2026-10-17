@@ -23,6 +23,10 @@
  *    rows drift apart until the table stops reading as one surface. Each of
  *    those shipped once. They are assertions now.
  *
+ * 3. FRAMED — Start on the page top-level and inside an iframe, the two ways
+ *    the itch.io embed differs from every other build. Fullscreen and the
+ *    portrait lock must be requested in the frame and nowhere else (#98).
+ *
  * Every threshold below is calibrated against a real defect, not taste. If you
  * relax one, check it still fails the commit that introduced the bug it names.
  */
@@ -749,6 +753,59 @@ async function checkScreens(browser, locale = 'it-IT', viewports = SCREEN_VIEWPO
   return failed;
 }
 
+/* ---- pass 3: top-level versus the itch.io iframe -------------------------- */
+
+// Start asks for fullscreen and a portrait lock, but only on the itch.io embed,
+// which is the one place the page runs in an iframe (#98). Every other pass here
+// loads the page top-level, so a gate that went missing or inverted changed
+// nothing they could see: Start forced fullscreen on the standalone page and the
+// Android and desktop builds, and shipped into a release candidate.
+//
+// Headless Chromium will not really enter fullscreen, so the requests are
+// counted instead. The host page is a real file next to nothing else, because
+// a frame cannot be opened from about:blank to a file:// URL.
+async function checkFramed(browser) {
+  console.log('\nframed versus top-level');
+  const hostPath = path.join(os.tmpdir(), `discola-host-${process.pid}.html`);
+  writeFileSync(hostPath, `<!doctype html><iframe src="${URL_}" style="width:640px;height:480px;border:0"></iframe>`);
+  const stub = () => {
+    window.__fs = { fullscreen: 0, lock: 0 };
+    const grant = () => { window.__fs.fullscreen++; return Promise.resolve(); };
+    for (const m of ['requestFullscreen', 'webkitRequestFullscreen'])
+      Element.prototype[m] = grant;
+    try { screen.orientation.lock = () => { window.__fs.lock++; return Promise.resolve(); }; } catch (_) {}
+  };
+  const cases = [
+    { name: 'top-level', url: URL_,
+      pick: p => p, expect: { fullscreen: 0, lock: 0 } },
+    { name: 'in an iframe', url: pathToFileURL(hostPath).href,
+      pick: p => p.frames().find(f => f !== p.mainFrame()), expect: { fullscreen: 1, lock: 1 } },
+  ];
+  let bad = 0;
+  for (const c of cases) {
+    const page = await browser.newPage({ viewport: { width: 640, height: 480 } });
+    const errs = [];
+    page.on('pageerror', e => errs.push('script error: ' + e.message));
+    await page.addInitScript(stub);
+    await page.goto(c.url);
+    const frame = c.pick(page);
+    await frame.waitForSelector('#startPlay');
+    await frame.click('#startPlay');
+    await page.waitForTimeout(300);
+    const got = await frame.evaluate(() => ({ ...window.__fs, table: !document.querySelector('#viewTable').hidden }));
+    const issues = [...errs];
+    for (const k of ['fullscreen', 'lock'])
+      if (got[k] !== c.expect[k]) issues.push(`${k} requested ${got[k]} time(s), expected ${c.expect[k]}`);
+    if (!got.table) issues.push('Start did not reach the table');
+    if (issues.length) bad++;
+    console.log(`  ${issues.length ? 'FAIL' : 'pass'}  ${c.name}`);
+    issues.forEach(i => console.log(`        ${i}`));
+    await page.close();
+  }
+  rmSync(hostPath, { force: true });
+  return bad;
+}
+
 /* ---- pass 2: the card table ----------------------------------------------- */
 
 const measure = () => {
@@ -834,6 +891,7 @@ failed += await checkScreens(browser);
 failed += await checkScreens(browser, 'en-US', EN_VIEWPORTS);
 failed += await checkTable(browser, null, false);
 failed += await checkTable(browser, TIGHT, true);
+failed += await checkFramed(browser);
 await browser.close();
 
 console.log(failed ? `\n${failed} case(s) failed` : '\nAll checks pass.');
