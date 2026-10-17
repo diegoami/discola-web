@@ -416,7 +416,11 @@ the lines, and the decks the Play set hides.
    - free.
 3. A "Carte italiane" itch.io collection holding the three games,
    cross-linked from each page.
-4. Upload by hand, or with `butler` once there are regular updates.
+4. Upload with `node tools/publish_itch.mjs` (dry run) and `--confirm`, which wraps
+   `butler push` to channel `html5`. It refuses unless the zip verifies against
+   `SHA256SUMS.txt` and `vX.Y.Z` is an annotated tag on `origin/main` at the
+   packaged commit. Needs `butler` on PATH and `BUTLER_API_KEY` in the
+   environment, never in the repo. Uploading by hand through the page still works.
 
 #### Phase 2: itch.io Details textbox
 
