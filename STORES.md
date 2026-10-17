@@ -496,9 +496,28 @@ The itch.io HTML5 embed ships the page in a fixed-size iframe (the project's "Em
 
 - **Trigger**: only the start button (`#startPlay` at `public/index.html:1061`, handler at `public/index.html:2014`). Not any click on the start screen. A stray click on the language picker or opponent selector does not surprise the user by jumping to fullscreen.
 - **Once per session**: the listener is `{ once: true }`. After the first fullscreen, subsequent GIOCA clicks don't repeat the call (and couldn't, outside a user gesture).
-- **Failure mode**: silently no-op. The iframe sandbox may deny fullscreen on some embed configurations, iOS Safari before 15 rejects it, and the request can throw on a few browsers. The game still works in the iframe at its current size; the itch.io fullscreen button remains as a fallback.
+- **Orientation lock**: when the page enters fullscreen, the browser sees the iframe's "natural" aspect ratio (1280×800, landscape) and may rotate the device to match. The patch calls `screen.orientation.lock('portrait')` right after `requestFullscreen()` so the player stays in portrait. Silently no-ops on browsers that don't expose the API (iOS Safari, desktop). The page is already designed to work in both orientations, so a non-portrait target is a no-op.
+- **Failure mode**: silently no-op. The iframe sandbox may deny fullscreen on some embed configurations, iOS Safari before 15 rejects it, the orientation lock can throw on a few browsers, and the request can throw on a few browsers. The game still works in the iframe at its current size; the itch.io fullscreen button remains as a fallback.
 
-**Browser support**: modern Chromium, Firefox, Safari (15+), and Edge all expose `Element.requestFullscreen()`. Older Safari needs the `webkitRequestFullscreen` prefix; the patch uses the same vendor fallback chain as elsewhere in `public/index.html`. itch.io's HTML5 iframe sets `allow="fullscreen"` by default, so the permission is in place without an owner-side change.
+**Browser support**: modern Chromium, Firefox, Safari (15+), and Edge all expose `Element.requestFullscreen()`. Older Safari needs the `webkitRequestFullscreen` prefix; the patch uses the same vendor fallback chain as elsewhere in `public/index.html`. `screen.orientation.lock()` is Chromium-Android, where the rotation bug surfaces; it silently no-ops elsewhere. itch.io's HTML5 iframe sets `allow="fullscreen"` by default, so the permission is in place without an owner-side change.
+
+**Code shape** (recorded for the implementation PR):
+
+```js
+function tryFullscreen() {
+  const el = document.documentElement;
+  const req = el.requestFullscreen
+          || el.webkitRequestFullscreen
+          || el.mozRequestFullScreen
+          || el.msRequestFullscreen;
+  if (req) { try { req.call(el); } catch (e) { /* sandbox or policy */ } }
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {});
+  }
+}
+```
+
+Attached to the existing handler at `public/index.html:2014`, before `show("table")` and `newHand()`. Tracked in #89.
 
 ### Phase 3: Google Play
 
