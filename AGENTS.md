@@ -70,6 +70,36 @@ a PR (`Fixes #n`) or rebut it on the issue with evidence.
 - Change the smallest thing: targeted reads and focused edits, and show diffs,
   not whole files.
 
+- **Watch every external review you start.** An external review (`opencode run`,
+  or any other process that takes minutes and posts its result elsewhere) is
+  started together with a `Monitor` on its outcome, before the next reply, and
+  the monitor must emit on every end state: a verdict comment or finding issue
+  appearing, the reviewer process exiting without one, and no output for
+  20 minutes. A backgrounded launcher's completion notice says only that the
+  launcher returned, not that the review is done: it fired a minute after the
+  reviewer started, and "still running" was then reported from stale output
+  while the verdicts were already posted. Poll the result, never the launcher:
+
+  ```sh
+  # one line per new comment on the PRs or issues under review; ends when the
+  # reviewer is gone or has been silent for 20 minutes
+  list() { for n in 100 112; do gh pr view $n --json comments -q ".comments[]|\"#$n \(.id)\""; done; }
+  seen=$(list); idle=0                      # what is already there is not news
+  while true; do
+    now=$(list)
+    new=$(comm -13 <(echo "$seen" | sort) <(echo "$now" | sort))
+    [ -n "$new" ] && { echo "new review comment: $new"; idle=0; } || idle=$((idle+1))
+    seen=$now
+    { pgrep -f 'opencode run' || tasklist 2>/dev/null | grep -qi opencode; } >/dev/null 2>&1 \
+      || { echo "reviewer exited"; break; }
+    [ $idle -ge 40 ] && { echo "no new comment for 20 minutes"; break; }
+    sleep 30
+  done
+  ```
+
+  Use the Bash tool's own `run_in_background` for one-shot waits and `Monitor` for
+  anything that should report more than once.
+
 ## Verification
 
 - Gates: `npm run check` (UI check), `npm test` (unit tests), `npm run verify`
