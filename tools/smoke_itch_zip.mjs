@@ -105,11 +105,13 @@ const server = createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream' });
   createReadStream(file).pipe(res);
 });
-await new Promise(r => server.listen(0, '127.0.0.1', r));
-const base = `http://127.0.0.1:${server.address().port}/`;
-
-const browser = await chromium.launch({ executablePath: process.env.CHROME || chromium.executablePath() });
+// Everything from here on is inside the try, so a server that will not start or
+// a Chromium that will not launch still removes the scratch directory.
+let browser;
 try {
+  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+  const base = `http://127.0.0.1:${server.address().port}/`;
+  browser = await chromium.launch({ executablePath: process.env.CHROME || chromium.executablePath() });
   if (existsSync(path.join(SITE, 'index.html'))) {
     const page = await browser.newPage({ viewport: { width: 640, height: 480 }, locale: 'it-IT' });
     const errs = [];
@@ -135,7 +137,7 @@ try {
     check('no script, console or network errors', errs.length === 0, errs.join(' | '));
   }
 } finally {
-  await browser.close();
+  await browser?.close();
   server.close();
   rmSync(SCRATCH, { recursive: true, force: true });
 }
