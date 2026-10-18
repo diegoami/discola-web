@@ -418,7 +418,7 @@ the lines, and the decks the Play set hides.
    - the cover, screenshots and tags (`card-game`, `italian`, `singleplayer`,
      `offline`, `retro`, `browser`);
    - free.
-**Embed size set on the page:** not yet confirmed by the owner (#108).
+**Embed size set on the page:** portrait recommended (480x720 is the itch.io portrait default); the value is the owner's to confirm (#108).
 
 3. A "Carte italiane" itch.io collection holding the three games,
    cross-linked from each page.
@@ -498,22 +498,11 @@ su https://discola.netlify.app/privacy.html.
 
 **What does not need to be in Details:** the per-language description fields, the dedicated Screenshots field, the tags, the price, the "played in browser" toggle, the embed size, and the full privacy-policy text — link to the policy at `discola.netlify.app/privacy.html` instead.
 
-#### Phase 2: click-to-fullscreen (v1.0.7.x, gated on the iframe in v1.0.8)
+#### Phase 2: no fullscreen trigger
 
-The itch.io HTML5 embed ships the page in a fixed-size iframe, and the fullscreen button on the embed is the only way out of that size; players don't always find it. The first click on the start button (`#startPlay`) therefore asks for fullscreen on `document.documentElement`, so the iframe expands to the browser window. The Fullscreen API needs a user gesture, and the start button is the natural one: it is the player's explicit "play". The code is `tryFullscreen()` and the `#startPlay` click handler in `public/index.html`; look them up by name, as line numbers drift.
+v1.0.7.x tried taking the itch.io iframe fullscreen (and locking portrait) on the first click of Start. The owner tested it on itch.io and rejected it: on a phone the embed launched in landscape and flipped back on Start, and Start jumped to fullscreen, which is too invasive. The code was removed and v1.0.8 as first built was never tagged. The game never requests fullscreen or an orientation lock; the UI check's framed pass asserts it, top-level and inside an iframe.
 
-**Behaviour:**
-
-- **Only inside an iframe (#98).** `tryFullscreen()` returns at once unless `window.self !== window.top`. A cross-origin top window throws on that comparison in some browsers, and that case counts as framed. The standalone web page, the Android Capacitor app and the Tauri desktop build are top-level windows, so Start does nothing extra there.
-- **Trigger**: the start button only, not any click on the start screen, so a stray click on the language picker or the opponent chips never jumps to fullscreen.
-- **Once per session**: a `triedFullscreen` flag (#92), not a `{ once: true }` listener. A second Start after returning to the start screen does not ask again.
-- **Vendor chain**: `requestFullscreen`, then the `webkit`, `moz` and `ms` prefixed forms, each paired with its own change event and element property (#91).
-- **Portrait lock**: after fullscreen is entered, `window.screen.orientation.lock('portrait')` runs, so a 1280x800 landscape embed does not rotate a phone. Where `requestFullscreen()` returns a promise the lock waits for it; otherwise it waits for the matching fullscreen change event, so it never runs before the transition (#91). The page reads `window.screen` explicitly because the game's own `screen` variable shadows it (#94). It silently does nothing where the API is absent (iOS Safari, desktop).
-- **Failure mode**: every failure is swallowed: a denied permission (#93), a synchronous throw from `lock` (#95), a missing API, an iframe without `allow="fullscreen"`, a transition that never fires. The game keeps working at the embed's size and the itch.io fullscreen button remains.
-
-**Browser support**: modern Chromium, Firefox, Safari (15+) and Edge. The orientation lock is Chromium on Android. itch.io's HTML5 iframe sets `allow="fullscreen"`, so no owner-side change is needed.
-
-**Tests**: none yet exercises the framed case; the UI check loads the page top-level only (#106).
+**Embed size**: use a portrait embed (480x720 is the itch.io portrait default). On phones itch.io launches fullscreen and fixes the orientation from the embed's aspect ratio before any game code runs, so a portrait embed is what keeps a phone upright. The page still has to work at 640x480 (above).
 
 ### Phase 3: Google Play
 
