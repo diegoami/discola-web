@@ -97,15 +97,16 @@ if (onMain.status !== 0)
 // --- release notes, in Italian to match the game ---
 // The subtitle and the changes are the release-specific part: what changed,
 // set with each version bump, so the milestone's candidate carries the notes
-// that ship and its reviewer reads them. The next release is one user-facing
-// change, a start screen that fits short landscape windows without scrolling,
-// plus the docs and toolchain bumps that go with every release.
+// that ship and its reviewer reads them. v1.0.9 is one user-facing change: on
+// a phone, Gioca sits above the deck picker, out of the way of the fullscreen
+// toast that itch.io's runner makes Android show — plus the docs and toolchain
+// bumps that go with every release.
 let notes;
 try {
   notes = buildNotes(version, platforms, {
-    subtitle: 'schermata iniziale compatta',
+    subtitle: 'Gioca in alto',
     changes: [
-      'La schermata iniziale entra nelle finestre orizzontali basse e nel riquadro verticale 480×720 di itch.io, senza scorrere.',
+      'Sul telefono il pulsante Gioca sta sopra la scelta del mazzo, fuori dall\'avviso di schermo intero che Android mostra su itch.io.',
     ],
     commit: tagged,
   });
