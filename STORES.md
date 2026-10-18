@@ -435,6 +435,13 @@ The Details textbox is the free-form markdown area below the per-language descri
 **English (recommended — broader reach):**
 
 ```markdown
+## On a phone
+
+itch.io opens HTML5 games on phones in fullscreen, and Chrome shows a
+"full screen" notice for a few seconds. For the game without that, open
+https://discola.netlify.app/ in your browser, or download the Android app
+from this page.
+
 ## How to play
 
 Tap a card to play it. Each hand deals six cards, three to you and three
@@ -467,6 +474,13 @@ https://discola.netlify.app/privacy.html.
 **Italian (alternative — matches the game's "Italian by default" stance):**
 
 ```markdown
+## Sul telefono
+
+Su telefono itch.io apre i giochi HTML5 a tutto schermo, e Chrome mostra per
+qualche secondo un avviso di «schermo intero». Per giocare senza, apri
+https://discola.netlify.app/ nel browser, oppure scarica l'app Android da
+questa pagina.
+
 ## Come si gioca
 
 Tocca una carta per giocarla. Ogni mano distribuisce sei carte, tre a te e
@@ -495,6 +509,8 @@ telemetria, nessuna chiamata di rete a runtime (i font sono self-hosted).
 Lo storico delle partite resta sul dispositivo. L'informativa completa è
 su https://discola.netlify.app/privacy.html.
 ```
+
+**Updating it.** Butler pushes builds only; the page text (Details, descriptions, embed size) is edited by hand on itch.io, so a change here is not live until the owner pastes it. Phone players reach the game through itch.io's own fullscreen runner (see "Phase 2: no fullscreen trigger" below), which the game cannot change, hence the "On a phone" paragraph above.
 
 **What does not need to be in Details:** the per-language description fields, the dedicated Screenshots field, the tags, the price, the "played in browser" toggle, the embed size, and the full privacy-policy text — link to the policy at `discola.netlify.app/privacy.html` instead.
 
