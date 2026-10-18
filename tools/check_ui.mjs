@@ -175,7 +175,10 @@ const SCREENS = [
       // whole start screen, decks included, fits without the sheet scrolling:
       // nobody should have to scroll to find a deck. Same query as the CSS.
       const sheet = document.querySelector('#viewStart .sheet-body');
-      if (matchMedia('(orientation: landscape) and (max-height: 800px) and (min-width: 560px)').matches
+      // The 480x720 itch.io portrait embed gets the same promise, in both languages
+      // (#123); the query is the CSS one for it, bounded below by the embed itself.
+      if ((matchMedia('(orientation: landscape) and (max-height: 800px) and (min-width: 560px)').matches
+           || matchMedia('(orientation: portrait) and (min-width: 480px) and (min-height: 720px) and (max-height: 760px)').matches)
           && sheet.scrollHeight > sheet.clientHeight + 1)
         out.push(`the start sheet scrolls at ${window.innerWidth}x${window.innerHeight} (${sheet.scrollHeight} in ${sheet.clientHeight})`);
       // A page cannot close its own tab: outside the Android build, no Exit (#55).

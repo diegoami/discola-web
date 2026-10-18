@@ -103,10 +103,9 @@ if (onMain.status !== 0)
 let notes;
 try {
   notes = buildNotes(version, platforms, {
-    subtitle: 'a tutto schermo',
+    subtitle: 'schermata iniziale compatta',
     changes: [
-      'Su itch.io, tocca Gioca per andare a tutto schermo; l\'orientamento resta verticale.',
-      'La schermata iniziale entra nelle finestre orizzontali basse, come il riquadro 640×480 di itch.io, senza scorrere.',
+      'La schermata iniziale entra nelle finestre orizzontali basse e nel riquadro verticale 480×720 di itch.io, senza scorrere.',
     ],
     commit: tagged,
   });
