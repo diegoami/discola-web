@@ -97,10 +97,9 @@ if (onMain.status !== 0)
 // --- release notes, in Italian to match the game ---
 // The subtitle and the changes are the release-specific part: what changed,
 // set with each version bump, so the milestone's candidate carries the notes
-// that ship and its reviewer reads them. v1.0.8 is two user-facing changes:
-// the itch.io page's in-iframe fullscreen + portrait lock, and a start screen
-// that fits short landscape windows without scrolling — plus the docs and
-// toolchain bumps that go with every release.
+// that ship and its reviewer reads them. The next release is one user-facing
+// change, a start screen that fits short landscape windows without scrolling,
+// plus the docs and toolchain bumps that go with every release.
 let notes;
 try {
   notes = buildNotes(version, platforms, {

@@ -24,8 +24,9 @@
  *    those shipped once. They are assertions now.
  *
  * 3. FRAMED — Start on the page top-level and inside an iframe, the two ways
- *    the itch.io embed differs from every other build. Fullscreen and the
- *    portrait lock must be requested in the frame and nowhere else (#98).
+ *    the itch.io embed differs from every other build. Start must request
+ *    neither fullscreen nor a portrait lock in either (the owner does not
+ *    want a fullscreen trigger; the embed size is set on the itch.io page).
  *
  * Every threshold below is calibrated against a real defect, not taste. If you
  * relax one, check it still fails the commit that introduced the bug it names.
@@ -43,6 +44,20 @@ const FILE = path.resolve(process.argv[2] ?? fileURLToPath(new URL('../public/in
 // differs per OS and per Playwright revision, so do not hard-code one.
 const CHROME = process.env.CHROME || chromium.executablePath();
 const URL_ = pathToFileURL(FILE).href;
+
+// Every case opens its own page (its own browser context), so cases do not
+// share state and can run side by side. Results print in the original order.
+// UI_CHECK_JOBS=1 restores the one-at-a-time run for debugging a flaky case.
+const JOBS = Math.max(1, Number(process.env.UI_CHECK_JOBS) || Math.min(6, os.cpus().length));
+async function inParallel(items, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) { const i = next++; out[i] = await fn(items[i]); }
+  };
+  await Promise.all(Array.from({ length: Math.min(JOBS, items.length) }, worker));
+  return out;
+}
 
 /* ---- viewports ------------------------------------------------------------ */
 
@@ -65,6 +80,7 @@ const VIEWPORTS = [
   ['iPad Pro',         1024, 1366],
   ['tablet landscape', 1180,  820],
   ['desktop window',   1280,  800],   // the Tauri wrapper's default window
+  ['itch portrait',     480,  720],   // itch.io's canonical portrait embed: the start screen must fit
   ['itch embed',        640,  480],   // the default itch.io HTML5 frame
   ['phone landscape',   980,  385],
   ['small landscape',   740,  360],
@@ -83,10 +99,10 @@ const VIEWPORTS = [
 // Enough shapes to cover the ways a screen can go wrong, without visiting all
 // eight screens at all nineteen sizes.
 const SCREEN_VIEWPORTS = ['Android small', 'iPhone Pro Max', 'tablet portrait',
-                          'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'narrow and short', 'narrow mid', 'laptop window', 'laptop', 'itch embed'];
+                          'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'narrow and short', 'narrow mid', 'laptop window', 'laptop', 'itch embed', 'itch portrait'];
 
 // English runs longer or shorter in places; the shapes where that bites first.
-const EN_VIEWPORTS = ['Android small', 'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'narrow and short', 'narrow mid', 'laptop window', 'laptop', 'itch embed'];
+const EN_VIEWPORTS = ['Android small', 'phone landscape', 'small landscape', 'SE landscape', 'wide and short', 'short laptop', 'narrow and short', 'narrow mid', 'laptop window', 'laptop', 'itch embed', 'itch portrait'];
 
 // The tightest ones; worth re-running the table budget against inflated spacing.
 const TIGHT = ['phone landscape', 'laptop short', 'iPad', 'tablet portrait', 'Android small'];
@@ -739,48 +755,49 @@ async function checkFonts(browser) {
 // passes would silently have become English ones.
 async function checkScreens(browser, locale = 'it-IT', viewports = SCREEN_VIEWPORTS) {
   console.log(locale === 'it-IT' ? '\nscreens' : `\nscreens, ${locale}`);
-  let failed = 0;
-  for (const vname of viewports) {
+  const cases = viewports.flatMap(vname => SCREENS.map(screen => ({ vname, screen })));
+  const results = await inParallel(cases, async ({ vname, screen }) => {
     const [, width, height] = VIEWPORTS.find(v => v[0] === vname);
-    for (const screen of SCREENS) {
-      const page = await browser.newPage({ locale, viewport: { width, height } });
-      const errs = [];
-      page.on('pageerror', e => errs.push('script error: ' + e.message));
-      // Every request the page makes is file:// now that the fonts are
-      // self-hosted, so a console network error is a defect, not local noise.
-      page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+    const page = await browser.newPage({ locale, viewport: { width, height } });
+    const errs = [];
+    page.on('pageerror', e => errs.push('script error: ' + e.message));
+    // Every request the page makes is file:// now that the fonts are
+    // self-hosted, so a console network error is a defect, not local noise.
+    page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 
-      if (screen.native) await page.addInitScript(fakeCapacitor);
-      await page.goto(URL_);
-      await page.evaluate(() => localStorage.removeItem('discola.history'));
-      if (screen.seed) await screen.seed(page);
-      await page.goto(URL_);
-      await page.waitForTimeout(350);
-      await screen.open(page);
-      await page.waitForTimeout(350);
+    if (screen.native) await page.addInitScript(fakeCapacitor);
+    await page.goto(URL_);
+    await page.evaluate(() => localStorage.removeItem('discola.history'));
+    if (screen.seed) await screen.seed(page);
+    await page.goto(URL_);
+    await page.waitForTimeout(350);
+    await screen.open(page);
+    await page.waitForTimeout(350);
 
-      const issues = [
-        ...(await page.evaluate(audit)),
-        ...(screen.check ? await page.evaluate(screen.check) : []),
-        ...(locale.startsWith('en') ? await page.evaluate(englishAudit) : []),
-        ...errs,
-      ];
-      if (issues.length) failed++;
-      console.log(`  ${issues.length ? 'FAIL' : 'pass'}  ${vname.padEnd(16)} ${screen.name}`);
-      issues.forEach(i => console.log(`        ${i}`));
-      await page.close();
-    }
+    const issues = [
+      ...(await page.evaluate(audit)),
+      ...(screen.check ? await page.evaluate(screen.check) : []),
+      ...(locale.startsWith('en') ? await page.evaluate(englishAudit) : []),
+      ...errs,
+    ];
+    await page.close();
+    return { vname, name: screen.name, issues };
+  });
+  let failed = 0;
+  for (const { vname, name, issues } of results) {
+    if (issues.length) failed++;
+    console.log(`  ${issues.length ? 'FAIL' : 'pass'}  ${vname.padEnd(16)} ${name}`);
+    issues.forEach(i => console.log(`        ${i}`));
   }
   return failed;
 }
 
 /* ---- pass 3: top-level versus the itch.io iframe -------------------------- */
 
-// Start asks for fullscreen and a portrait lock, but only on the itch.io embed,
-// which is the one place the page runs in an iframe (#98). Every other pass here
-// loads the page top-level, so a gate that went missing or inverted changed
-// nothing they could see: Start forced fullscreen on the standalone page and the
-// Android and desktop builds, and shipped into a release candidate.
+// Start must not take the page fullscreen or lock the orientation, top-level or
+// inside the itch.io iframe. v1.0.8 tried it on the embed and the owner rejected
+// it: it jumps to fullscreen on Start (and rotated phones). Every other pass
+// loads the page top-level, so only this one would see it come back.
 //
 // Headless Chromium will not really enter fullscreen, so the requests are
 // counted instead. The host page is a real file next to nothing else, because
@@ -798,9 +815,9 @@ async function checkFramed(browser) {
   };
   const cases = [
     { name: 'top-level', url: URL_,
-      pick: p => p, expect: { fullscreen: 0, lock: 0 } },
+      pick: p => p },
     { name: 'in an iframe', url: pathToFileURL(hostPath).href,
-      pick: p => p.frames().find(f => f !== p.mainFrame()), expect: { fullscreen: 1, lock: 1 } },
+      pick: p => p.frames().find(f => f !== p.mainFrame()) },
   ];
   let bad = 0;
   for (const c of cases) {
@@ -816,7 +833,7 @@ async function checkFramed(browser) {
     const got = await frame.evaluate(() => ({ ...window.__fs, table: !document.querySelector('#viewTable').hidden }));
     const issues = [...errs];
     for (const k of ['fullscreen', 'lock'])
-      if (got[k] !== c.expect[k]) issues.push(`${k} requested ${got[k]} time(s), expected ${c.expect[k]}`);
+      if (got[k] !== 0) issues.push(`${k} requested ${got[k]} time(s), expected none`);
     if (!got.table) issues.push('Start did not reach the table');
     if (issues.length) bad++;
     console.log(`  ${issues.length ? 'FAIL' : 'pass'}  ${c.name}`);
@@ -871,9 +888,8 @@ const tableFaults = r => [
 
 async function checkTable(browser, only, inflate) {
   console.log(inflate ? '\ntable, inflated spacing' : '\ntable');
-  let failed = 0;
-  for (const [vname, width, height] of VIEWPORTS) {
-    if (only && !only.includes(vname)) continue;
+  const sizes = VIEWPORTS.filter(([vname]) => !only || only.includes(vname));
+  const results = await inParallel(sizes, async ([vname, width, height]) => {
     const page = await browser.newPage({ locale: 'it-IT', viewport: { width, height } });
     const rows = [];
     // The table only exists once a hand is dealt, so each deck goes through the
@@ -888,7 +904,10 @@ async function checkTable(browser, only, inflate) {
       rows.push({ deck, ...(await page.evaluate(measure)) });
     }
     await page.close();
-
+    return { vname, width, height, rows };
+  });
+  let failed = 0;
+  for (const { vname, width, height, rows } of results) {
     const bad = rows.flatMap(r => tableFaults(r).map(f => `${r.deck}: ${f}`));
     if (bad.length) failed++;
     const margin = Math.min(...rows.map(r => Math.min(r.gapTop, r.gapBot, -r.belowFold)));
