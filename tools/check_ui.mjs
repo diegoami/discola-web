@@ -181,6 +181,17 @@ const SCREENS = [
            || matchMedia('(orientation: portrait) and (min-width: 480px) and (min-height: 720px) and (max-height: 760px)').matches)
           && sheet.scrollHeight > sheet.clientHeight + 1)
         out.push(`the start sheet scrolls at ${window.innerWidth}x${window.innerHeight} (${sheet.scrollHeight} in ${sheet.clientHeight})`);
+      // In portrait Gioca sits above the deck picker, so it is never the last thing
+      // on the screen: itch.io opens the game fullscreen on a phone and Android lays
+      // a toast over the bottom 9% for a few seconds (#128). Sticky, so on a short
+      // screen it still pins to the bottom edge; the position is asserted where
+      // the sheet has room.
+      if (matchMedia('(orientation: portrait)').matches
+          && r.top > document.querySelector('#decks').getBoundingClientRect().top)
+        out.push('Gioca is below the deck picker; it belongs above it (#128)');
+      if (matchMedia('(orientation: portrait) and (max-width: 560px) and (min-height: 780px)').matches
+          && r.bottom > window.innerHeight * 0.88)
+        out.push(`Gioca ends at ${Math.round(100 * r.bottom / window.innerHeight)}% of the screen, under the fullscreen toast zone`);
       // A page cannot close its own tab: outside the Android build, no Exit (#55).
       if (!document.querySelector('#btnExit').hidden) out.push('#btnExit shows without the Android App plugin');
       return out;
