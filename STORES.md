@@ -387,7 +387,8 @@ Full description, Italiano:
 > con i mazzi regionali: Trevisane, Piacentine, Napoletane, Romagnole e
 > Francesi. Funziona senza connessione, non ha pubblicità, non chiede account e
 > non raccoglie dati: lo storico delle partite resta sul dispositivo. In
-> italiano e in inglese.
+> italiano e in inglese. Per un'esperienza migliore gioca su
+> http://discola.netlify.app .
 
 Full description, English:
 > Discola is the two-player Briscola of 1997, back on your phone. Play four
@@ -395,9 +396,12 @@ Full description, English:
 > — with the regional Italian decks: Trevisane, Piacentine, Napoletane,
 > Romagnole and Francesi. It works offline, has no ads, asks for no account and
 > collects no data: your match history stays on the device. In Italian and
-> English.
+> English. For a better experience play at http://discola.netlify.app .
 
-The itch.io page takes the same text, with Bresciane added to the decks.
+The itch.io page takes the same text, with Bresciane added to the decks. On
+phones itch.io opens HTML5 games fullscreen and Android shows a toast over the
+bottom of the screen, so the last sentence sends phone players to the web
+version.
 
 **For Tressette and Scopetta:** copy the script and change the shot list: each
 game's screens, its end-of-hand or counting screen, and a mid-game table. Also
@@ -435,13 +439,6 @@ The Details textbox is the free-form markdown area below the per-language descri
 **English (recommended — broader reach):**
 
 ```markdown
-## On a phone
-
-itch.io opens HTML5 games on phones in fullscreen, and Chrome shows a
-"full screen" notice for a few seconds. For the game without that, open
-https://discola.netlify.app/ in your browser, or download the Android app
-from this page.
-
 ## How to play
 
 Tap a card to play it. Each hand deals six cards, three to you and three
@@ -474,13 +471,6 @@ https://discola.netlify.app/privacy.html.
 **Italian (alternative — matches the game's "Italian by default" stance):**
 
 ```markdown
-## Sul telefono
-
-Su telefono itch.io apre i giochi HTML5 a tutto schermo, e Chrome mostra per
-qualche secondo un avviso di «schermo intero». Per giocare senza, apri
-https://discola.netlify.app/ nel browser, oppure scarica l'app Android da
-questa pagina.
-
 ## Come si gioca
 
 Tocca una carta per giocarla. Ogni mano distribuisce sei carte, tre a te e
@@ -510,7 +500,7 @@ Lo storico delle partite resta sul dispositivo. L'informativa completa è
 su https://discola.netlify.app/privacy.html.
 ```
 
-**Updating it.** Butler pushes builds only; the page text (Details, descriptions, embed size) is edited by hand on itch.io, so a change here is not live until the owner pastes it. Phone players reach the game through itch.io's own fullscreen runner (see "Phase 2: no fullscreen trigger" below), which the game cannot change, hence the "On a phone" paragraph above.
+**Updating it.** Butler pushes builds only; the page text (Details, descriptions, embed size) is edited by hand on itch.io, so a change here is not live until the owner pastes it.
 
 **What does not need to be in Details:** the per-language description fields, the dedicated Screenshots field, the tags, the price, the "played in browser" toggle, the embed size, and the full privacy-policy text — link to the policy at `discola.netlify.app/privacy.html` instead.
 
