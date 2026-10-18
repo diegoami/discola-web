@@ -923,6 +923,15 @@ button.card:disabled{ cursor: default; }
   .chips{ grid-template-columns: 1fr 1fr; }
 }
 
+/* itch.io's canonical embed is 480x720: every widget on the start screen fits
+   it without scrolling, in both languages (#123). That window is portrait but
+   wider than 3/5, so the phone tier above does not apply; take the sheet's
+   padding and gaps back instead of the text size. */
+@media (orientation: portrait) and (max-height: 760px){
+  #viewStart .sheet-body{ padding-block: .3rem; }
+  #viewStart .sheet-inner{ gap: .6rem; }
+}
+
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
     animation-duration: .001ms !important;
