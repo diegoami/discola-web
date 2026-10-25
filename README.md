@@ -6,7 +6,9 @@ modern computer without an installer.
 
 **Play it:** <https://discola.netlify.app>
 
-**Android app and rules:** download them from [discola-releases](https://github.com/diegoami/discola-releases).
+**Android and Windows:** download them from the [latest release](https://github.com/diegoami/discola-web/releases/latest).
+
+**Rules and credits:** [Italiano / English](RULES.md).
 
 Or open `public/index.html` locally, or serve `public/` with any static web
 server — it is plain static files with no build step. `engine.js` is loaded as a

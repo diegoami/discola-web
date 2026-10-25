@@ -135,19 +135,18 @@ python3 tools/make_icons.py --check
 It runs in CI. If it fails, either the crop changed on purpose — re-run the
 script and commit — or a committed icon was edited or corrupted.
 
-### 2.3 The releases repo — done
+### 2.3 Releases in the source repository
 
-`diegoami/discola-web` was private when the Android build was set up, and
-release assets on a private repo are not publicly downloadable, so "publish as
-a release and link it from the website" could not work from this repo.
+Source, annotated version tags and downloadable releases all live in the public
+`diegoami/discola-web` repository. `tools/publish_release.mjs` (§5) publishes
+there, and the website's Android and Windows links point to its latest release.
+The separate binary repository is retired; its nine published releases have
+been copied here with their original assets, checksums and release notes.
 
-**`diegoami/discola-releases` exists and is public**: the same split
-`ROADMAP.md` §Iteration 6 proposed, and the same one `geoclick-releases` uses
-against a private `Geoclick2027`. `tools/publish_release.mjs` (§5) targets it.
-
-`discola-web` has since been made public as well (#46). The split stays: the
-releases repo is what the site's `/android` link and the release notes point
-at, and each release there names the tagged commit it was built from here.
+The migration preserves the original `v1.0.0` tag from the binary repository;
+it points to that repository's historical snapshot, not a verified source
+commit. Later releases use this repository's existing source tags. New releases
+must follow the annotated source-tag checks in §5.
 
 ---
 
@@ -389,7 +388,7 @@ commit (`DESKTOP.md` §Releasing).
 
 **`tools/publish_release.mjs`** — verify the staged set against
 `SHA256SUMS.txt` (a missing or unlisted file fails the run), check the source
-tag, then `gh release create` on `diegoami/discola-releases`, attaching every
+tag, then `gh release create` on `diegoami/discola-web`, attaching every
 asset. Dry run by default, `--confirm` to actually publish; this is
 outward-facing and irreversible enough to deserve the extra word.
 
@@ -418,7 +417,7 @@ That needs no plugin, only a redirect in `netlify.toml`:
 ```toml
 [[redirects]]
   from = "/android"
-  to = "https://github.com/diegoami/discola-releases/releases/latest"
+  to = "https://github.com/diegoami/discola-web/releases/latest"
   status = 302
   force = true
 ```
@@ -447,7 +446,7 @@ the page is opened from disk — and so the APK never advertises a link to itsel
 |---|---|---|---|
 | 1 | ~~Fonts~~ — done: self-hosted, 172 KB, `fonts` pass in the check | — | — |
 | 2 | ~~Icons~~ — done: `tools/make_icons.py`, wired into the page | — | — |
-| 3 | ~~Create `diegoami/discola-releases`~~ — done, public | — | — |
+| 3 | ~~Public releases in `diegoami/discola-web`~~ — done | — | — |
 | 4 | ~~Android SDK, `cap add android`, debug APK builds & runs offline~~ — done | — | — |
 | 5 | ~~Release key, `keystore.properties`, signed build~~ — done | — | — |
 | 6 | ~~`package_release.mjs` and `publish_release.mjs`; cut v1.0.0~~ — done, v1.0.0–v1.0.4 and v1.0.6 released | — | — |

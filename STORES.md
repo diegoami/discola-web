@@ -5,9 +5,11 @@ Scopetta follow after it**. Companion to [`ANDROID.md`](ANDROID.md) (the APK) an
 [`DESKTOP.md`](DESKTOP.md) (the Windows build). The proposal, the research and
 the owner's decisions are on #48.
 
-**Status (2026-10-17).** Phase 1 (#49–#53) merged before v1.0.6 was tagged,
-so v1.0.0–v1.0.4 and v1.0.6–v1.0.7 are published on `diegoami/discola-releases`;
+**Release hosting (2026-10-25).** Releases v1.0.0–v1.0.4 and v1.0.6–v1.0.9
+are now hosted on `diegoami/discola-web`;
 v1.0.5 was tagged but not published (owner's decision, 2026-10-16).
+
+**Store status (2026-10-17).** Phase 1 (#49–#53) merged before v1.0.6 was tagged.
 Nothing is listed on either store yet.
 - **Open before any store build (owner):** the device checks for 1.1 (Back) and
   1.4 (edge-to-edge), and approval of the draft listing text in 1.5.

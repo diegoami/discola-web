@@ -22,7 +22,7 @@ Chosen by the owner on 2026-09-22; recorded on issue #18.
 | Shell | **Tauri 2** | wraps `public/` unchanged |
 | Platforms | **Windows only** | first release; Linux AppImage and macOS are later options |
 | Goal | **Personal use + GitHub Releases** | matching Android, not app stores |
-| Binary hosting | **`diegoami/discola-releases`** | the existing public repo (`ANDROID.md:138-147`) |
+| Binary hosting | **`diegoami/discola-web`** | the public source repository (`ANDROID.md` §2.3) |
 | Code signing | **Unsigned first** | document the SmartScreen warning; departs from `ROADMAP.md:196` ("a signed desktop build") |
 
 ## Comparison
@@ -116,7 +116,7 @@ source carries no test code.
 ## Releasing
 
 Both targets ship as one GitHub Release on
-[`diegoami/discola-releases`](https://github.com/diegoami/discola-releases),
+[`diegoami/discola-web`](https://github.com/diegoami/discola-web),
 numbered on the shared version line (1.0.4 is the first). The process is local
 by design, for the reasons in [`ANDROID.md`](ANDROID.md) §5 — the machine doing
 a release holds the Android signing key and the Rust toolchain.
@@ -142,8 +142,7 @@ fails its smoke must not leave a tag behind. The tag then goes on the same
 commit, so the published binaries are built from exactly the tagged commit.
 The publisher proves it.
 
-The tag is what ties a published binary to its source, since
-`diegoami/discola-releases` holds binaries only.
+The tag ties each published binary to its source in the same repository.
 
 - **`package_release.mjs`** refuses a working tree whose content differs from
   `HEAD`: modified or staged files, untracked files, and ignored files under
