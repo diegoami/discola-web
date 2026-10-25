@@ -19,7 +19,7 @@ the route decision it argues for is what was taken.
 | 3 — Desktop via Tauri | Done: `desktop/`, Windows only, first shipped in 1.0.4 (#22, #26) |
 | 4 — Android via Capacitor | Done: `mobile/`, a signed APK, sideloaded. A Play listing (and itch.io) is planned in [`STORES.md`](STORES.md) (#48) |
 | 5 — Geoclick stack | Not started (optional) |
-| 6 — Releases | Done: `diegoami/discola-releases`, one release per version carrying the APK and `SHA256SUMS.txt`, plus the Windows exe since 1.0.4 |
+| 6 — Releases | Done: `diegoami/discola-web`, one release per version carrying the APK and `SHA256SUMS.txt`, plus the Windows exe since 1.0.4 |
 
 ---
 
@@ -208,7 +208,7 @@ original lived and has the most sentimental claim. macOS notarisation costs an
 Apple Developer account; Linux AppImage costs nothing.
 
 **Decided (2026-09-22).** Tauri 2, Windows first, unsigned, published on
-`diegoami/discola-releases`. The comparison and the pending Iteration 0 spike are
+`diegoami/discola-web`. The comparison and the pending Iteration 0 spike are
 in [`DESKTOP.md`](DESKTOP.md), which supersedes the open question above.
 
 ### Iteration 4 — Android via Capacitor (2–3 days, mostly paperwork)
@@ -219,7 +219,7 @@ in [`DESKTOP.md`](DESKTOP.md), which supersedes the open question above.
 iteration where the repo turned out not to match it: the page fetches its fonts
 from Google at runtime, there is no icon anywhere, and this repo was private
 then, so its release assets could not be linked from the site (it has since
-been made public, #46; binaries still go to `discola-releases`).
+been made public, #46; source and releases now live together in `discola-web`).
 
 `mobile/` with `capacitor.config.ts`, `webDir` at `public/`, Android
 platform added. No plugins: no SQLite, no filesystem — `localStorage` covers
@@ -274,7 +274,7 @@ alike and should not.
 
 ## 6. Open questions
 
-Where these stand now: releases are sideloaded from `discola-releases` and no
+Where these stand now: releases are sideloaded from `discola-web` and no
 Play listing has been pursued (1, and with it 4); desktop is Windows only for
 now, per `DESKTOP.md` (2); Route A was taken (3); orientation is still open and
 tracked in `ANDROID.md` §8 (5).

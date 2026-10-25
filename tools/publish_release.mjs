@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Publish a packaged release to the public releases repo as a GitHub Release.
+ * Publish a packaged release to the public source repository as a GitHub Release.
  *
  *   node tools/publish_release.mjs            # dry run: check everything, do nothing
  *   node tools/publish_release.mjs --confirm  # actually create the release
@@ -8,7 +8,7 @@
  * Reads dist-release/vX.Y.Z/ (from tools/package_release.mjs) — every staged
  * asset, verified against SHA256SUMS.txt, including the set itself: a missing
  * or unlisted file fails the run — and needs `gh` logged in with access to the
- * releases repo. It also refuses, dry run included, unless vX.Y.Z is tagged on
+ * source repository. It also refuses, dry run included, unless vX.Y.Z is tagged on
  * origin, on origin/main, at the commit recorded in dist-release/vX.Y.Z.source,
  * and the notes name that commit, so every published binary names its source.
  * Outward-facing and hard to take back
@@ -24,7 +24,7 @@ import { CHECKSUM_FILE, verifyChecksums } from './checksums.mjs';
 import { buildNotes } from './release_notes.mjs';
 import { branchHead, parseSource, tagRef } from './source_tag.mjs';
 
-const RELEASES_REPO = 'diegoami/discola-releases';
+const RELEASES_REPO = 'diegoami/discola-web';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIRM = process.argv.includes('--confirm');
 
@@ -129,7 +129,7 @@ const notesFile = path.join(os.tmpdir(), `discola-${tag}-notes.md`);
 writeFileSync(notesFile, notes);
 const res = gh(['release', 'create', tag,
   ...names.map((n) => path.join(dir, n)), path.join(dir, CHECKSUM_FILE),
-  '-R', RELEASES_REPO, '--title', `Discola ${version}`, '--notes-file', notesFile],
+  '-R', RELEASES_REPO, '--verify-tag', '--title', `Discola ${version}`, '--notes-file', notesFile],
   { stdio: 'inherit' });
 if (res.status !== 0) fail('gh release create failed.');
 console.log(`\npublished: https://github.com/${RELEASES_REPO}/releases/tag/${tag}`);

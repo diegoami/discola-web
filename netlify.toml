@@ -19,7 +19,7 @@
 # a build plugin is the wrong tool here.
 [[redirects]]
   from = "/android"
-  to = "https://github.com/diegoami/discola-releases/releases/latest"
+  to = "https://github.com/diegoami/discola-web/releases/latest"
   status = 302
   force = true
 
@@ -27,7 +27,7 @@
 # same latest-release page serves either platform. See DESKTOP.md.
 [[redirects]]
   from = "/windows"
-  to = "https://github.com/diegoami/discola-releases/releases/latest"
+  to = "https://github.com/diegoami/discola-web/releases/latest"
   status = 302
   force = true
 

@@ -34,8 +34,8 @@ This is the one instructions file, for every tool. `CLAUDE.md` only imports it.
 ## Releases
 
 A release is an annotated tag `vX.Y.Z` on `main`, on the exact commit the
-published binaries are built from. Binaries go to `diegoami/discola-releases`,
-the tag stays here, and `tools/publish_release.mjs` refuses anything else.
+published binaries are built from. Binaries and source tags live together in
+`diegoami/discola-web`, and `tools/publish_release.mjs` refuses anything else.
 Nothing but a release is a milestone.
 
 1. **Open `Milestone vX.Y.Z`**: the candidate SHA on `main`, the previous tag,

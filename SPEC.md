@@ -430,7 +430,7 @@ revalidates `index.html` on every load so a deploy reaches players immediately.
 It also redirects `/android` to the latest GitHub release.
 
 **Android.** The same `public/` is packaged as an APK with Capacitor (`mobile/`),
-signed and published as a GitHub release on the public `diegoami/discola-releases`
+signed and published as a GitHub release on the public `diegoami/discola-web`
 repo; the website links to it. The build, signing and release scripts are in
 [`ANDROID.md`](ANDROID.md). The web build is unchanged by any of this.
 
