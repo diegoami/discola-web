@@ -4,7 +4,7 @@ A two-player Briscola game, originally written in Delphi 3 in 1997. This is a
 port to the web — one HTML page and one plain-JS engine file — so it runs on any
 modern computer without an installer.
 
-**Play it:** <https://discola.netlify.app>
+**Play it: [GitHub Pages](https://diegoami.github.io/discola-web/)** · [Netlify mirror](https://discola.netlify.app)
 
 **Android and Windows:** download them from the [latest release](https://github.com/diegoami/discola-web/releases/latest).
 
@@ -166,3 +166,9 @@ surprise.
 ```sh
 node tools/import_bresciane.mjs
 ```
+
+## GitHub Pages
+
+The Pages workflow publishes only `public/` from `main`, with no build step.
+In Settings → Pages, select **GitHub Actions** as the source.
+Changes to the game deploy automatically; the workflow can also be run manually.
